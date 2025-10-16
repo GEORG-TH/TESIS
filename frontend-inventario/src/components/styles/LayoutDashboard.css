@@ -1,0 +1,39 @@
+.layout-dashboard {
+    display: flex;
+    align-items: stretch;
+    min-height: 100vh;
+    width: 100%;
+    background: var(--background-color);
+    color: var(--text-color);
+}
+
+.layout-dashboard > .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.layout-dashboard .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 0;
+    background: var(--background-color);
+    color: var(--text-color);
+}
+
+.layout-dashboard .main-scroll-area {
+    flex: 1;
+    padding: 20px 40px;
+    overflow-y: auto;
+    background: var(--background-color);
+}
+
+@media (max-width: 768px) {
+    .layout-dashboard .main-scroll-area {
+        padding: 90px 15px 20px;
+    }
+}
