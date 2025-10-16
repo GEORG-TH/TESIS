@@ -24,7 +24,7 @@ public class AreaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Area> obtenerArea(@PathVariable Long id) {
+    public ResponseEntity<Area> obtenerArea(@PathVariable Integer id) {
         return areaService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -36,12 +36,12 @@ public class AreaController {
     }
 
     @PutMapping("/actualizar/{id}")
-    public ResponseEntity<Area> actualizar(@PathVariable Long id, @Valid @RequestBody Area area) {
+    public ResponseEntity<Area> actualizar(@PathVariable Integer id, @Valid @RequestBody Area area) {
         return ResponseEntity.ok(areaService.actualizarArea(id, area));
     }
 
     @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         areaService.eliminarArea(id);
         return ResponseEntity.noContent().build();
     }

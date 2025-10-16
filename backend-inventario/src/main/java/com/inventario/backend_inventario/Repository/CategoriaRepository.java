@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.inventario.backend_inventario.Model.Categoria;
 
 @Repository
-public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
+public interface CategoriaRepository extends JpaRepository<Categoria, Integer> {
     boolean existsByNombreCat(String nombreCat);
 }

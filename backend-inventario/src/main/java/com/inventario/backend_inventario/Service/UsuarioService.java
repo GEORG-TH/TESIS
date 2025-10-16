@@ -6,13 +6,13 @@ import java.util.Optional;
 
 public interface UsuarioService {
     List<Usuario> listarUsuarios();
-    Optional<Usuario> obtenerUsuarioPorId(Long id);
+    Optional<Usuario> obtenerUsuarioPorId(Integer id);
     Usuario crearUsuario(Usuario u);
     Usuario actualizarUsuario(Usuario u);
-    void eliminarUsuario(Long id);
-    Optional<Usuario> desactivarUsuario(Long id);
-    Optional<Usuario> activarUsuario(Long id);
+    void eliminarUsuario(Integer id);
+    Optional<Usuario> desactivarUsuario(Integer id);
+    Optional<Usuario> activarUsuario(Integer id);
     boolean existeEmail(String email);
-    boolean existeEmailEnOtroUsuario(String email, Long id);
+    boolean existeEmailEnOtroUsuario(String email, Integer id);
     boolean existeDni(String dni);
 }

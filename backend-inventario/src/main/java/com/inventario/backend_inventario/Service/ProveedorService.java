@@ -7,8 +7,8 @@ import com.inventario.backend_inventario.Model.Proveedor;
 
 public interface ProveedorService {
     List<Proveedor> listarProveedores();
-    Optional<Proveedor> obtenerPorId(Long id);
+    Optional<Proveedor> obtenerPorId(Integer id);
     Proveedor registrarProveedor(Proveedor proveedor);
-    Proveedor actualizarProveedor(Long id, Proveedor proveedor);
-    void eliminarProveedor(Long id);
+    Proveedor actualizarProveedor(Integer id, Proveedor proveedor);
+    void eliminarProveedor(Integer id);
 }

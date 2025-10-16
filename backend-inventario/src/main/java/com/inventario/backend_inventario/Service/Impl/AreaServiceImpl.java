@@ -21,7 +21,7 @@ public class AreaServiceImpl implements AreaService {
     }
 
     @Override
-    public Optional<Area> obtenerPorId(Long id) {
+    public Optional<Area> obtenerPorId(Integer id) {
         return areaRepository.findById(id);
     }
 
@@ -34,7 +34,7 @@ public class AreaServiceImpl implements AreaService {
     }
 
     @Override
-    public Area actualizarArea(Long id, Area area) {
+    public Area actualizarArea(Integer id, Area area) {
         Area existente = areaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Área no encontrada"));
         existente.setNombreArea(area.getNombreArea());
@@ -42,7 +42,7 @@ public class AreaServiceImpl implements AreaService {
     }
 
     @Override
-    public void eliminarArea(Long id) {
+    public void eliminarArea(Integer id) {
         Area area = areaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Área no encontrada con el ID: " + id));
 

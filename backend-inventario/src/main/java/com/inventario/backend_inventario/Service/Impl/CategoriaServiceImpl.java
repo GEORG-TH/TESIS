@@ -28,7 +28,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public Optional<Categoria> obtenerPorId(Long id) {
+    public Optional<Categoria> obtenerPorId(Integer id) {
         return categoriaRepository.findById(id);
     }
 
@@ -43,7 +43,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public Categoria actualizarCategoria(Long id, Categoria categoria) {
+    public Categoria actualizarCategoria(Integer id, Categoria categoria) {
         Categoria existente = categoriaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
 
@@ -53,7 +53,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public void eliminarCategoria(Long id) {
+    public void eliminarCategoria(Integer id) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada con el ID: " + id));
 

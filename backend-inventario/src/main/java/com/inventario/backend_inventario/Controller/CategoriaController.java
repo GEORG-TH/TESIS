@@ -30,7 +30,7 @@ public class CategoriaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Categoria> obtenerCategoriaPorId(@PathVariable Long id) {
+    public ResponseEntity<Categoria> obtenerCategoriaPorId(@PathVariable Integer id) {
         return categoriaService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -42,12 +42,12 @@ public class CategoriaController {
     }
 
     @PutMapping("/actualizar/{id}")
-    public ResponseEntity<Categoria> actualizarCategoria(@PathVariable Long id, @Valid @RequestBody Categoria categoria) {
+    public ResponseEntity<Categoria> actualizarCategoria(@PathVariable Integer id, @Valid @RequestBody Categoria categoria) {
         return ResponseEntity.ok(categoriaService.actualizarCategoria(id, categoria));
     }
 
     @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<Void> eliminarCategoria(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarCategoria(@PathVariable Integer id) {
         categoriaService.eliminarCategoria(id);
         return ResponseEntity.noContent().build();
     }

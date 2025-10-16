@@ -19,7 +19,7 @@ import lombok.*;
 public class Area implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_area;
+    private Integer id_area;
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El nombre del área es obligatorio")

@@ -16,7 +16,7 @@ import lombok.*;
 public class Usuario implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_u;
+    private Integer id_u;
 
     @NotBlank(message = "El DNI es obligatorio")
     @Size(min = 8, max = 8, message = "El DNI debe tener exactamente 8 caracteres")

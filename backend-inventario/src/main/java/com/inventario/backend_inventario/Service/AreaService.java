@@ -6,8 +6,8 @@ import com.inventario.backend_inventario.Model.Area;
 
 public interface AreaService {
     List<Area> listarAreas();
-    Optional<Area> obtenerPorId(Long id);
+    Optional<Area> obtenerPorId(Integer id);
     Area registrarArea(Area area);
-    Area actualizarArea(Long id, Area area);
-    void eliminarArea(Long id);
+    Area actualizarArea(Integer id, Area area);
+    void eliminarArea(Integer id);
 }

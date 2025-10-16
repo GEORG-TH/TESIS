@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.inventario.backend_inventario.Model.Area;
 
 @Repository
-public interface AreaRepository extends JpaRepository<Area, Long> {
+public interface AreaRepository extends JpaRepository<Area, Integer> {
     boolean existsByNombreArea(String nombreArea);
 }

@@ -35,7 +35,7 @@ CREATE TABLE CATEGORIA (
 	id_area INT NOT NULL
 );
 CREATE TABLE PRODUCTO (
-    id_producto INT PRIMARY KEY IDENTITY(1,1),
+    id_producto BIGINT PRIMARY KEY IDENTITY(1,1),
     sku VARCHAR(10) UNIQUE NOT NULL,
 	cod_ean VARCHAR(50) UNIQUE NOT NULL,
     nombre VARCHAR(100) NOT NULL,
@@ -58,14 +58,14 @@ CREATE TABLE PROVEEDOR (
 );
 /*TABLAS PROCESO DE INVENTARIO*/
 CREATE TABLE INVENTARIO_ACTUAL (
-    id_ivn INT PRIMARY KEY IDENTITY(1,1),
+    id_ivn BIGINT PRIMARY KEY IDENTITY(1,1),
     id_producto INT NOT NULL,
     id_sede INT NOT NULL,
     stock_actual INT NOT NULL,
     ultima_actualizacion DATETIME DEFAULT GETDATE()
 );
 CREATE TABLE CONTEO_INVENTARIO (
-    id_conteo INT PRIMARY KEY IDENTITY(1,1),
+    id_conteo BIGINT PRIMARY KEY IDENTITY(1,1),
 	id_usuario INT NOT NULL,
     id_sede INT NOT NULL,
     fecha DATETIME DEFAULT GETDATE(),
@@ -74,15 +74,16 @@ CREATE TABLE CONTEO_INVENTARIO (
 	
 );
 CREATE TABLE DETALLE_CONTEO_INVENTARIO (
-    id_detalle INT PRIMARY KEY IDENTITY(1,1),
-    id_conteo INT NOT NULL,
-    id_producto INT NOT NULL,
+    id_detalle BIGINT PRIMARY KEY IDENTITY(1,1),
+    id_conteo BIGINT NOT NULL,
+    id_producto BIGINT NOT NULL,
     stock_anterior INT NOT NULL,
     stock_nuevo INT NOT NULL,
     diferencia AS (stock_nuevo - stock_anterior) PERSISTED
 );
 CREATE TABLE TIPO_MOVIMIENTO (
-    id_tipo_mov VARCHAR(10) PRIMARY KEY,
+    id_tipo_mov VARCHAR(20) PRIMARY KEY,
+    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('ENTRADA', 'SALIDA', 'AJUSTE CONTEO')),
     descripcion VARCHAR(100) NOT NULL    
 );
 CREATE TABLE MOVIMIENTO_INVENTARIO (
@@ -90,7 +91,7 @@ CREATE TABLE MOVIMIENTO_INVENTARIO (
     id_sede INT NOT NULL,
     id_producto INT NOT NULL,
     fecha DATETIME DEFAULT GETDATE(),
-    id_tipo_mov VARCHAR(10) NOT NULL,
+    id_tipo_mov VARCHAR(20) NOT NULL,
     cantidad INT NOT NULL,
     referencia VARCHAR(100),
     observaciones VARCHAR(255),
@@ -163,3 +164,13 @@ CREATE INDEX idx_movimiento_tipo ON MOVIMIENTO_INVENTARIO(id_tipo_mov);
 CREATE INDEX idx_inventario_producto_sede ON INVENTARIO_ACTUAL(id_producto, id_sede);
 CREATE INDEX idx_usuario_email_pass ON USUARIO(email, pass);
 CREATE INDEX idx_usuario_dni ON USUARIO(dni);
+
+/*Modificaciones adicionales*/
+ALTER TABLE USUARIOS
+ADD id_sede INT NULL;
+GO
+
+ALTER TABLE USUARIOS
+ADD CONSTRAINT FK_USUARIOS_SEDES
+FOREIGN KEY (id_sede) REFERENCES SEDES(id_sede);
+GO

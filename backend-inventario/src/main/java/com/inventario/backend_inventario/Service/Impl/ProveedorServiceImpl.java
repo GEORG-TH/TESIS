@@ -24,7 +24,7 @@ public class ProveedorServiceImpl implements ProveedorService{
     }
 
     @Override
-    public Optional<Proveedor> obtenerPorId(Long id) {
+    public Optional<Proveedor> obtenerPorId(Integer id) {
         return proveedorRepository.findById(id);
     }
 
@@ -40,7 +40,7 @@ public class ProveedorServiceImpl implements ProveedorService{
     }
 
     @Override
-    public Proveedor actualizarProveedor(Long id, Proveedor proveedor) {
+    public Proveedor actualizarProveedor(Integer id, Proveedor proveedor) {
         Proveedor existente = proveedorRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Proveedor no encontrado con el ID: " + id));
 
@@ -65,7 +65,7 @@ public class ProveedorServiceImpl implements ProveedorService{
     }
 
     @Override
-    public void eliminarProveedor(Long id) {
+    public void eliminarProveedor(Integer id) {
         if (!proveedorRepository.existsById(id)) {
             throw new EntityNotFoundException("Proveedor no encontrado con el ID: " + id);
         }

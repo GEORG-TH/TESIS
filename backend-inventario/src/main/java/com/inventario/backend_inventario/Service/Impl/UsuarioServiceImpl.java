@@ -18,7 +18,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     public List<Usuario> listarUsuarios() { return repo.findAll(); }
 
     @Override
-    public Optional<Usuario> obtenerUsuarioPorId(Long id) { return repo.findById(id); }
+    public Optional<Usuario> obtenerUsuarioPorId(Integer id) { return repo.findById(id); }
 
     @Override
     public Usuario crearUsuario(Usuario u) { return repo.save(u); }
@@ -27,10 +27,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Usuario actualizarUsuario(Usuario u) { return repo.save(u); }
 
     @Override
-    public void eliminarUsuario(Long id) { repo.deleteById(id); }
+    public void eliminarUsuario(Integer id) { repo.deleteById(id); }
 
     @Override
-    public Optional<Usuario> desactivarUsuario(Long id) {
+    public Optional<Usuario> desactivarUsuario(Integer id) {
         return repo.findById(id).map(usuario -> {
             usuario.setEstado_u(0);
             return repo.save(usuario);
@@ -38,7 +38,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public Optional<Usuario> activarUsuario(Long id) {
+    public Optional<Usuario> activarUsuario(Integer id) {
         return repo.findById(id).map(usuario -> {
             usuario.setEstado_u(1);
             return repo.save(usuario);
@@ -51,7 +51,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public boolean existeEmailEnOtroUsuario(String email, Long id) {
+    public boolean existeEmailEnOtroUsuario(String email, Integer id) {
         return repo.findByEmail(email)
                 .map(u -> !u.getId_u().equals(id))
                 .orElse(false);
