@@ -21,7 +21,7 @@ public class SedeServiceImpl implements SedeService {
     }
 
     @Override
-    public Optional<Sede> obtenerSedePorId(Long id) {
+    public Optional<Sede> obtenerSedePorId(Integer id) {
         return sedeRepository.findById(id);
     }
 
@@ -31,7 +31,7 @@ public class SedeServiceImpl implements SedeService {
     }
 
     @Override
-    public Sede actualizarSede(Long id, Sede sedeDetalles) {
+    public Sede actualizarSede(Integer id, Sede sedeDetalles) {
         Sede sedeExistente = sedeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sede no encontrada con el ID: " + id));
         sedeExistente.setNombreSede(sedeDetalles.getNombreSede());
@@ -41,7 +41,7 @@ public class SedeServiceImpl implements SedeService {
     }
 
     @Override
-    public void eliminarSede(Long id) {
+    public void eliminarSede(Integer id) {
         if (!sedeRepository.existsById(id)) {
             throw new RuntimeException("Sede no encontrada con el ID: " + id);
         }

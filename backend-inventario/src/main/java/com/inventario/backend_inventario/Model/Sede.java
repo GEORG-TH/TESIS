@@ -14,7 +14,7 @@ public class Sede {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_sede")
-    private Long idSede;
+    private Integer idSede;
 
     @NotBlank(message = "El nombre de la sede es obligatorio")
     @Column(name = "nombre_sede", nullable = false, length = 50)

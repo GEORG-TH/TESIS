@@ -75,7 +75,7 @@ public class AuthController {
     }
 
     public record LoginResponse(
-            Long id_u,
+            Integer id_u,
             String dni,
             String nombre_u,
             String apellido_pat,

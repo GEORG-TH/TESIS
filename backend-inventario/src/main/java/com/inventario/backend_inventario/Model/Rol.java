@@ -13,7 +13,7 @@ import lombok.*;
 public class Rol implements Serializable {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private Long id_rol;
+    private Integer id_rol;
     @Column(nullable = false, unique = true)
     private String nombreRol;
 }

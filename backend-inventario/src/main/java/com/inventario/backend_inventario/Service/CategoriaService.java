@@ -7,8 +7,8 @@ import com.inventario.backend_inventario.Model.Categoria;
 
 public interface CategoriaService {
     List<Categoria> listarCategorias();
-    Optional<Categoria> obtenerPorId(Long id);
+    Optional<Categoria> obtenerPorId(Integer id);
     Categoria registrarCategoria(Categoria categoria);
-    Categoria actualizarCategoria(Long id, Categoria categoria);
-    void eliminarCategoria(Long id);
+    Categoria actualizarCategoria(Integer id, Categoria categoria);
+    void eliminarCategoria(Integer id);
 }

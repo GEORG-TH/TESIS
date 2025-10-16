@@ -20,7 +20,7 @@ import lombok.*;
 public class Categoria implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_cat;
+    private Integer id_cat;
 
     @Column(nullable = false, unique = true)
     @NotBlank(message = "El nombre de la categoría es obligatorio")

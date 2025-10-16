@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.inventario.backend_inventario.Model.Proveedor;
 
 @Repository
-public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
+public interface ProveedorRepository extends JpaRepository<Proveedor, Integer> {
     Optional<Proveedor> findByRuc(String ruc);
     Optional<Proveedor> findByEmail(String email);
 }

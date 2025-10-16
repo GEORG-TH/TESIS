@@ -7,8 +7,8 @@ import com.inventario.backend_inventario.Model.Sede;
 
 public interface SedeService {
     List<Sede> obtenerTodasLasSedes();
-    Optional<Sede> obtenerSedePorId(Long id);
+    Optional<Sede> obtenerSedePorId(Integer id);
     Sede guardarSede(Sede sede);
-    Sede actualizarSede(Long id, Sede sedeDetalles);
-    void eliminarSede(Long id);
+    Sede actualizarSede(Integer id, Sede sedeDetalles);
+    void eliminarSede(Integer id);
 }

@@ -32,7 +32,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long id) {
+    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Integer id) {
         return usuarioService.obtenerUsuarioPorId(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -62,7 +62,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarUsuario(@PathVariable Long id, @RequestBody UsuarioUpdateDto usuario) {
+    public ResponseEntity<?> actualizarUsuario(@PathVariable Integer id, @RequestBody UsuarioUpdateDto usuario) {
         return usuarioService.obtenerUsuarioPorId(id)
                 .map(uDB -> {
                     if (usuario.getEmail() != null &&
@@ -84,20 +84,20 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Integer id) {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/desactivar")
-    public ResponseEntity<Usuario> desactivarUsuario(@PathVariable Long id) {
+    public ResponseEntity<Usuario> desactivarUsuario(@PathVariable Integer id) {
         return usuarioService.desactivarUsuario(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/{id}/activar")
-    public ResponseEntity<Usuario> activarUsuario(@PathVariable Long id) {
+    public ResponseEntity<Usuario> activarUsuario(@PathVariable Integer id) {
         return usuarioService.activarUsuario(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

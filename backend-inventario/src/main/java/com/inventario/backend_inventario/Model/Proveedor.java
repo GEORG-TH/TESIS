@@ -13,7 +13,7 @@ import lombok.*;
 public class Proveedor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_proveedor;
+    private Integer id_proveedor;
 
     @Column(nullable = false, unique = true, length = 11)
     @NotBlank(message = "El RUC es obligatorio")
