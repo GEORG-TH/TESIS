@@ -1,0 +1,165 @@
+CREATE DATABASE CONTROL_INVENTARIO_BD;
+GO
+USE CONTROL_INVENTARIO_BD;
+GO
+/*TABLA USUARIO*/
+CREATE TABLE USUARIO (
+	id_u INT IDENTITY(1,1) PRIMARY KEY,
+	dni VARCHAR(8) NOT NULL UNIQUE,
+	nombre_u VARCHAR(50) NOT NULL,
+	apellido_pat VARCHAR(50) NOT NULL,
+	apellido_mat VARCHAR(50),
+	email VARCHAR(100) NOT NULL UNIQUE,
+	pass VARCHAR(255) NOT NULL,
+	estado_u BIT NOT NULL DEFAULT 1, 
+	id_rol INT NOT NULL
+);
+CREATE TABLE ROL (
+	id_rol INT IDENTITY(1,1) PRIMARY KEY,
+	nombre_rol VARCHAR(50) NOT NULL UNIQUE
+);
+/*TABLAS NEGOCIO*/
+CREATE TABLE SEDE (
+	id_sede INT IDENTITY(1,1) PRIMARY KEY,
+	nombre_sede VARCHAR(50) NOT NULL,
+	direccion_se VARCHAR(100) NOT NULL,
+	anexo_se VARCHAR(7) NOT NULL
+);
+CREATE TABLE AREA (
+	id_area INT IDENTITY(1,1) PRIMARY KEY,
+	nombre_area VARCHAR(50) NOT NULL UNIQUE
+);
+CREATE TABLE CATEGORIA (
+	id_cat INT IDENTITY(1,1) PRIMARY KEY,
+	nombre_cat VARCHAR(50) NOT NULL UNIQUE,
+	id_area INT NOT NULL
+);
+CREATE TABLE PRODUCTO (
+    id_producto INT PRIMARY KEY IDENTITY(1,1),
+    sku VARCHAR(10) UNIQUE NOT NULL,
+	cod_ean VARCHAR(50) UNIQUE NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    marca VARCHAR(50),
+	uni_medida VARCHAR(50) NOT NULL,
+	precio_venta DECIMAL(10,2) NOT NULL,
+    precio_compra DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    estado BIT NOT NULL DEFAULT 1,
+    id_cat INT NOT NULL,
+	id_proveedor INT NOT NULL
+);
+CREATE TABLE PROVEEDOR (
+    id_proveedor INT IDENTITY(1,1) PRIMARY KEY,
+    ruc VARCHAR(11) UNIQUE NOT NULL,
+    nombre_proveedor VARCHAR(150) NOT NULL,
+    telefono VARCHAR(20),
+    email VARCHAR(100),
+    direccion VARCHAR(200)
+);
+/*TABLAS PROCESO DE INVENTARIO*/
+CREATE TABLE INVENTARIO_ACTUAL (
+    id_ivn INT PRIMARY KEY IDENTITY(1,1),
+    id_producto INT NOT NULL,
+    id_sede INT NOT NULL,
+    stock_actual INT NOT NULL,
+    ultima_actualizacion DATETIME DEFAULT GETDATE()
+);
+CREATE TABLE CONTEO_INVENTARIO (
+    id_conteo INT PRIMARY KEY IDENTITY(1,1),
+	id_usuario INT NOT NULL,
+    id_sede INT NOT NULL,
+    fecha DATETIME DEFAULT GETDATE(),
+    estado VARCHAR(20) CHECK (estado IN ('Pendiente','Aprobado','Rechazado')) DEFAULT 'Pendiente',
+    observaciones VARCHAR(255),
+	
+);
+CREATE TABLE DETALLE_CONTEO_INVENTARIO (
+    id_detalle INT PRIMARY KEY IDENTITY(1,1),
+    id_conteo INT NOT NULL,
+    id_producto INT NOT NULL,
+    stock_anterior INT NOT NULL,
+    stock_nuevo INT NOT NULL,
+    diferencia AS (stock_nuevo - stock_anterior) PERSISTED
+);
+CREATE TABLE TIPO_MOVIMIENTO (
+    id_tipo_mov VARCHAR(10) PRIMARY KEY,
+    descripcion VARCHAR(100) NOT NULL    
+);
+CREATE TABLE MOVIMIENTO_INVENTARIO (
+    id_movimiento BIGINT PRIMARY KEY IDENTITY(1,1),
+    id_sede INT NOT NULL,
+    id_producto INT NOT NULL,
+    fecha DATETIME DEFAULT GETDATE(),
+    id_tipo_mov VARCHAR(10) NOT NULL,
+    cantidad INT NOT NULL,
+    referencia VARCHAR(100),
+    observaciones VARCHAR(255),
+    id_usuario INT NOT NULL
+);
+/*RELACIONES DE TABLAS*/
+ALTER TABLE USUARIO
+ADD CONSTRAINT FK_Usuario_Rol FOREIGN KEY (id_rol)
+REFERENCES ROL(id_rol);
+
+ALTER TABLE INVENTARIO_ACTUAL
+ADD CONSTRAINT FK_Inventario_Sede
+FOREIGN KEY (id_sede) REFERENCES SEDE(id_sede);
+
+ALTER TABLE MOVIMIENTO_INVENTARIO
+ADD CONSTRAINT FK_Movimiento_Sede
+FOREIGN KEY (id_sede) REFERENCES SEDE(id_sede);
+
+ALTER TABLE CONTEO_INVENTARIO
+ADD CONSTRAINT FK_Conteo_Sede
+FOREIGN KEY (id_sede) REFERENCES SEDE(id_sede);
+
+ALTER TABLE CATEGORIA
+ADD CONSTRAINT FK_Categoria_Area
+FOREIGN KEY (id_area) REFERENCES AREA(id_area);
+
+ALTER TABLE PRODUCTO
+ADD CONSTRAINT FK_Producto_Categoria
+FOREIGN KEY (id_cat) REFERENCES CATEGORIA(id_cat);
+
+ALTER TABLE PRODUCTO
+ADD CONSTRAINT FK_Producto_Proveedor
+FOREIGN KEY (id_proveedor) REFERENCES PROVEEDOR(id_proveedor);
+
+ALTER TABLE INVENTARIO_ACTUAL
+ADD CONSTRAINT FK_InventarioActual_Producto FOREIGN KEY (id_producto)
+REFERENCES PRODUCTO(id_producto);
+
+ALTER TABLE CONTEO_INVENTARIO
+ADD CONSTRAINT FK_ConteoInventario_Usuario FOREIGN KEY (id_usuario)
+REFERENCES USUARIO(id_u);
+
+ALTER TABLE DETALLE_CONTEO_INVENTARIO
+ADD CONSTRAINT FK_DetalleConteoInventario_Conteo FOREIGN KEY (id_conteo)
+REFERENCES CONTEO_INVENTARIO(id_conteo);
+
+ALTER TABLE DETALLE_CONTEO_INVENTARIO
+ADD CONSTRAINT FK_DetalleConteoInventario_Producto FOREIGN KEY (id_producto)
+REFERENCES PRODUCTO(id_producto);
+
+ALTER TABLE MOVIMIENTO_INVENTARIO
+ADD CONSTRAINT FK_MovimientoInventario_Producto FOREIGN KEY (id_producto)
+REFERENCES PRODUCTO(id_producto);
+
+ALTER TABLE MOVIMIENTO_INVENTARIO
+ADD CONSTRAINT FK_MovimientoInventario_TipoMovimiento FOREIGN KEY (id_tipo_mov)
+REFERENCES TIPO_MOVIMIENTO(id_tipo_mov);
+
+ALTER TABLE MOVIMIENTO_INVENTARIO
+ADD CONSTRAINT FK_MovimientoInventario_Usuario FOREIGN KEY (id_usuario)
+REFERENCES USUARIO(id_u);
+
+/*Indices*/
+
+CREATE INDEX idx_producto_nombre ON PRODUCTO(nombre);
+CREATE INDEX idx_producto_categoria ON PRODUCTO(id_cat);
+CREATE INDEX idx_producto_sku ON PRODUCTO(sku);
+CREATE INDEX idx_movimiento_producto_fecha ON MOVIMIENTO_INVENTARIO(id_producto, fecha);
+CREATE INDEX idx_movimiento_tipo ON MOVIMIENTO_INVENTARIO(id_tipo_mov);
+CREATE INDEX idx_inventario_producto_sede ON INVENTARIO_ACTUAL(id_producto, id_sede);
+CREATE INDEX idx_usuario_email_pass ON USUARIO(email, pass);
+CREATE INDEX idx_usuario_dni ON USUARIO(dni);

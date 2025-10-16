@@ -1,0 +1,89 @@
+SISTEMA WEB DE CONTROL DE INVENTARIOS DESARROLLADO EN *SPRING BOOT / REACT*
+
+Roles:
+- Administrador
+- Jefe de Inventario
+- Operador de Recepción de mercadería
+- Auditor de Inventarios
+- Operador de Tienda
+Módulos del sistema:
+
+-Mod. Usuario:
+Login / Register
+Gestión de Usuarios
+	Interface de Perfil de Usuario
+	CRUD Usuario
+
+-Mod. Producto:
+Gestión de Productos
+	CRUD de Productos
+Gestión de Área y Categorización
+	(Listar, Insertar y Bloquear) de Área
+	(Listar, Insertar y Bloquear) de Categoría
+	Modificar las Categorías relacionadas a cada Área
+Gestión de Proveedores
+	CRUD de proveedores
+
+-Mod. Sedes:
+Gestión de Sedes:
+	CRUD de Sedes
+	Asociar inventarios por sede
+
+-Mod. Inventario:
+Pedir mercadería a Proveedor
+Generar Conteo de Inventario (Programado o Sorpresivo)
+Gestión de Conteo
+	Lista de Productos escaneados en el Conteo
+	Aprobar/Rechazar Conteos de Inventario
+	Modificar Conteo
+Movimientos de Inventario
+	Importar Venta (CSV)
+	Transferencia de mercadería a otra sede
+	Merma de productos
+	Recepción de mercadería
+	Devolución de mercadería
+	Envió a Soporte Técnico (Funcionalidad no Priorizada)
+Reportes de Inventario
+	Reporte de Conteos de Inventario	(con Exportar a CSV o Gráfico en JPG)
+		- Lista de diferencias de stock (Sistema vs Físico)	
+	Consulta de Stock de Productos		(con Exportar a CSV o Gráfico en JPG)
+	Consulta de Stock por Sede		(con Exportar a CSV o Gráfico en JPG)
+	Reporte de Movimientos de Inventario	(con Exportar a CSV o Gráfico en JPG)
+	Reporte de Quiebres de Stock		(con Exportar a CSV o Gráfico en JPG)
+
+
+Funciones x Rol:
+
+-Admin
+Control total del Sistema (Todas las Funcionalidades xd)
+Priorización en Gestión de Usuarios (Asignación de roles), Áreas, Categoría, Producto, Proveedores
+Autorización de Conteos de Inventario (Aprueba/Desaprueba) 
+
+-Jefe de Inventario
+Modulo de Productos (Todas las funcionalidades)
+Modulo de Sedes (Todas las funcionalidades)
+Genera conteos programados
+Gestión de Conteo
+Transferencia de mercadería a otra sede
+Importar Venta
+Acceso a Reportes
+
+-Operador de Recepción de mercadería
+Merma de productos
+Recepción de mercadería
+Devolución de mercadería
+Gestión de Proveedores (sin eliminar)
+Transferencia de mercadería a otra sede
+Generar Conteo de Inventario
+Lista de Productos escaneados en el Conteo
+Acceso a Reportes
+
+-Auditor de Inventarios
+Acceso a Reportes
+
+-Operador de Tienda
+Pedir mercadería a Proveedor
+Generar Conteo de Inventario
+Lista de Productos escaneados en el Conteo
+Acceso a Reportes
+(En caso sea un Operador del Área Electro) Envió de Soporte Técnico (Funcionalidad no Priorizada)
