@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
@@ -17,6 +18,14 @@ const MySwal = withReactContent(Swal);
 const ListaProveedores = () => {
   const navigate = useNavigate();
   const [proveedores, setProveedores] = useState([]);
+  const rowVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.05, duration: 0.3 }, 
+    }),
+  };
 
   useEffect(() => {
     cargarProveedores();
@@ -163,6 +172,11 @@ const ListaProveedores = () => {
 
   return (
     <LayoutDashboard>
+      <motion.div
+          initial={{ opacity: 0, y: 20 }}     
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
       <div className="lista-panel-container">
         <div className="lista-panel-header">
           <h2 className="lista-panel-title">Lista de Proveedores</h2>
@@ -205,6 +219,7 @@ const ListaProveedores = () => {
               </tr>
             </thead>
             <tbody>
+              <AnimatePresence>
               {proveedores.length === 0 ? (
                 <tr>
                   <td className="sin-datos" colSpan={7}>
@@ -212,8 +227,15 @@ const ListaProveedores = () => {
                   </td>
                 </tr>
               ) : (
-                proveedores.map((proveedor) => (
-                  <tr key={proveedor.id_proveedor}>
+                proveedores.map((proveedor, i) => (
+                  <motion.tr
+                      key={proveedor.id_proveedor}
+                      custom={i}
+                      initial="hidden"
+                      animate="visible"
+                      variants={rowVariants}
+                      className="fila-proveedor"
+                    >
                     <td>{proveedor.id_proveedor}</td>
                     <td>{proveedor.ruc}</td>
                     <td>{proveedor.nombre_proveedor}</td>
@@ -255,13 +277,15 @@ const ListaProveedores = () => {
                         </button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
       </div>
+      </motion.div>
     </LayoutDashboard>
   );
 };

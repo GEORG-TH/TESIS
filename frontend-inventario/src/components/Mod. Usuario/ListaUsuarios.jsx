@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { motion, AnimatePresence  } from "framer-motion";
 import {
   getUsuarios,
   deleteUsuario,
@@ -9,6 +10,7 @@ import {
   updateUsuario,
 } from "../../api/usuarioApi";
 import LayoutDashboard from "../layouts/LayoutDashboard";
+import SkeletonRow from "../SkeletonRow";
 import "../styles/styleLista.css";
 import { useNavigate } from "react-router-dom";
 
@@ -25,9 +27,18 @@ function ListaUsuarios() {
     { id_rol: 4, nombreRol: "Auditor de Inventarios" },
     { id_rol: 5, nombreRol: "Operador de Tienda" }
   ]);
-
+  const rowVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.05, duration: 0.3 }, 
+    }),
+  };
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     cargarUsuarios();
+    setLoading(false);
   }, []);
 
   const cargarUsuarios = async () => {
@@ -188,106 +199,127 @@ function ListaUsuarios() {
 
   return (
     <LayoutDashboard>
-      <div className="lista-panel-container">
-        <div className="lista-panel-header">
-          <h2 className="lista-panel-title">Lista de Usuarios</h2>
-          <div className="lista-panel-actions">
-            <button
-              type="button"
-              className="lista-panel-back"
-              onClick={() => navigate("/dashboard-usuarios")}
-            >
-              Volver
-            </button>
-            <button type="button" className="lista-panel-refresh" onClick={cargarUsuarios}>
-              Actualizar
-            </button>
-            <button
-              type="button"
-              className="lista-panel-nuevo"
-              onClick={() => navigate("/usuarios/nuevo")}
-            >
-              Ingresar Usuario
-            </button>
+      <motion.div
+          initial={{ opacity: 0, y: 20 }}     
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+        <div className="lista-panel-container">
+          <div className="lista-panel-header">
+            <h2 className="lista-panel-title">Lista de Usuarios</h2>
+            <div className="lista-panel-actions">
+              <button
+                type="button"
+                className="lista-panel-back"
+                onClick={() => navigate("/dashboard-usuarios")}
+              >
+                Volver
+              </button>
+              <button type="button" className="lista-panel-refresh" onClick={cargarUsuarios}>
+                Actualizar
+              </button>
+              <button
+                type="button"
+                className="lista-panel-nuevo"
+                onClick={() => navigate("/usuarios/nuevo")}
+              >
+                Ingresar Usuario
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="panel-table-wrapper">
-          <table className="panel-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>DNI</th>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.length === 0 ? (
+          <div className="panel-table-wrapper">
+            <table className="panel-table">
+              <thead>
                 <tr>
-                  <td className="sin-datos" colSpan={7}>
-                    No hay usuarios registrados.
-                  </td>
+                  <th>ID</th>
+                  <th>DNI</th>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
-              ) : (
-                usuarios.map((u) => (
-                  <tr key={u.id_u}>
-                    <td>{u.id_u}</td>
-                    <td>{u.dni}</td>
-                    <td>
-                      {u.nombre_u} {u.apellido_pat} {u.apellido_mat}
-                    </td>
-                    <td>{u.email}</td>
-                    <td>{u.rol?.nombreRol}</td>
-                    <td>
-                      <span className={`estado-chip ${u.estado_u === 1 ? "activo" : "inactivo"}`}>
-                        {getEstadoTexto(u.estado_u)}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="acciones-columna">
-                        <button
-                          type="button"
-                          className="btn-accion editar"
-                          onClick={() => handleEditar(u)}
-                        >
-                          Editar
-                        </button>
-                        {u.estado_u === 1 ? (
-                          <button
-                            type="button"
-                            className="btn-accion desactivar"
-                            onClick={() => handleDesactivar(u.id_u)}
-                          >
-                            Desactivar
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn-accion activar"
-                            onClick={() => handleActivar(u.id_u)}
-                          >
-                            Activar
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="btn-accion eliminar"
-                          onClick={() => handleEliminar(u.id_u)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
+              </thead>
+              <tbody>
+                <AnimatePresence>
+                {loading ? (
+                  <>
+                    <SkeletonRow />
+                    <SkeletonRow />
+                    <SkeletonRow />
+                  </>
+                ) : usuarios.length === 0 ? (
+                  <tr>
+                    <td className="sin-datos" colSpan={7}>
+                      No hay usuarios registrados.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  usuarios.map((u, i) => (
+                    <motion.tr
+                      key={u.id_u}
+                      custom={i}
+                      initial="hidden"
+                      animate="visible"
+                      variants={rowVariants}
+                      className="fila-usuario"
+                    >
+                      <td>{u.id_u}</td>
+                      <td>{u.dni}</td>
+                      <td>
+                        {u.nombre_u} {u.apellido_pat} {u.apellido_mat}
+                      </td>
+                      <td>{u.email}</td>
+                      <td>{u.rol?.nombreRol}</td>
+                      <td>
+                        <span className={`estado-chip ${u.estado_u === 1 ? "activo" : "inactivo"}`}>
+                          {getEstadoTexto(u.estado_u)}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="acciones-columna">
+                          <button
+                            type="button"
+                            className="btn-accion editar"
+                            onClick={() => handleEditar(u)}
+                          >
+                            Editar
+                          </button>
+                          {u.estado_u === 1 ? (
+                            <button
+                              type="button"
+                              className="btn-accion desactivar"
+                              onClick={() => handleDesactivar(u.id_u)}
+                            >
+                              Desactivar
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn-accion activar"
+                              onClick={() => handleActivar(u.id_u)}
+                            >
+                              Activar
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn-accion eliminar"
+                            onClick={() => handleEliminar(u.id_u)}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </LayoutDashboard>
   );
 }

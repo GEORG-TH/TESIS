@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
@@ -12,6 +13,14 @@ function ListaRoles() {
   const navigate = useNavigate();
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const rowVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.05, duration: 0.3 }, 
+    }),
+  };
 
   useEffect(() => {
     cargarRoles();
@@ -102,6 +111,11 @@ function ListaRoles() {
 
   return (
     <LayoutDashboard>
+      <motion.div
+          initial={{ opacity: 0, y: 20 }}     
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
       <div className="lista-panel-container">
         <div className="lista-panel-header">
           <h2 className="lista-panel-title">Lista de Roles</h2>
@@ -141,6 +155,7 @@ function ListaRoles() {
               </tr>
             </thead>
             <tbody>
+              <AnimatePresence>
               {roles.length === 0 ? (
                 <tr>
                   <td className="sin-datos" colSpan={3}>
@@ -148,8 +163,15 @@ function ListaRoles() {
                   </td>
                 </tr>
               ) : (
-                roles.map((rol) => (
-                  <tr key={rol.id_rol}>
+                roles.map((rol, i) => (
+                  <motion.tr
+                      key={rol.id_rol}
+                      custom={i}
+                      initial="hidden"
+                      animate="visible"
+                      variants={rowVariants}
+                      className="fila-rol"
+                    >
                     <td>{rol.id_rol}</td>
                     <td>{rol.nombreRol}</td>
                     <td>
@@ -170,13 +192,15 @@ function ListaRoles() {
                         </button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
       </div>
+      </motion.div>
     </LayoutDashboard>
   );
 }
