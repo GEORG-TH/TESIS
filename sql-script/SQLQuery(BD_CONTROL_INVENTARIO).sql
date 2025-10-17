@@ -166,11 +166,3 @@ CREATE INDEX idx_usuario_email_pass ON USUARIO(email, pass);
 CREATE INDEX idx_usuario_dni ON USUARIO(dni);
 
 /*Modificaciones adicionales*/
-ALTER TABLE USUARIOS
-ADD id_sede INT NULL;
-GO
-
-ALTER TABLE USUARIOS
-ADD CONSTRAINT FK_USUARIOS_SEDES
-FOREIGN KEY (id_sede) REFERENCES SEDES(id_sede);
-GO
