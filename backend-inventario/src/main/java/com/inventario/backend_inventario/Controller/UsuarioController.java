@@ -1,9 +1,7 @@
 package com.inventario.backend_inventario.Controller;
 
 import com.inventario.backend_inventario.Dto.UsuarioUpdateDto;
-import com.inventario.backend_inventario.Model.Rol;
 import com.inventario.backend_inventario.Model.Usuario;
-import com.inventario.backend_inventario.Repository.RolRepository;
 import com.inventario.backend_inventario.Service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,8 +21,6 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
-    @Autowired
-    private RolRepository rolRepository;
 
     @GetMapping
     public ResponseEntity<List<Usuario>> listarUsuarios() {
@@ -46,41 +42,25 @@ public class UsuarioController {
                     .collect(Collectors.joining(", "));
             return ResponseEntity.badRequest().body(Map.of("message", errores));
         }
-
-        if (usuario.getEmail() != null && usuarioService.existeEmail(usuario.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("message", "El email ya está en uso"));
+        try {
+            Usuario nuevoUsuario = usuarioService.crearUsuario(usuario);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         }
-
-        if (usuario.getDni() != null && usuarioService.existeDni(usuario.getDni())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("message", "El DNI ya está registrado"));
-        }
-
-        Usuario nuevoUsuario = usuarioService.crearUsuario(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizarUsuario(@PathVariable Integer id, @RequestBody UsuarioUpdateDto usuario) {
-        return usuarioService.obtenerUsuarioPorId(id)
-                .map(uDB -> {
-                    if (usuario.getEmail() != null &&
-                        usuarioService.existeEmailEnOtroUsuario(usuario.getEmail(), id)) {
-                        return ResponseEntity.status(HttpStatus.CONFLICT)
-                                .body(Map.of("message", "El email ya está en uso"));
-                    }
-                    uDB.setNombre_u(usuario.getNombre_u());
-                    uDB.setEmail(usuario.getEmail());
-
-                    Rol rol = rolRepository.findById(usuario.getRol().getId_rol())
-                            .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
-                    uDB.setRol(rol);
-
-                Usuario actualizado = usuarioService.actualizarUsuario(uDB);
-                    return ResponseEntity.ok(actualizado);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            Usuario actualizado = usuarioService.actualizarUsuario(id, usuario);
+            return ResponseEntity.ok(actualizado);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("no encontrado")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")
