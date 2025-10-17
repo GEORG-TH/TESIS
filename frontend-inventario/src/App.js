@@ -1,4 +1,5 @@
 import './App.css';
+import './components/styles/SweetAlert.css';
 import React, { useEffect } from "react";
 import { useSettings } from "./components/Mod. Configuracion/SettingsContext";
 import { BrowserRouter as Router, Routes } from "react-router-dom";

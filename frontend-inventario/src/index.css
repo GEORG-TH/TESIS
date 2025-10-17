@@ -33,6 +33,15 @@
   --card-icon: rgba(71, 85, 105, 0.75);
   --card-icon-hover: #0f172a;
   --card-description: rgba(71, 85, 105, 0.8);
+  --swal-bg: #ffffff;
+  --swal-title: #1f2937;
+  --swal-text: #374151;
+  --swal-border: rgba(148, 163, 184, 0.25);
+  --swal-button-confirm-bg: #22c55e;
+  --swal-button-confirm-hover: #16a34a;
+  --swal-button-cancel-bg: #ef4444;
+  --swal-button-cancel-hover: #dc2626;
+  --swal-button-text: #ffffff;
   --panel-padding: 32px;
   --panel-radius: 18px;
   --panel-gap: 24px;
@@ -107,6 +116,15 @@ body.light-theme {
   --card-stack-gap: 24px;
   --card-padding-y: 22px;
   --card-padding-x: 26px;
+  --swal-bg: #ffffff;
+  --swal-title: #1f2937;
+  --swal-text: #374151;
+  --swal-border: rgba(148, 163, 184, 0.25);
+  --swal-button-confirm-bg: #22c55e;
+  --swal-button-confirm-hover: #16a34a;
+  --swal-button-cancel-bg: #ef4444;
+  --swal-button-cancel-hover: #dc2626;
+  --swal-button-text: #ffffff;
 }
 
 body.dark-theme {
@@ -154,6 +172,15 @@ body.dark-theme {
   --card-stack-gap: 22px;
   --card-padding-y: 20px;
   --card-padding-x: 24px;
+  --swal-bg: #0f172a;
+  --swal-title: #f8fafc;
+  --swal-text: #cbd5f5;
+  --swal-border: rgba(148, 163, 184, 0.25);
+  --swal-button-confirm-bg: #22c55e;
+  --swal-button-confirm-hover: #16a34a;
+  --swal-button-cancel-bg: #f87171;
+  --swal-button-cancel-hover: #ef4444;
+  --swal-button-text: #0f172a;
 }
 
 body.font-size-small {
