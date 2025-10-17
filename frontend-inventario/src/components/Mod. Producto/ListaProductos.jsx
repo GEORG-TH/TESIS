@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
@@ -24,6 +25,14 @@ const ListaProductos = () => {
 	const [proveedores, setProveedores] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const rowVariants = {
+		hidden: { opacity: 0, y: 10 },
+		visible: (i) => ({
+		opacity: 1,
+		y: 0,
+		transition: { delay: i * 0.05, duration: 0.3 }, 
+		}),
+	};
 
 	useEffect(() => {
 		cargarDatos();
@@ -325,6 +334,11 @@ const ListaProductos = () => {
 
 	return (
 		<LayoutDashboard>
+			<motion.div
+				initial={{ opacity: 0, y: 20 }}     
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.4, ease: "easeOut" }}
+				>
 			<div className="lista-panel-container productos-panel">
 				<div className="lista-panel-header">
 					<h2 className="lista-panel-title">Lista de Productos</h2>
@@ -373,6 +387,7 @@ const ListaProductos = () => {
 							</tr>
 						</thead>
 						<tbody>
+							<AnimatePresence>
 							{loading ? (
 								<tr>
 									<td className="sin-datos" colSpan={12}>
@@ -392,12 +407,19 @@ const ListaProductos = () => {
 									</td>
 								</tr>
 							) : (
-								productos.map((producto) => {
+								productos.map((producto, i) => {
 									const productoId = resolveProductoId(producto);
 									const estado = producto.estado ?? producto.estado_producto ?? producto.estadoProd;
 									const estaActivo = esEstadoActivo(estado);
 									return (
-										<tr key={productoId}>
+										<motion.tr
+											key={productoId}
+											custom={i}
+											initial="hidden"
+											animate="visible"
+											variants={rowVariants}
+											className="fila-roles"
+											>
 											<td>{productoId}</td>
 											<td>{producto.sku || "-"}</td>
 											<td>{producto.codEan || "-"}</td>
@@ -448,14 +470,16 @@ const ListaProductos = () => {
 													</button>
 												</div>
 											</td>
-										</tr>
+										</motion.tr>
 									);
 								})
 							)}
+							</AnimatePresence>
 						</tbody>
 					</table>
 				</div>
 			</div>
+			</motion.div>
 		</LayoutDashboard>
 	);
 };

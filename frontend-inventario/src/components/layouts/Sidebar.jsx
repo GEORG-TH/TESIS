@@ -7,6 +7,7 @@ import {
   FaTruck, FaHome
 } from "react-icons/fa";
 import "../styles/Sidebar.css";
+import { motion } from "framer-motion";
 
 export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChange }) {
   const navigate = useNavigate();
@@ -161,6 +162,13 @@ export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChan
   }, [isMobile, isOpen]);
 
   return (
+    <motion.aside
+      initial={{ x: -250 }}      // Oculto a la izquierda
+      animate={{ x: 0 }}         // Entra suavemente
+      exit={{ x: -250 }}         // Sale con animación inversa
+      transition={{ duration: 0.3 }}
+      className="fixed left-0 top-0 h-full w-64 bg-gray-800 text-white shadow-lg"
+    >
     <>
       {isMobile && (
         <button
@@ -227,5 +235,6 @@ export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChan
         )}
       </aside>
     </>
+    </motion.aside>
   );
 }

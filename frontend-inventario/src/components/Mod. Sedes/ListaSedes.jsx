@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
@@ -13,6 +14,14 @@ const ListaSedes = () => {
 	const [sedes, setSedes] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const rowVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.05, duration: 0.3 }, 
+    }),
+  };
 
 	useEffect(() => {
 		cargarSedes();
@@ -118,6 +127,11 @@ const ListaSedes = () => {
 
 	return (
 		<LayoutDashboard>
+			<motion.div
+				initial={{ opacity: 0, y: 20 }}     
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.4, ease: "easeOut" }}
+			>
 			<div className="lista-panel-container">
 				<div className="lista-panel-header">
 					<h2 className="lista-panel-title">Lista de Sedes</h2>
@@ -159,6 +173,7 @@ const ListaSedes = () => {
 							</tr>
 						</thead>
 						<tbody>
+							<AnimatePresence>
 							{loading ? (
 								<tr>
 									<td className="sin-datos" colSpan={5}>
@@ -178,8 +193,15 @@ const ListaSedes = () => {
 									</td>
 								</tr>
 							) : (
-								sedes.map((sede) => (
-									<tr key={sede.idSede}>
+								sedes.map((sede, i) => (
+									<motion.tr
+										key={sede.idSede}
+										custom={i}
+										initial="hidden"
+										animate="visible"
+										variants={rowVariants}
+										className="fila-sede"
+									>
 										<td>{sede.idSede}</td>
 										<td>{sede.nombreSede}</td>
 										<td>{sede.direccion}</td>
@@ -202,13 +224,15 @@ const ListaSedes = () => {
 												</button>
 											</div>
 										</td>
-									</tr>
+									</motion.tr>
 								))
 							)}
+							</AnimatePresence>
 						</tbody>
 					</table>
 				</div>
 			</div>
+			</motion.div>
 		</LayoutDashboard>
 	);
 };

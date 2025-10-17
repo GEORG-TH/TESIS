@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
@@ -19,6 +20,14 @@ const ListaCategorias = () => {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const rowVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.05, duration: 0.3 }, 
+    }),
+  };
 
   useEffect(() => {
     cargarDatos();
@@ -152,6 +161,11 @@ const ListaCategorias = () => {
 
   return (
     <LayoutDashboard>
+      <motion.div
+          initial={{ opacity: 0, y: 20 }}     
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
       <div className="lista-panel-container">
         <div className="lista-panel-header">
           <h2 className="lista-panel-title">Lista de Categorías</h2>
@@ -192,6 +206,7 @@ const ListaCategorias = () => {
               </tr>
             </thead>
             <tbody>
+              <AnimatePresence>
               {loading ? (
                 <tr>
                   <td className="sin-datos" colSpan={4}>
@@ -211,8 +226,15 @@ const ListaCategorias = () => {
                   </td>
                 </tr>
               ) : (
-                categorias.map((categoria) => (
-                  <tr key={categoria.id_cat}>
+                categorias.map((categoria, i) => (
+                  <motion.tr
+                      key={categoria.id_cat}
+                      custom={i}
+                      initial="hidden"
+                      animate="visible"
+                      variants={rowVariants}
+                      className="fila-categoria"
+                    >
                     <td>{categoria.id_cat}</td>
                     <td>{categoria.nombreCat}</td>
                     <td>{categoria.nombreArea}</td>
@@ -234,13 +256,15 @@ const ListaCategorias = () => {
                         </button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
       </div>
+      </motion.div>
     </LayoutDashboard>
   );
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import { getAreas, deleteArea, updateArea } from "../../api/areaApi";
 import LayoutDashboard from "../layouts/LayoutDashboard";
@@ -13,6 +14,14 @@ const AreaList = () => {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const rowVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.05, duration: 0.3 }, 
+    }),
+  };
 
   const cargarAreas = async () => {
     try {
@@ -102,6 +111,11 @@ const AreaList = () => {
 
   return (
     <LayoutDashboard>
+      <motion.div
+          initial={{ opacity: 0, y: 20 }}     
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
       <div className="lista-panel-container">
         <div className="lista-panel-header">
           <h2 className="lista-panel-title">Lista de Áreas</h2>
@@ -141,6 +155,7 @@ const AreaList = () => {
               </tr>
             </thead>
             <tbody>
+              <AnimatePresence>
               {loading ? (
                 <tr>
                   <td className="sin-datos" colSpan={3}>
@@ -160,8 +175,15 @@ const AreaList = () => {
                   </td>
                 </tr>
               ) : (
-                areas.map((area) => (
-                  <tr key={area.id_area}>
+                areas.map((area, i) => (
+                  <motion.tr
+                      key={area.id_area}
+                      custom={i}
+                      initial="hidden"
+                      animate="visible"
+                      variants={rowVariants}
+                      className="fila-areas"
+                    >
                     <td>{area.id_area}</td>
                     <td>{area.nombreArea}</td>
                     <td>
@@ -182,13 +204,15 @@ const AreaList = () => {
                         </button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
       </div>
+      </motion.div>
     </LayoutDashboard>
   );
 };
