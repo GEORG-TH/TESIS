@@ -4,7 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+
+import com.inventario.backend_inventario.Dto.UsuarioUpdateDto;
+import com.inventario.backend_inventario.Exception.ResourceConflictException;
+import com.inventario.backend_inventario.Model.Rol;
 import com.inventario.backend_inventario.Model.Usuario;
+import com.inventario.backend_inventario.Repository.RolRepository;
 import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import com.inventario.backend_inventario.Service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository repo;
+    private final RolRepository rolRepository;
 
     @Override
     public List<Usuario> listarUsuarios() { return repo.findAll(); }
@@ -21,10 +27,32 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Optional<Usuario> obtenerUsuarioPorId(Integer id) { return repo.findById(id); }
 
     @Override
-    public Usuario crearUsuario(Usuario u) { return repo.save(u); }
+    public Usuario crearUsuario(Usuario usuario) {
+        if (existeEmail(usuario.getEmail())) {
+            throw new ResourceConflictException("El email ya está en uso");
+        }
+        if (existeDni(usuario.getDni())) {
+            throw new ResourceConflictException("El DNI ya está registrado");
+        }
+        return repo.save(usuario);
+    }
 
     @Override
-    public Usuario actualizarUsuario(Usuario u) { return repo.save(u); }
+    public Usuario actualizarUsuario(Integer id, UsuarioUpdateDto usuarioUpdateDto) {
+        return repo.findById(id).map(uDB -> {
+            if (usuarioUpdateDto.getEmail() != null && existeEmailEnOtroUsuario(usuarioUpdateDto.getEmail(), id)) {
+                throw new ResourceConflictException("El email ya está en uso");
+            }
+            uDB.setNombre_u(usuarioUpdateDto.getNombre_u());
+            uDB.setEmail(usuarioUpdateDto.getEmail());
+
+            Rol rol = rolRepository.findById(usuarioUpdateDto.getRol().getId_rol())
+                    .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+            uDB.setRol(rol);
+
+            return repo.save(uDB);
+        }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    }
 
     @Override
     public void eliminarUsuario(Integer id) { repo.deleteById(id); }

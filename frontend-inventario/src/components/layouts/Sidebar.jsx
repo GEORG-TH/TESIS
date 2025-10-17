@@ -193,7 +193,7 @@ export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChan
           <>
             <div className="profile-section">
               <img
-                src="./logo_madrid.png"
+                src="../../logo_madrid.png"
                 alt="Perfil"
                 className="profile-img"
               />
