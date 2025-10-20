@@ -1,20 +1,42 @@
 import React from "react";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import GraficoUsuariosPorRol from "../Graficos/GraficoUsuariosPorRol"
+import FeedActividad from "../Graficos/FeedActividad";
+import "../styles/dashboardAdmin.css"
 
 export default function DashboardAdmin() {
   return (
     <LayoutDashboard>
-      <header className="header">
-        <h1>Panel del Administrador</h1>
-      </header>
-      <section className="content">
-        <p>
-          Bienvenido al panel principal. Aquí puedes gestionar usuarios, productos,
-          inventarios, reportes y configuraciones generales del sistema.
-        </p>
-        <GraficoUsuariosPorRol />
-      </section>
+      <div className="dashboard-admin-container">
+          <h1>Dashboard de Administrador</h1>
+          
+          <div className="dashboard-grid">
+
+              {/* --- FILA 1: TARJETAS KPI --- */}
+              <div className="grid-item-kpi">
+                  {/* <StatCard  ... /> */}
+              </div>
+              <div className="grid-item-kpi">
+                  {/* <StatCard  ... /> */}
+              </div>
+              <div className="grid-item-kpi">
+                  {/* <StatCard  ... /> */}
+              </div>
+              <div className="grid-item-kpi">
+                  {/* <StatCard  ... /> */}
+              </div>
+              {/** Gráficos y Listas */}
+              <div className="grid-item-large">
+                  <div className="card-widget">
+                      <h3>Usuarios por Rol</h3>
+                      <GraficoUsuariosPorRol />
+                  </div>
+              </div>
+              <div className="grid-item-large">
+                  <FeedActividad />
+              </div>
+          </div>
+      </div>
     </LayoutDashboard>
   );
 }

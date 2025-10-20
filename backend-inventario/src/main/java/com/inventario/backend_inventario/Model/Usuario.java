@@ -1,6 +1,11 @@
 package com.inventario.backend_inventario.Model;
 
-import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -13,7 +18,7 @@ import lombok.*;
 @ToString
 @Entity
 @Table(name = "USUARIO")
-public class Usuario implements Serializable {
+public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_u;
@@ -46,4 +51,41 @@ public class Usuario implements Serializable {
     @JoinColumn(name = "id_rol")
     private Rol rol;
     
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (rol == null || rol.getNombreRol() == null) {
+            return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        }
+        return List.of(new SimpleGrantedAuthority("ROLE_" + rol.getNombreRol()));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.pass;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.estado_u != null && this.estado_u == 1;
+    }
 }

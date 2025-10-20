@@ -5,15 +5,20 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.inventario.backend_inventario.Dto.CategoriaDto;
 import com.inventario.backend_inventario.Dto.ProductoDto;
 import com.inventario.backend_inventario.Dto.ProveedorDto;
 import com.inventario.backend_inventario.Model.Producto;
+import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.CategoriaRepository;
 import com.inventario.backend_inventario.Repository.ProductoRepository;
 import com.inventario.backend_inventario.Repository.ProveedorRepository;
+import com.inventario.backend_inventario.Repository.UsuarioRepository;
+import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.ProductoService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -28,6 +33,12 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Autowired
     private ProveedorRepository proveedorRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private HistorialActividadService historialActividadService;
 
     @Override
     public List<Producto> listarProductos() {
@@ -52,7 +63,22 @@ public class ProductoServiceImpl implements ProductoService {
         proveedorRepository.findById(producto.getProveedor().getId_proveedor())
                 .orElseThrow(() -> new EntityNotFoundException("Proveedor no encontrado"));
 
-        return productoRepository.save(producto);
+        Producto productoGuardado = productoRepository.save(producto);
+
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Creó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
+            
+            usuarioActual.ifPresent(usuario -> {
+                historialActividadService.registrarActividad(usuario, "CREACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return productoGuardado;
     }
 
     @Override
@@ -69,11 +95,43 @@ public class ProductoServiceImpl implements ProductoService {
         existente.setCategoria(producto.getCategoria());
         existente.setProveedor(producto.getProveedor());
 
-        return productoRepository.save(existente);
+        Producto productoGuardado = productoRepository.save(existente);
+
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Actualizó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
+            
+            usuarioActual.ifPresent(usuario -> {
+                historialActividadService.registrarActividad(usuario, "ACTUALIZACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+
+        return productoGuardado;
     }
 
     @Override
     public void eliminarProducto(Long id) {
+        Producto productoGuardado = productoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
+
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Eliminó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
+            
+            usuarioActual.ifPresent(usuario -> {
+                historialActividadService.registrarActividad(usuario, "ELIMINACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
         productoRepository.deleteById(id);
     }
     

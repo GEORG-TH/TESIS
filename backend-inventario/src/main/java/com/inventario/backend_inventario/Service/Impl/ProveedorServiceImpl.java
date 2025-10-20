@@ -4,11 +4,16 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.inventario.backend_inventario.Exception.ResourceConflictException;
 import com.inventario.backend_inventario.Model.Proveedor;
+import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.ProveedorRepository;
+import com.inventario.backend_inventario.Repository.UsuarioRepository;
+import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.ProveedorService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +22,10 @@ import jakarta.persistence.EntityNotFoundException;
 public class ProveedorServiceImpl implements ProveedorService{
     @Autowired
     private ProveedorRepository proveedorRepository;
+    @Autowired
+    private HistorialActividadService historialActividadService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Override
     public List<Proveedor> listarProveedores() {
@@ -36,7 +45,21 @@ public class ProveedorServiceImpl implements ProveedorService{
         proveedorRepository.findByEmail(proveedor.getEmail()).ifPresent(p -> {
             throw new ResourceConflictException("El email '" + proveedor.getEmail() + "' ya está registrado.");
         });
-        return proveedorRepository.save(proveedor);
+        Proveedor proveedorGuardado = proveedorRepository.save(proveedor);
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Creó el proveedor '" + proveedorGuardado.getNombre_proveedor() + "' (ID: " + proveedorGuardado.getId_proveedor() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return proveedorGuardado;
     }
 
     @Override
@@ -61,7 +84,22 @@ public class ProveedorServiceImpl implements ProveedorService{
         existente.setTelefono(proveedor.getTelefono());
         existente.setDireccion(proveedor.getDireccion());
 
-        return proveedorRepository.save(existente);
+        Proveedor proveedorGuardado = proveedorRepository.save(existente);
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Actualizó el proveedor '" + proveedorGuardado.getNombre_proveedor() + "' (ID: " + proveedorGuardado.getId_proveedor() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+
+        return proveedorGuardado;
     }
 
     @Override
@@ -69,7 +107,24 @@ public class ProveedorServiceImpl implements ProveedorService{
         if (!proveedorRepository.existsById(id)) {
             throw new EntityNotFoundException("Proveedor no encontrado con el ID: " + id);
         }
-        
+
+        Proveedor proveedorGuardado = proveedorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Proveedor no encontrado con el ID: " + id));
+
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Eliminó el proveedor '" + proveedorGuardado.getNombre_proveedor() + "' (ID: " + proveedorGuardado.getId_proveedor() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+
         proveedorRepository.deleteById(id);
     }
 }

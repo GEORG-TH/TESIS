@@ -14,10 +14,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.inventario.backend_inventario.Security.JwtAuthenticationFilter;
-import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
@@ -58,18 +56,8 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(UsuarioRepository usuarioRepo) {
         return username -> {
-            Usuario u = usuarioRepo.findByEmail(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-            String rol = u.getRol() != null ? u.getRol().getNombreRol() : "USER";
-            boolean disabled = (u.getEstado_u() != null && u.getEstado_u() == 0);
-            return User.withUsername(u.getEmail())
-                    .password(u.getPass())
-                    .authorities("ROLE_" + rol)
-                    .accountExpired(false)
-                    .accountLocked(false)
-                    .credentialsExpired(false)
-                    .disabled(disabled)
-                    .build();
+            return usuarioRepo.findByEmail(username)
+            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         };
     }
 

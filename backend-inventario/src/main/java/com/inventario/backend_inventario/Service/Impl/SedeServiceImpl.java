@@ -4,16 +4,25 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.inventario.backend_inventario.Model.Sede;
+import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.SedeRepository;
+import com.inventario.backend_inventario.Repository.UsuarioRepository;
+import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.SedeService;
 
 @Service
 public class SedeServiceImpl implements SedeService {
     @Autowired
     private SedeRepository sedeRepository;
+    @Autowired
+    private HistorialActividadService historialActividadService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Override
     public List<Sede> obtenerTodasLasSedes() {
@@ -27,7 +36,22 @@ public class SedeServiceImpl implements SedeService {
 
     @Override
     public Sede guardarSede(Sede sede) {
-        return sedeRepository.save(sede);
+        Sede sedeGuardada = sedeRepository.save(sede);
+
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Creó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return sedeGuardada;
     }
 
     @Override
@@ -37,13 +61,43 @@ public class SedeServiceImpl implements SedeService {
         sedeExistente.setNombreSede(sedeDetalles.getNombreSede());
         sedeExistente.setDireccion(sedeDetalles.getDireccion());
         sedeExistente.setAnexo(sedeDetalles.getAnexo());
-        return sedeRepository.save(sedeExistente);
+        Sede sedeGuardada = sedeRepository.save(sedeExistente);
+
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Actualizó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return sedeGuardada;
     }
 
     @Override
     public void eliminarSede(Integer id) {
         if (!sedeRepository.existsById(id)) {
             throw new RuntimeException("Sede no encontrada con el ID: " + id);
+        }
+        Sede sedeGuardada = sedeRepository.findById(id).orElseThrow(() -> new RuntimeException("Sede no encontrada con el ID: " + id));
+
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Eliminó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
         }
         sedeRepository.deleteById(id);
     }
