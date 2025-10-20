@@ -1,10 +1,15 @@
 package com.inventario.backend_inventario.Service.Impl;
 import com.inventario.backend_inventario.Model.Area;
+import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.AreaRepository;
+import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import com.inventario.backend_inventario.Service.AreaService;
+import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Exception.ResourceConflictException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +19,10 @@ public class AreaServiceImpl implements AreaService {
 
     @Autowired
     private AreaRepository areaRepository;
+    @Autowired
+    private HistorialActividadService historialActividadService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Override
     public List<Area> listarAreas() {
@@ -30,7 +39,21 @@ public class AreaServiceImpl implements AreaService {
         if (areaRepository.existsByNombreArea(area.getNombreArea())) {
             throw new IllegalArgumentException("El nombre del área ya está registrado");
         }
-        return areaRepository.save(area);
+        Area areaGuardada = areaRepository.save(area);
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Creó el área '" + areaGuardada.getNombreArea() + "' (ID: " + areaGuardada.getId_area() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return areaGuardada;
     }
 
     @Override
@@ -38,7 +61,21 @@ public class AreaServiceImpl implements AreaService {
         Area existente = areaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Área no encontrada"));
         existente.setNombreArea(area.getNombreArea());
-        return areaRepository.save(existente);
+        Area areaGuardada = areaRepository.save(existente);
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Actualizó el área '" + areaGuardada.getNombreArea() + "' (ID: " + areaGuardada.getId_area() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return areaGuardada;
     }
 
     @Override
@@ -48,6 +85,20 @@ public class AreaServiceImpl implements AreaService {
 
         if (area.getCategorias() != null && !area.getCategorias().isEmpty()) {
             throw new ResourceConflictException("No se puede eliminar el área porque tiene categorías asociadas.");
+        }
+
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Eliminó el área '" + area.getNombreArea() + "' (ID: " + area.getId_area() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
         }
 
         areaRepository.delete(area);

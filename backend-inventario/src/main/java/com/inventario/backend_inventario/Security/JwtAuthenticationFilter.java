@@ -1,5 +1,6 @@
 package com.inventario.backend_inventario.Security;
 
+import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -45,12 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             var usuarioOpt = usuarioRepo.findByEmail(email);
             if (usuarioOpt.isPresent()) {
+                Usuario usuario = usuarioOpt.get(); 
+
                 UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                usuarioOpt.get(),
-                                null,
-                                Collections.emptyList()
-                        );
+                new UsernamePasswordAuthenticationToken(
+                    usuario,
+                    null,
+                    usuario.getAuthorities()
+                );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }

@@ -4,11 +4,17 @@ import com.inventario.backend_inventario.Dto.AreaDto;
 import com.inventario.backend_inventario.Dto.CategoriaDto;
 import com.inventario.backend_inventario.Exception.ResourceConflictException;
 import com.inventario.backend_inventario.Model.Categoria;
+import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.CategoriaRepository;
+import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import com.inventario.backend_inventario.Repository.AreaRepository;
 import com.inventario.backend_inventario.Service.CategoriaService;
+import com.inventario.backend_inventario.Service.HistorialActividadService;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +24,10 @@ import java.util.stream.Collectors;
 public class CategoriaServiceImpl implements CategoriaService {
     @Autowired
     private CategoriaRepository categoriaRepository;
+    @Autowired
+    private HistorialActividadService historialActividadService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Autowired
     private AreaRepository areaRepository;
@@ -39,7 +49,22 @@ public class CategoriaServiceImpl implements CategoriaService {
         }
         areaRepository.findById(categoria.getArea().getId_area())
                 .orElseThrow(() -> new EntityNotFoundException("Área asociada no encontrada"));
-        return categoriaRepository.save(categoria);
+
+        Categoria categoriaGuardada = categoriaRepository.save(categoria);
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Creó la categoría '" + categoriaGuardada.getNombreCat() + "' (ID: " + categoriaGuardada.getId_cat() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return categoriaGuardada;
     }
 
     @Override
@@ -49,7 +74,21 @@ public class CategoriaServiceImpl implements CategoriaService {
 
         existente.setNombreCat(categoria.getNombreCat());
         existente.setArea(categoria.getArea());
-        return categoriaRepository.save(existente);
+        Categoria categoriaGuardada = categoriaRepository.save(existente);
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Actualizó la categoría '" + categoriaGuardada.getNombreCat() + "' (ID: " + categoriaGuardada.getId_cat() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return categoriaGuardada;
     }
 
     @Override
@@ -59,6 +98,19 @@ public class CategoriaServiceImpl implements CategoriaService {
 
         if (categoria.getProductos() != null && !categoria.getProductos().isEmpty()) {
             throw new ResourceConflictException("No se puede eliminar la categoría porque tiene productos asociados.");
+        }
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Eliminó la categoría '" + categoria.getNombreCat() + "' (ID: " + categoria.getId_cat() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
         }
         categoriaRepository.delete(categoria);
     }

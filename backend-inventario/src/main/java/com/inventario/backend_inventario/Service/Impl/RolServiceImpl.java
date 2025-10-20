@@ -1,8 +1,13 @@
 package com.inventario.backend_inventario.Service.Impl;
 import com.inventario.backend_inventario.Model.Rol;
+import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.RolRepository;
+import com.inventario.backend_inventario.Repository.UsuarioRepository;
+import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.RolService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +18,10 @@ public class RolServiceImpl implements RolService {
 
     @Autowired
     private RolRepository rolRepository;
+    @Autowired
+    private HistorialActividadService historialActividadService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Override
     public List<Rol> listarRoles() {
@@ -26,7 +35,21 @@ public class RolServiceImpl implements RolService {
 
     @Override
     public Rol crearRol(Rol rol) {
-        return rolRepository.save(rol);
+        Rol rolGuardado = rolRepository.save(rol);
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Creó el rol '" + rolGuardado.getNombreRol() + "' (ID: " + rolGuardado.getId_rol() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return rolGuardado;
     }
 
     @Override
@@ -34,11 +57,40 @@ public class RolServiceImpl implements RolService {
         Rol rol = rolRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rol no encontrado con ID: " + id));
         rol.setNombreRol(rolActualizado.getNombreRol());
-        return rolRepository.save(rol);
+        Rol rolGuardado = rolRepository.save(rol);
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Actualizó el rol '" + rolGuardado.getNombreRol() + "' (ID: " + rolGuardado.getId_rol() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
+        return rolGuardado;
     }
 
     @Override
     public void eliminarRol(Integer id) {
+        Rol rolGuardado = rolRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rol no encontrado con ID: " + id));
+        try {
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
+
+            String descripcion = "Eliminó el rol '" + rolGuardado.getNombreRol() + "' (ID: " + rolGuardado.getId_rol() + ").";
+
+            usuarioActual.ifPresent(u -> {
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+            });
+
+        } catch (Exception e) {
+            System.err.println("Error al registrar actividad: " + e.getMessage());
+        }
         rolRepository.deleteById(id);
     }
 }

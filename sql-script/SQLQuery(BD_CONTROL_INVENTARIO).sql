@@ -166,3 +166,15 @@ CREATE INDEX idx_usuario_email_pass ON USUARIO(email, pass);
 CREATE INDEX idx_usuario_dni ON USUARIO(dni);
 
 /*Modificaciones adicionales*/
+
+CREATE TABLE HISTORIAL_ACTIVIDAD (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    tipo_accion VARCHAR(50) NOT NULL,
+    descripcion VARCHAR(500) NOT NULL,
+    fecha_hora DATETIME NOT NULL,
+    id_usuario INT NOT NULL
+);
+
+ALTER TABLE HISTORIAL_ACTIVIDAD
+ADD CONSTRAINT FK_HistorialActividad_Usuario FOREIGN KEY (id_usuario)
+REFERENCES USUARIO(id_u);
