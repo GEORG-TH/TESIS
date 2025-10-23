@@ -1,7 +1,7 @@
 import "./styles/Login.css";
 import axios from "axios";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -112,8 +112,8 @@ function Login() {
           </button>
         </form>
 
-        <div className="card-footer">
-          <span>¿Necesitas ayuda? Contacta a soporte interno.</span>
+        <div className="forgot-password-link">
+         <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
         </div>
       </div>
     </div>

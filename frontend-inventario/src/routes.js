@@ -1,6 +1,8 @@
 import React from "react";
 import { Route } from "react-router-dom";
 import Login from "./components/Login";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 import DashboardAdmin from "./components/Dashboards/dashboardAdmin";
 import DashboardJefeInventario from "./components/Dashboards/dashboardJInventario";
 import DashboardOperadorRecepcion from "./components/Dashboards/dashboardORecepcion";
@@ -31,6 +33,8 @@ import Settings from "./components/Mod. Configuracion/Settings";
 
 const AppRoutes = [
   <Route key="login" path="/" element={<Login />} />,
+  <Route key="forgotPassword" path="/forgot-password" element={<ForgotPassword />} />,
+  <Route key="resetPassword" path="/reset-password" element={<ResetPassword />} />,
 
   <Route
     key="admin"
