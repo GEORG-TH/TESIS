@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.inventario.backend_inventario.Dto.UsuarioUpdateDto;
@@ -18,11 +19,13 @@ import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 
+
 @Service
 @RequiredArgsConstructor
 public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository userRepo;
     private final RolRepository rolRepository;
+    private final PasswordEncoder passwordEncoder;
     @Autowired
     private HistorialActividadService historialActividadService;
 
@@ -40,6 +43,12 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (existeDni(usuario.getDni())) {
             throw new ResourceConflictException("El DNI ya está registrado");
         }
+        String passwordPlano = usuario.getPassword(); 
+        
+        String passwordEncriptado = passwordEncoder.encode(passwordPlano);
+        
+        usuario.setPass(passwordEncriptado);
+        
         Usuario usuarioGuardado = userRepo.save(usuario);
 
         try {

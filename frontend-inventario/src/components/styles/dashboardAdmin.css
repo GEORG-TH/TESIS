@@ -29,11 +29,13 @@
 /* (Esto lo puse en FeedActividad.css, pero puedes ponerlo aquí 
    para que el gráfico también tenga fondo blanco) */
 .card-widget {
-    background-color: #ffffff;
+    background-color: var(--surface-color);
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--surface-border);
     height: 100%;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* --- RESPONSIVIDAD (IMPORTANTE) --- */
