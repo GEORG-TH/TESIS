@@ -4,10 +4,13 @@ import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import com.inventario.backend_inventario.Security.JwtUtil;
 import com.inventario.backend_inventario.Service.EmailService;
+import com.inventario.backend_inventario.Service.MfaService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +28,8 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private MfaService mfaService;
 
     public AuthController(UsuarioRepository usuarioRepo,
                           PasswordEncoder passwordEncoder,
@@ -61,6 +66,53 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("success", false, "message", "Credenciales inválidas"));
         }
+        
+        if (usuario.isMfaEnabled()) { 
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true); 
+            resp.put("mfaRequired", true);
+            resp.put("email", usuario.getEmail());
+            
+            return ResponseEntity.ok(resp);
+            
+        } else {
+            String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().getNombreRol(),"Sesion");
+
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true);
+            resp.put("mfaRequired", false);
+            resp.put("token", token);
+            resp.put("usuario", new LoginResponse(
+                    usuario.getId_u(),
+                    usuario.getDni(),
+                    usuario.getNombre_u(),
+                    usuario.getApellido_pat(),
+                    usuario.getApellido_mat(),
+                    usuario.getEmail(),
+                    usuario.getEstado_u(),
+                    usuario.getRol().getNombreRol(),
+                    usuario.isMfaEnabled()
+            ));
+            return ResponseEntity.ok(resp);
+        }
+    }
+
+    @PostMapping("/mfa/login-verify")
+    public ResponseEntity<Map<String, Object>> verifyMfaLogin(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String code = payload.get("code");
+
+        var usuarioOpt = usuarioRepo.findByEmail(email);
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "Usuario no encontrado"));
+        }
+        Usuario usuario = usuarioOpt.get();
+        
+        if (usuario.getMfaSecret() == null || !mfaService.verifyCode(usuario.getMfaSecret(), code)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "Código 2FA inválido"));
+        }
 
         String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().getNombreRol(),"Sesion");
 
@@ -75,10 +127,12 @@ public class AuthController {
                 usuario.getApellido_mat(),
                 usuario.getEmail(),
                 usuario.getEstado_u(),
-                usuario.getRol().getNombreRol()
+                usuario.getRol().getNombreRol(),
+                usuario.isMfaEnabled()
         ));
         return ResponseEntity.ok(resp);
     }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         Optional<Usuario> usuarioOpt = usuarioRepo.findByEmail(request.getEmail());
@@ -97,6 +151,7 @@ public class AuthController {
         }   
         return ResponseEntity.ok("Si existe una cuenta asociada a este correo, se ha enviado un enlace de restablecimiento.");
     }
+
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
         String token = request.getToken();
@@ -122,6 +177,48 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/mfa/setup")
+    public ResponseEntity<?> setupMfa(Authentication authentication) {
+        Usuario usuario = usuarioRepo.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+        String secret = mfaService.generateNewSecret();
+        String qrCodeUri = mfaService.generateQrCodeImageUri(secret, usuario.getEmail(), "TuAppInventario");
+
+        usuario.setMfaSecret(secret);
+        usuario.setMfaEnabled(false);
+        usuarioRepo.save(usuario);
+
+        return ResponseEntity.ok(Map.of("secret", secret, "qrCodeUri", qrCodeUri));
+    }
+
+    @PostMapping("/mfa/verify")
+    public ResponseEntity<?> verifyMfa(@RequestBody Map<String, String> payload, Authentication authentication) {
+        String code = payload.get("code");
+        
+        Usuario usuario = usuarioRepo.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+        if (mfaService.verifyCode(usuario.getMfaSecret(), code)) {
+            usuario.setMfaEnabled(true);
+            usuarioRepo.save(usuario);
+            return ResponseEntity.ok(Map.of("message", "2FA habilitado correctamente"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Código inválido"));
+        }
+    }
+    @PostMapping("/mfa/disable")
+    public ResponseEntity<?> disableMfa(Authentication authentication) {
+        Usuario usuario = usuarioRepo.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        
+        usuario.setMfaEnabled(false);
+        usuario.setMfaSecret(null); 
+        usuarioRepo.save(usuario);
+        
+        return ResponseEntity.ok(Map.of("message", "2FA deshabilitado correctamente"));
+    }
+
     public record LoginResponse(
         Integer id_u,
         String dni,
@@ -130,6 +227,7 @@ public class AuthController {
         String apellido_mat,
         String email,
         Integer estado_u,
-        String rol
+        String rol,
+        boolean mfaEnabled
     ) {}
 }

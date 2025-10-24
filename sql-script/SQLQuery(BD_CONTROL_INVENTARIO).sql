@@ -9,9 +9,12 @@ CREATE TABLE USUARIO (
 	nombre_u VARCHAR(50) NOT NULL,
 	apellido_pat VARCHAR(50) NOT NULL,
 	apellido_mat VARCHAR(50),
+    telefono VARCHAR(20) NOT NULL,
 	email VARCHAR(100) NOT NULL UNIQUE,
 	pass VARCHAR(255) NOT NULL,
-	estado_u BIT NOT NULL DEFAULT 1, 
+	estado_u BIT NOT NULL DEFAULT 1,
+    mfa_enabled BIT NOT NULL DEFAULT 0,
+    mfa_secret NVARCHAR(255) NULL,
 	id_rol INT NOT NULL
 );
 CREATE TABLE ROL (

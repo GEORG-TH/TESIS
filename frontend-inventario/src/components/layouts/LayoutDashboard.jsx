@@ -8,7 +8,7 @@ export default function LayoutDashboard({ children }) {
   const usuario = JSON.parse(localStorage.getItem("usuario")) || {};
   const rol = typeof usuario.rol === "string" ? usuario.rol : usuario.rol|| null;
   const empresa = "Cencosud - Wong SAC";
-  const version = "v1.0.0";
+  const version = "v1.0.2";
   const { settings, updateSetting } = useSettings();
 
   const handleSidebarToggle = (collapsed) => {

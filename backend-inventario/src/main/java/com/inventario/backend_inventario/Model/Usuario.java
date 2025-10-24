@@ -21,31 +21,41 @@ import lombok.*;
 public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_u")
     private Integer id_u;
 
     @NotBlank(message = "El DNI es obligatorio")
     @Size(min = 8, max = 8, message = "El DNI debe tener exactamente 8 caracteres")
     @Pattern(regexp = "\\d{8}", message = "El DNI solo debe contener números")
-    @Column(nullable = false, unique = true)
+    @Column(name = "dni", nullable = false, unique = true)
     private String dni;
 
     @NotBlank(message = "El nombre es obligatorio")
-    @Column(nullable = false)
+    @Column(name = "nombre_u", nullable = false)
     private String nombre_u;
 
+    @Column(name = "apellido_pat")
     private String apellido_pat;
+    @Column(name = "apellido_mat")
     private String apellido_mat;
 
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email no tiene un formato válido")
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Column(nullable = false)
+    @Column(name = "pass", nullable = false)
     private String pass;
 
+    @Column(name = "estado_u")
     private Integer estado_u;
+
+    @Column(name = "mfa_enabled", nullable = false)
+    private boolean mfaEnabled = false;
+
+    @Column(name = "mfa_secret")
+    private String mfaSecret;
 
     @ManyToOne
     @JoinColumn(name = "id_rol")

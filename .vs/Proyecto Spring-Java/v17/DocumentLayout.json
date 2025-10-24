@@ -23,14 +23,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "SQLQuery(BD_CONTROL_INVENTARIO).sql - localhost.CONTROL_INVENTARIO_BD (SWIFT16-VJSL\\VJSL (78))",
+              "Title": "SQLQuery(BD_CONTROL_INVENTARIO).sql - localhost.master (SWIFT16-VJSL\\VJSL (67))",
               "DocumentMoniker": "C:\\Users\\VJSL\\OneDrive\\Desktop\\Proyecto Spring-Java\\sql-script\\SQLQuery(BD_CONTROL_INVENTARIO).sql",
               "RelativeDocumentMoniker": "sql-script\\SQLQuery(BD_CONTROL_INVENTARIO).sql",
-              "ToolTip": "C:\\Users\\VJSL\\OneDrive\\Desktop\\Proyecto Spring-Java\\sql-script\\SQLQuery(BD_CONTROL_INVENTARIO).sql - localhost.CONTROL_INVENTARIO_BD (SWIFT16-VJSL\\VJSL (78))",
-              "RelativeToolTip": "sql-script\\SQLQuery(BD_CONTROL_INVENTARIO).sql - localhost.CONTROL_INVENTARIO_BD (SWIFT16-VJSL\\VJSL (78))",
+              "ToolTip": "C:\\Users\\VJSL\\OneDrive\\Desktop\\Proyecto Spring-Java\\sql-script\\SQLQuery(BD_CONTROL_INVENTARIO).sql - localhost.master (SWIFT16-VJSL\\VJSL (67))",
+              "RelativeToolTip": "sql-script\\SQLQuery(BD_CONTROL_INVENTARIO).sql - localhost.master (SWIFT16-VJSL\\VJSL (67))",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
               "WhenOpened": "2025-10-16T21:46:42.745Z",
-              "EditorCaption": " - localhost.CONTROL_INVENTARIO_BD (SWIFT16-VJSL\\VJSL (78))"
+              "EditorCaption": " - localhost.master (SWIFT16-VJSL\\VJSL (67))"
             }
           ]
         }
