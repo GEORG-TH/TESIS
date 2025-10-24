@@ -68,7 +68,7 @@ const ForgotPassword = () => {
                 </form>
 
                 <div className="forgot-password-link">
-                    <Link to="/">Volver a iniciar sesión</Link>
+                    <Link to="/">¿La recordaste? Volver a iniciar sesión</Link>
                 </div>
             </div>
         </div>

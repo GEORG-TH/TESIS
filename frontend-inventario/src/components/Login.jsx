@@ -9,32 +9,8 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const { data } = await axios.post("http://localhost:8080/api/auth/login", { email, pass });
-
-      if (!data.success) {
-        setError(data.message || "No se pudo iniciar sesión");
-        return;
-      }
-
-      if (data.usuario?.estado_u === 0) {
-        setError("Cuenta desactivada");
-        return;
-      }
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("usuario", JSON.stringify(data.usuario));
-
-      navigate("/loading_login");
-
-      setTimeout(() => {
-        const rol = data.usuario.rol;
-        switch (rol) {
+  const navigateBasedOnRole = (rol) => {
+    switch (rol) {
           case "Administrador":
             navigate("/dashboard-administrador");
             break;
@@ -53,16 +29,46 @@ function Login() {
           default:
             navigate("/usuarios");
             break;
-        }
-    }, 2000);
-    } catch (err) {
-      const status = err?.response?.status;
-      if (status === 403) setError("Cuenta desactivada");
-      else if (status === 401) setError("Credenciales inválidas");
-      else setError(err?.response?.data?.message || "Error al conectar con el servidor");
-    } finally {
-      setLoading(false);
     }
+  };
+  const handleLogin = async (e) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+        try {
+            const { data } = await axios.post("http://localhost:8080/api/auth/login", { email, pass });
+
+            if (!data.success) {
+                setError(data.message || "No se pudo iniciar sesión");
+                return;
+            }
+
+            if (data.mfaRequired) {
+                navigate('/verify-2fa', { state: { email: data.email } });
+                
+            } else {
+                if (data.usuario?.estado_u === 0) {
+                    setError("Cuenta desactivada");
+                    return;
+                }
+
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+                navigate("/loading_login");
+
+                setTimeout(() => {
+                    navigateBasedOnRole(data.usuario.rol);
+                }, 2000);
+            }
+        } catch (err) {
+            const status = err?.response?.status;
+            if (status === 403) setError("Cuenta desactivada");
+            else if (status === 401) setError("Credenciales inválidas");
+            else setError(err?.response?.data?.message || "Error al conectar con el servidor");
+        } finally {
+            setLoading(false);
+        }
   };
 
   return (
@@ -113,7 +119,7 @@ function Login() {
         </form>
 
         <div className="forgot-password-link">
-         <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
+         <Link to="/forgot-password">¿Olvidaste tu contraseña? Reestablécela aquí</Link>
         </div>
       </div>
     </div>

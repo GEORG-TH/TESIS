@@ -3,6 +3,7 @@ import { Route } from "react-router-dom";
 import Login from "./components/Login";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
+import MfaVerify from "./components/MfaVerify";
 import DashboardAdmin from "./components/Dashboards/dashboardAdmin";
 import DashboardJefeInventario from "./components/Dashboards/dashboardJInventario";
 import DashboardOperadorRecepcion from "./components/Dashboards/dashboardORecepcion";
@@ -35,6 +36,7 @@ const AppRoutes = [
   <Route key="login" path="/" element={<Login />} />,
   <Route key="forgotPassword" path="/forgot-password" element={<ForgotPassword />} />,
   <Route key="resetPassword" path="/reset-password" element={<ResetPassword />} />,
+  <Route key="mfaVerify" path="/verify-2fa" element={<MfaVerify />} />,
 
   <Route
     key="admin"
