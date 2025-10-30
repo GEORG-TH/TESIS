@@ -1,35 +1,39 @@
-import React from "react";
+import React, { useCallback } from "react"; // <-- ASEGÚRATE DE IMPORTAR useCallback
 import Footer from "./Footer";
 import Sidebar from "./Sidebar";
-import { useSettings } from "../Mod. Configuracion/SettingsContext";
+import { useGlobalStore } from "../../store/useGlobalStore"; // Ajusta la ruta si es necesario
 import "../styles/LayoutDashboard.css";
 
 export default function LayoutDashboard({ children }) {
-  const usuario = JSON.parse(localStorage.getItem("usuario")) || {};
-  const rol = typeof usuario.rol === "string" ? usuario.rol : usuario.rol|| null;
-  const empresa = "Cencosud - Wong SAC";
-  const version = "v1.0.2";
-  const { settings, updateSetting } = useSettings();
+  // Obtenemos el estado Y la acción 'set' de Zustand
+  const { sidebarCollapsed, showFooter, setSidebarCollapsed } = useGlobalStore();
 
-  const handleSidebarToggle = (collapsed) => {
-    updateSetting("sidebarCollapsed", collapsed);
-  };
+  const empresa = "React+Vite-SpringBoot";
+  const version = "v1.0.3";
 
-  const layoutClassName = `layout-dashboard${settings.sidebarCollapsed ? " layout-dashboard--collapsed" : ""}`;
+  // Usamos 'useCallback' para que la función NO se vuelva a crear en cada render.
+  // Esto rompe el bucle infinito.
+  const handleSidebarToggle = useCallback((newCollapsedState) => {
+    setSidebarCollapsed(newCollapsedState);
+  }, [setSidebarCollapsed]); // La dependencia es estable
+
+  // El className se basa en el estado de Zustand
+  const layoutClassName = `layout-dashboard${
+    sidebarCollapsed ? " layout-dashboard--collapsed" : ""
+  }`;
 
   return (
     <div className={layoutClassName}>
       <Sidebar
-        rolUsuario={rol}
-        collapsed={settings.sidebarCollapsed}
+        // Pasamos el estado de Zustand como prop
+        collapsed={sidebarCollapsed}
+        // Pasamos la función estable como prop
         onCollapsedChange={handleSidebarToggle}
       />
       <main className="main-content">
         <div className="main-scroll-area">{children}</div>
-        {settings.showFooter && <Footer empresa={empresa} version={version} />}
+        {showFooter && <Footer empresa={empresa} version={version} />}
       </main>
     </div>
   );
 }
-
-

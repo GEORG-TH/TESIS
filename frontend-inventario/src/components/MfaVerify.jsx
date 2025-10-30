@@ -1,25 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import './styles/Login.css';
 import LoadingScreen from './LoadingScreen_login';
-
+import { useForm } from "react-hook-form";
+import { z } from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { mfaLoginVerify } from '../api/authApi';
+import { useGlobalStore } from '../store/useGlobalStore';
+const mfaSchema = z.object({
+  mfaCode: z.string().trim().length(6, "El código debe tener 6 dígitos"),
+});
 const MfaVerify = () => {
-    const [mfaCode, setMfaCode] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    
     const navigate = useNavigate();
     const location = useLocation();
-    
     const email = location.state?.email;
-
+    const loginAction = useGlobalStore((state) => state.login);
+    const {
+      register,
+      handleSubmit,
+      formState: { errors: formErrors },
+      setError,
+    } = useForm({
+      resolver: zodResolver(mfaSchema),
+    });
     useEffect(() => {
         if (!email) {
-            setError("Sesión inválida. Por favor, inicia sesión de nuevo.");
+            setError("mfaCode", { type: "manual", message: "Sesión inválida. Por favor, inicia sesión de nuevo." });
             setTimeout(() => navigate('/'), 2000);
         }
-    }, [email, navigate]);
+    }, [email, navigate, setError]);
 
     const navigateBasedOnRole = (rol) => {
         switch (rol) {
@@ -45,44 +56,51 @@ const MfaVerify = () => {
     };
 
     const handleLoginSuccess = (data) => {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("usuario", JSON.stringify(data.usuario));
+        loginAction(data.token, data.usuario);
+        console.log("[Login] Éxito. Guardando en Zustand:", data.usuario);
 
         navigate("/loading_login");
 
         setTimeout(() => {
-            navigateBasedOnRole(data.usuario.rol);
+            navigateBasedOnRole(data.usuario?.rol);
         }, 2000);
     };
 
-    const handleMfaSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
-
-        try {
-            const { data } = await axios.post("http://localhost:8080/api/auth/mfa/login-verify", {
-                email,
-                code: mfaCode
-            });
-
-            if (!data.success) {
-                setError(data.message || "Código 2FA inválido");
-                return;
-            }
-
-            handleLoginSuccess(data);
-
-        } catch (err) {
-            const status = err?.response?.status;
-            if (status === 401) setError("Código 2FA inválido");
-            else setError(err?.response?.data?.message || "Error al verificar el código");
-        } finally {
-            setLoading(false);
+    const { 
+      mutate, 
+      isPending, 
+      error: mutationError
+    } = useMutation({
+      mutationFn: mfaLoginVerify,
+      onSuccess: (data) => {
+        if (!data.success) {
+          setError("mfaCode", { type: "manual", message: data.message || "Código 2FA inválido" });
+        } else {
+          handleLoginSuccess(data);
         }
+      },
+      onError: (err) => {
+        const status = err?.response?.status;
+        const message = err?.response?.data?.message || "Error al verificar el código";
+        if (status === 401) {
+          setError("mfaCode", { type: "manual", message: "Código 2FA inválido" });
+        } else {
+          setError("mfaCode", { type: "manual", message });
+        }
+      }
+    });
+
+    const onSubmit = (formData) => {
+      const payload = {
+        email: email,
+        code: formData.mfaCode
+      };
+      mutate(payload);
     };
 
-    if (loading) {
+    const errorMessage = formErrors.mfaCode?.message;
+
+    if (isPending) {
         return <LoadingScreen />;
     }
 
@@ -102,26 +120,29 @@ const MfaVerify = () => {
                     <strong> {email || 'tu cuenta'}</strong>.
                 </p>
 
-                {error && <div className="error-message">{error}</div>}
+                {errorMessage && <div className="error-message">{errorMessage}</div>}
 
-                <form className="card-form" onSubmit={handleMfaSubmit}>
+                <form className="card-form" onSubmit={handleSubmit(onSubmit)}>
                     <label className="input-label" htmlFor="mfaCode">Código de autenticación</label>
                     <input
                         className="input"
                         type="text"
                         id="mfaCode"
-                        value={mfaCode}
-                        onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                        {...register("mfaCode", {
+                            onChange: (e) => {
+                              e.target.value = e.target.value.replace(/\D/g, '');
+                            }
+                          })}
                         placeholder="000000"
                         inputMode="numeric"
                         autoComplete="one-time-code"
                         maxLength={6}
-                        disabled={loading || !email}
+                        disabled={isPending || !email}
                         required
                     />
 
-                    <button type="submit" className="button" disabled={loading || !email}>
-                        {loading ? 'Validando código…' : 'Verificar código'}
+                    <button type="submit" className="button" disabled={isPending || !email}>
+                        {isPending ? 'Validando código…' : 'Verificar código'}
                     </button>
                 </form>
 

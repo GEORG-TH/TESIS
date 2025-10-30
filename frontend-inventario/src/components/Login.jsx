@@ -1,14 +1,28 @@
+import React from "react";
 import "./styles/Login.css";
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate, Link } from 'react-router-dom';
-
+import { useForm } from "react-hook-form";
+import { z } from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { login } from "../api/authApi";
+import { useGlobalStore } from '../store/useGlobalStore';
+const loginSchema = z.object({
+  email: z.string().trim().email("Debe ser un email válido"),
+  pass: z.string().min(1, "La contraseña no puede estar vacía"),
+});
 function Login() {
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const {
+		register,
+		handleSubmit,
+		formState: { errors: formErrors },
+	} = useForm({
+		resolver: zodResolver(loginSchema),
+	});
+  const loginAction = useGlobalStore((state) => state.login);
   const navigateBasedOnRole = (rol) => {
     switch (rol) {
           case "Administrador":
@@ -31,45 +45,43 @@ function Login() {
             break;
     }
   };
-  const handleLogin = async (e) => {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
-        try {
-            const { data } = await axios.post("http://localhost:8080/api/auth/login", { email, pass });
+  const { 
+    mutate, 
+    isPending, 
+    error: mutationError
+  } = useMutation({
+		mutationFn: login, 
+		
+    onSuccess: (data) => {
+      if (data.mfaRequired) {
+				navigate('/verify-2fa', { state: { email: data.email } });
+			} else {
+				loginAction(data.token, data.usuario);
+				navigate("/loading_login");
 
-            if (!data.success) {
-                setError(data.message || "No se pudo iniciar sesión");
-                return;
-            }
-
-            if (data.mfaRequired) {
-                navigate('/verify-2fa', { state: { email: data.email } });
-                
-            } else {
-                if (data.usuario?.estado_u === 0) {
-                    setError("Cuenta desactivada");
-                    return;
-                }
-
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("usuario", JSON.stringify(data.usuario));
-
-                navigate("/loading_login");
-
-                setTimeout(() => {
-                    navigateBasedOnRole(data.usuario.rol);
-                }, 2000);
-            }
-        } catch (err) {
-            const status = err?.response?.status;
-            if (status === 403) setError("Cuenta desactivada");
-            else if (status === 401) setError("Credenciales inválidas");
-            else setError(err?.response?.data?.message || "Error al conectar con el servidor");
-        } finally {
-            setLoading(false);
-        }
+				setTimeout(() => {
+					navigateBasedOnRole(data.usuario?.rol);
+				}, 2000);
+			}
+		},
+    onError: (err) => {
+      console.error("Error de login:", err);
+    }
+	});
+  const onSubmit = (data) => {
+		mutate(data);
+	};
+  const getErrorMessage = () => {
+    if (formErrors.email) return formErrors.email.message;
+    if (formErrors.pass) return formErrors.pass.message;
+    if (!mutationError) return null;
+    const status = mutationError?.response?.status;
+    if (status === 403) return "Cuenta desactivada";
+    if (status === 401) return "Credenciales inválidas";
+    return mutationError?.response?.data?.message || mutationError.message || "Error al conectar con el servidor";
   };
+
+  const errorMessage = getErrorMessage();
 
   return (
     <div className="container">
@@ -81,10 +93,8 @@ function Login() {
             <p>Inicia sesión con tus credenciales corporativas.</p>
           </div>
         </div>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <form className="card-form" onSubmit={handleLogin}>
+        {errorMessage && <div className="error-message">{errorMessage}</div>}
+        <form className="card-form" onSubmit={handleSubmit(onSubmit)}>
           <label className="input-label" htmlFor="email">
             Correo electrónico
           </label>
@@ -92,13 +102,12 @@ function Login() {
             id="email"
             type="email"
             placeholder="nombre.apellido@empresa.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            {...register("email")}
             required
             className="input"
             autoComplete="username"
           />
-
+          
           <label className="input-label" htmlFor="password">
             Contraseña
           </label>
@@ -106,15 +115,14 @@ function Login() {
             id="password"
             type="password"
             placeholder="********"
-            value={pass}
-            onChange={(e) => setPass(e.target.value)}
+            {...register("pass")}
             required
             className="input"
             autoComplete="current-password"
           />
 
-          <button type="submit" className="button" disabled={loading}>
-            {loading ? "Validando credenciales…" : "Ingresar"}
+          <button type="submit" className="button" disabled={isPending}>
+            {isPending ? "Validando credenciales…" : "Ingresar"}
           </button>
         </form>
 

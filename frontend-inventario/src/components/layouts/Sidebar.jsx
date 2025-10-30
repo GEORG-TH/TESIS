@@ -8,32 +8,30 @@ import {
 } from "react-icons/fa";
 import "../styles/Sidebar.css";
 import { motion } from "framer-motion";
+import { useGlobalStore } from "../../store/useGlobalStore";
 
-export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChange }) {
+export default function Sidebar({ collapsed = false, onCollapsedChange }) {
   const navigate = useNavigate();
+  const user = useGlobalStore((state) => state.user);
+  console.log("[Sidebar] Datos del usuario en Zustand:", user);
   const MOBILE_QUERY = "(max-width: 420px)";
   const getIsMobile = () =>
     typeof window !== "undefined" && window.matchMedia
       ? window.matchMedia(MOBILE_QUERY).matches
       : false;
   const [isMobile, setIsMobile] = useState(getIsMobile);
-  const [isOpen, setIsOpen] = useState(() => (!collapsed));
-
-  const usuario = JSON.parse(localStorage.getItem("usuario")) || {};
-  const nombreCompleto = `${usuario.nombre_u || ""} ${usuario.apellido_pat || ""}`;
-  const email = usuario.email || "";
+  const isOpen = isMobile ? isMobileOpen : !collapsed;
+  const logout = useGlobalStore((state) => state.logout);
+  const nombreCompleto = `${user?.nombre_u || ""} ${user?.apellido_pat || ""}`;
+  const email = user?.email || "";
+  const rolUsuario = user?.rol || null;
 
   const toggleSidebar = () => {
     if (isMobile) {
       setIsOpen((prev) => !prev);
       return;
     }
-
-    setIsOpen((prev) => {
-      const nextOpen = !prev;
-      onCollapsedChange?.(!nextOpen);
-      return nextOpen;
-    });
+    onCollapsedChange(!collapsed);
   };
 
   const handleMenuNavigation = (path) => {
@@ -62,7 +60,7 @@ export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChan
     });
 
     if (result.isConfirmed) {
-      localStorage.clear();
+      logout();
       Swal.fire({
         title: "Sesión cerrada",
         text: "Has salido del sistema correctamente.",
@@ -75,22 +73,16 @@ export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChan
   };
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) {
-      return undefined;
-    }
-
     const mediaQuery = window.matchMedia(MOBILE_QUERY);
-    const handleMediaChange = (event) => setIsMobile(event.matches);
-
+    const handleMediaChange = (event) => {
+      setIsMobile(event.matches);
+      if (event.matches) {
+        setIsMobileOpen(false);
+      }
+    };
     setIsMobile(mediaQuery.matches);
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handleMediaChange);
-      return () => mediaQuery.removeEventListener("change", handleMediaChange);
-    }
-
-    mediaQuery.addListener(handleMediaChange);
-    return () => mediaQuery.removeListener(handleMediaChange);
+    mediaQuery.addEventListener("change", handleMediaChange);
+    return () => mediaQuery.removeEventListener("change", handleMediaChange);
   }, []);
 
   const menuPorRol = {
@@ -140,16 +132,6 @@ export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChan
   const menu = menuPorRol[rolUsuario] || [];
 
   useEffect(() => {
-    if (isMobile) {
-      setIsOpen(false);
-      return undefined;
-    }
-
-    setIsOpen(!collapsed);
-    return undefined;
-  }, [collapsed, isMobile]);
-
-  useEffect(() => {
     if (!isMobile) {
       document.body.style.overflow = "";
       return undefined;
@@ -163,9 +145,9 @@ export default function Sidebar({ rolUsuario, collapsed = false, onCollapsedChan
 
   return (
     <motion.aside
-      initial={{ x: -250 }}      // Oculto a la izquierda
-      animate={{ x: 0 }}         // Entra suavemente
-      exit={{ x: -250 }}         // Sale con animación inversa
+      initial={{ x: -250 }} 
+      animate={{ x: 0 }}  
+      exit={{ x: -250 }}         
       transition={{ duration: 0.3 }}
       className="fixed left-0 top-0 h-full w-64 bg-gray-800 text-white shadow-lg"
     >

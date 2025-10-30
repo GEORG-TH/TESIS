@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
 import "../styles/Footer.css";
+import { useGlobalStore } from "../../store/useGlobalStore";
 
 export default function Footer({ mostrarUsuario = true, empresa = "Empresa S.A.", version = "v1.0.0" }) {
-  const usuario = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("usuario")) || null;
-    } catch {
-      return null;
-    }
-  })();
+  const user = useGlobalStore((state) => state.user);
 
-  const nombreUsuario = usuario ? `${usuario.nombre_u || ""} ${usuario.apellido_pat || ""}`.trim() : null;
-  const rolUsuario = usuario ? usuario.rol || null : null;
+  const nombreUsuario = user ? `${user.nombre_u || ""} ${user.apellido_pat || ""}`.trim() : null;
+  const rolUsuario = user?.rol || null;
   const anio = new Date().getFullYear();
 
   const [horaActual, setHoraActual] = useState(new Date());
