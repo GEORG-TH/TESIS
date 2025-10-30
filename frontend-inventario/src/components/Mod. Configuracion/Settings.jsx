@@ -1,5 +1,5 @@
 import React from "react";
-import { useSettings } from "../Mod. Configuracion/SettingsContext";
+import { useGlobalStore } from '../../store/useGlobalStore';
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/Settings.css";
 
@@ -38,8 +38,10 @@ const densityOptions = [
 ];
 
 const Settings = () => {
-    const { settings, updateSetting } = useSettings();
-
+    const { 
+      theme, fontSize, density, sidebarCollapsed, showFooter,
+      setTheme, setFontSize, setDensity, setSidebarCollapsed, setShowFooter 
+    } = useGlobalStore();
     return (
         <LayoutDashboard>
             <div className="settings-panel">
@@ -58,13 +60,13 @@ const Settings = () => {
                     </div>
                     <div className="settings-options settings-options--grid">
                         {themeOptions.map((option) => {
-                            const isActive = settings.theme === option.value;
+                            const isActive = theme === option.value;
                             return (
                                 <button
                                     key={option.value}
                                     type="button"
                                     className={`settings-button ${isActive ? "is-active" : ""}`}
-                                    onClick={() => updateSetting("theme", option.value)}
+                                    onClick={() => setTheme(option.value)}
                                     aria-pressed={isActive}
                                 >
                                     <span
@@ -96,8 +98,8 @@ const Settings = () => {
                             <select
                                 id="font-size-select"
                                 className="settings-select"
-                                value={settings.fontSize}
-                                onChange={(event) => updateSetting("fontSize", event.target.value)}
+                                value={fontSize}
+                                onChange={(event) => setFontSize(event.target.value)}
                             >
                                 {Object.entries(fontSizeLabels).map(([value, label]) => (
                                     <option key={value} value={value}>
@@ -119,13 +121,13 @@ const Settings = () => {
                     </div>
                     <div className="settings-options settings-options--grid">
                         {densityOptions.map((option) => {
-                            const isActive = settings.density === option.value;
+                            const isActive = density === option.value;
                             return (
                                 <button
                                     key={option.value}
                                     type="button"
                                     className={`settings-button ${isActive ? "is-active" : ""}`}
-                                    onClick={() => updateSetting("density", option.value)}
+                                    onClick={() => setDensity(option.value)}
                                     aria-pressed={isActive}
                                 >
                                     <span className="settings-button-text">
@@ -152,14 +154,14 @@ const Settings = () => {
                         </div>
                         <button
                             type="button"
-                            className={`settings-switch ${settings.sidebarCollapsed ? "is-on" : ""}`}
-                            onClick={() => updateSetting("sidebarCollapsed", !settings.sidebarCollapsed)}
-                            aria-pressed={settings.sidebarCollapsed}
+                            className={`settings-switch ${sidebarCollapsed ? "is-on" : ""}`}
+                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                            aria-pressed={sidebarCollapsed}
                         >
                             <span className="settings-switch-track" aria-hidden="true">
                                 <span className="settings-switch-thumb" aria-hidden="true" />
                             </span>
-                            <span className="settings-switch-label">{settings.sidebarCollapsed ? "Activado" : "Desactivado"}</span>
+                            <span className="settings-switch-label">{sidebarCollapsed ? "Activado" : "Desactivado"}</span>
                         </button>
                     </div>
                 </section>
@@ -178,14 +180,14 @@ const Settings = () => {
                         </div>
                         <button
                             type="button"
-                            className={`settings-switch ${settings.showFooter ? "is-on" : ""}`}
-                            onClick={() => updateSetting("showFooter", !settings.showFooter)}
-                            aria-pressed={settings.showFooter}
+                            className={`settings-switch ${showFooter ? "is-on" : ""}`}
+                            onClick={() => setShowFooter(!showFooter)}
+                            aria-pressed={showFooter}
                         >
                             <span className="settings-switch-track" aria-hidden="true">
                                 <span className="settings-switch-thumb" aria-hidden="true" />
                             </span>
-                            <span className="settings-switch-label">{settings.showFooter ? "Visible" : "Oculto"}</span>
+                            <span className="settings-switch-label">{showFooter ? "Visible" : "Oculto"}</span>
                         </button>
                     </div>
                 </section>

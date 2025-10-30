@@ -1,66 +1,65 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { createSede } from "../../api/sedeApi";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleRegistrar.css";
+import { useForm } from "react-hook-form";
+import { z } from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const MySwal = withReactContent(Swal);
-
+const sedeSchema = z.object({
+  nombreSede: z.string().trim().min(4, "El nombre de la sede es obligatorio (mín. 4)"),
+  direccion: z.string().trim().min(10, "La dirección es obligatoria (mín. 10)"),
+  anexo: z.string().trim().min(6, "El anexo es obligatorio (mín. 6)"),
+});
 const RegistrarSede = () => {
 	const navigate = useNavigate();
-	const [formData, setFormData] = useState({
+	const queryClient = useQueryClient();
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+		reset,
+	} = useForm({
+		resolver: zodResolver(sedeSchema),
+		defaultValues: {
 		nombreSede: "",
 		direccion: "",
 		anexo: "",
+    }
 	});
-
-	const handleChange = (event) => {
-		const { name, value } = event.target;
-		setFormData((prev) => ({ ...prev, [name]: value }));
-	};
-
-	const handleSubmit = async (event) => {
-		event.preventDefault();
-
-		if (!formData.nombreSede || !formData.direccion || !formData.anexo) {
-			MySwal.fire("Error", "Completa todos los campos obligatorios", "warning");
-			return;
-		}
-
-		try {
-			const payload = {
-				nombreSede: formData.nombreSede,
-				direccion: formData.direccion,
-				anexo: formData.anexo,
-			};
-
-			await createSede(payload);
-
+	const createSedeMutation = useMutation({
+		mutationFn: createSede,
+		onSuccess: () => {
 			MySwal.fire("Éxito", "Sede registrada correctamente", "success");
-			setFormData({ nombreSede: "", direccion: "", anexo: "" });
-		} catch (error) {
+			queryClient.invalidateQueries(["sedes"]); 
+			reset();
+		},
+		onError: (error) => {
 			console.error("Error al registrar la sede:", error);
-
 			if (error.response?.data?.errors) {
 				const errores = error.response.data.errors;
 				const mensajes = Object.entries(errores)
 					.map(([campo, mensaje]) => `${campo.toUpperCase()}: ${mensaje}`)
 					.join("<br>");
-
 				MySwal.fire({
 					icon: "error",
 					title: "Errores de validación",
 					html: mensajes,
 				});
 			} else {
-				const mensaje = error.response?.data?.message || "No se pudo registrar la sede";
+				const mensaje =
+					error.response?.data?.message || "No se pudo registrar la sede";
 				MySwal.fire("Error", mensaje, "error");
 			}
-		}
+		},
+	});
+	const onSubmit = (data) => {
+		createSedeMutation.mutate(data);
 	};
-
 	return (
 		<LayoutDashboard>
 			<div className="form-panel-container">
@@ -72,42 +71,36 @@ const RegistrarSede = () => {
 					Volver
 				</button>
 				<h2>Registrar Nueva Sede</h2>
-				<form className="form-panel" onSubmit={handleSubmit}>
+				<form className="form-panel" onSubmit={handleSubmit(onSubmit)}>
 					<div className="form-group">
 						<label>Nombre de la Sede:</label>
 						<input
 							type="text"
-							name="nombreSede"
-							value={formData.nombreSede}
-							onChange={handleChange}
-							required
+							{...register("nombreSede")}
 						/>
+						{errors.nombreSede && <span className="error-message">{errors.nombreSede.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>Dirección:</label>
 						<input
 							type="text"
-							name="direccion"
-							value={formData.direccion}
-							onChange={handleChange}
-							required
+							{...register("direccion")}
 						/>
+						{errors.direccion && <span className="error-message">{errors.direccion.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>Anexo:</label>
 						<input
 							type="text"
-							name="anexo"
-							value={formData.anexo}
-							onChange={handleChange}
-							required
+							{...register("anexo")}
 						/>
+						{errors.anexo && <span className="error-message">{errors.anexo.message}</span>}
 					</div>
 
-					<button type="submit" className="form-panel-submit">
-						Registrar Sede
+					<button type="submit" className="form-panel-submit" disabled={createSedeMutation.isPending}>
+						{createSedeMutation.isPending ? "Registrando..." : "Registrar Sede"}
 					</button>
 				</form>
 			</div>

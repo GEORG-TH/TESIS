@@ -1,133 +1,61 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleRegistrar.css";
+import { useForm } from "react-hook-form";
+import { z } from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProducto } from "../../api/productoApi";
 import { getCategorias } from "../../api/categoriaApi";
 import { getProveedores } from "../../api/proveedorApi";
 import { getAreas } from "../../api/areaApi";
 
 const MySwal = withReactContent(Swal);
+const productoSchema = z.object({
+  sku: z.string().trim().min(4, "El SKU es obligatorio (mín. 4 caracteres)"),
+  ean: z.string().trim().min(13, "El EAN es obligatorio (mín. 13 caracteres)"),
+  nombre_producto: z.string().trim().min(4, "El nombre es obligatorio (mín. 4 caracteres)"),
+  marca: z.string().trim().min(2, "La marca es obligatoria"),
+  uni_medida: z.string().trim().min(1, "La unidad de medida es obligatoria"),
+  precio_venta: z.coerce.number().positive("El precio de venta debe ser positivo"),
+  precio_compra: z.coerce.number().positive("El precio de compra debe ser positivo"),
+  id_area: z.string().nonempty("Debes seleccionar un área"),
+  id_cat: z.string().nonempty("Debes seleccionar una categoría"),
+  id_proveedor: z.string().nonempty("Debes seleccionar un proveedor"),
+});
 
 const IngresarProducto = () => {
 	const navigate = useNavigate();
-	const [formData, setFormData] = useState({
-		sku: "",
-		ean: "",
-		nombre_producto: "",
-		marca: "",
-		uni_medida: "",
-		precio_venta: "",
-		precio_compra: "",
-		id_area: "",
-		id_cat: "",
-		id_proveedor: "",
+	const queryClient = useQueryClient();
+	const { data: areas = [], isLoading: isLoadingAreas } = useQuery({
+		queryKey: ["areas"],
+		queryFn: getAreas,
 	});
-	const [categorias, setCategorias] = useState([]);
-	const [areas, setAreas] = useState([]);
-	const [proveedores, setProveedores] = useState([]);
-	const [cargandoTablas, setCargandoTablas] = useState(true);
-
-	useEffect(() => {
-		const cargarListas = async () => {
-			try {
-				const [areasRes, categoriasRes, proveedoresRes] = await Promise.all([
-					getAreas(),
-					getCategorias(),
-					getProveedores(),
-				]);
-
-				setAreas(areasRes.data || []);
-				setCategorias(categoriasRes.data || []);
-				setProveedores(proveedoresRes.data || []);
-			} catch (error) {
-				console.error("Error al cargar datos auxiliares:", error);
-				MySwal.fire(
-					"Error",
-					"No se pudieron cargar categorías y proveedores. Intenta nuevamente.",
-					"error"
-				);
-			} finally {
-				setCargandoTablas(false);
-			}
-		};
-
-		cargarListas();
-	}, []);
-
-	const handleChange = (event) => {
-		const { name, value } = event.target;
-		setFormData((prev) => ({ ...prev, [name]: value }));
-	};
-
-	const handleSubmit = async (event) => {
-		event.preventDefault();
-
-		const camposRequeridos = [
-			formData.sku,
-			formData.ean,
-			formData.nombre_producto,
-			formData.marca,
-			formData.uni_medida,
-			formData.precio_venta,
-			formData.precio_compra,
-			formData.id_area,
-			formData.id_cat,
-			formData.id_proveedor,
-		];
-
-		if (camposRequeridos.some((campo) => !campo)) {
-			MySwal.fire("Error", "Completa todos los campos obligatorios", "warning");
-			return;
-		}
-
-		const precioVenta = parseFloat(formData.precio_venta);
-		const precioCompra = parseFloat(formData.precio_compra);
-
-		if (Number.isNaN(precioVenta) || Number.isNaN(precioCompra)) {
-			MySwal.fire("Error", "Los precios deben ser números válidos", "warning");
-			return;
-		}
-
-		const payload = {
-			sku: formData.sku,
-			ean: formData.ean,
-			codEan: formData.ean,
-			nombre_producto: formData.nombre_producto,
-			nombre: formData.nombre_producto,
-			marca: formData.marca,
-			uni_medida: formData.uni_medida,
-			precio_venta: precioVenta,
-			precio_compra: precioCompra,
-			estado: true,
-			categoria: { id_cat: parseInt(formData.id_cat, 10) },
-			proveedor: { id_proveedor: parseInt(formData.id_proveedor, 10) },
-		};
-
-		try {
-			await createProducto(payload);
+	const { data: categorias = [], isLoading: isLoadingCategorias } = useQuery({
+		queryKey: ["categorias"],
+		queryFn: getCategorias,
+	});
+	const { data: proveedores = [], isLoading: isLoadingProveedores } = useQuery({
+		queryKey: ["proveedores"],
+		queryFn: getProveedores,
+	});
+	const cargandoTablas = isLoadingAreas || isLoadingCategorias || isLoadingProveedores;
+	const createProductoMutation = useMutation({
+		mutationFn: createProducto,
+		onSuccess: () => {
 			MySwal.fire("Éxito", "Producto registrado correctamente", "success");
-			setFormData({
-				sku: "",
-				ean: "",
-				nombre_producto: "",
-				marca: "",
-				uni_medida: "",
-				precio_venta: "",
-				precio_compra: "",
-				id_area: "",
-				id_cat: "",
-				id_proveedor: "",
-			});
-		} catch (error) {
+			queryClient.invalidateQueries(["productos"]);
+			reset();
+		},
+		onError: (error) => {
 			console.error("Error al registrar producto:", error);
 			if (error.response?.data?.errors) {
 				const mensajes = Object.entries(error.response.data.errors)
 					.map(([campo, mensaje]) => `${campo.toUpperCase()}: ${mensaje}`)
 					.join("<br>");
-
 				MySwal.fire({
 					icon: "error",
 					title: "Errores de validación",
@@ -138,27 +66,55 @@ const IngresarProducto = () => {
 					error.response?.data?.message || "No se pudo registrar el producto";
 				MySwal.fire("Error", mensaje, "error");
 			}
+		},
+	});
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+		reset,
+		watch,
+		setValue,
+	} = useForm({
+		resolver: zodResolver(productoSchema),
+		defaultValues: {
+		sku: "", ean: "", nombre_producto: "", marca: "", uni_medida: "",
+		precio_venta: "", precio_compra: "", id_area: "", id_cat: "", id_proveedor: ""
 		}
-	};
+	});
+	const selectedAreaId = watch("id_area");
 
-	const categoriasFiltradas = () => {
-		if (!formData.id_area) {
-			return [];
-		}
-		const areaId = parseInt(formData.id_area, 10);
+	const categoriasDisponibles = useMemo(() => {
+    if (!selectedAreaId) return [];
+    
+    const areaIdNum = parseInt(selectedAreaId, 10);
 		return categorias.filter((categoria) => {
-			const categoriaAreaRaw =
-				categoria.area?.id_area ??
-				categoria.id_area ??
-				categoria.area_id ??
-				categoria.areaId ??
-				categoria.area;
-			const categoriaAreaId = Number(categoriaAreaRaw);
-			return !Number.isNaN(categoriaAreaId) && categoriaAreaId === areaId;
+		const categoriaAreaRaw = categoria.area?.id_area ?? categoria.id_area;
+		const categoriaAreaId = Number(categoriaAreaRaw);
+		return !Number.isNaN(categoriaAreaId) && categoriaAreaId === areaIdNum;
 		});
+	}, [selectedAreaId, categorias]);
+	useEffect(() => {
+		setValue("id_cat", "");
+	}, [selectedAreaId, setValue]);
+	const onSubmit = (data) => {
+		const payload = {
+			sku: data.sku,
+			ean: data.ean,
+			codEan: data.ean,
+			nombre_producto: data.nombre_producto,
+			nombre: data.nombre_producto,
+			marca: data.marca,
+			uni_medida: data.uni_medida,
+			precio_venta: data.precio_venta,
+			precio_compra: data.precio_compra,
+			estado: true,
+			categoria: { id_cat: parseInt(data.id_cat, 10) },
+			proveedor: { id_proveedor: parseInt(data.id_proveedor, 10) },
+		};
+    
+		createProductoMutation.mutate(payload);
 	};
-
-	const categoriasDisponibles = categoriasFiltradas();
 
 	return (
 		<LayoutDashboard>
@@ -171,60 +127,50 @@ const IngresarProducto = () => {
 					Volver
 				</button>
 				<h2>Registrar Nuevo Producto</h2>
-				<form className="form-panel" onSubmit={handleSubmit}>
+				<form className="form-panel" onSubmit={handleSubmit(onSubmit)}>
 					<div className="form-group">
 						<label>SKU:</label>
 						<input
 							type="text"
-							name="sku"
-							value={formData.sku}
-							onChange={handleChange}
-							required
+							{...register("sku")}
 						/>
+						{errors.sku && <span className="error-message">{errors.sku.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>EAN:</label>
 						<input
 							type="text"
-							name="ean"
-							value={formData.ean}
-							onChange={handleChange}
-							required
+							{...register("ean")}
 						/>
+						{errors.ean && <span className="error-message">{errors.ean.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>Nombre:</label>
 						<input
 							type="text"
-							name="nombre_producto"
-							value={formData.nombre_producto}
-							onChange={handleChange}
-							required
+							{...register("nombre_producto")}
 						/>
+						{errors.nombre_producto && <span className="error-message">{errors.nombre_producto.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>Marca:</label>
 						<input
 							type="text"
-							name="marca"
-							value={formData.marca}
-							onChange={handleChange}
-							required
+							{...register("marca")}
 						/>
+						{errors.marca && <span className="error-message">{errors.marca.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>Unidad de Medida:</label>
 						<input
 							type="text"
-							name="uni_medida"
-							value={formData.uni_medida}
-							onChange={handleChange}
-							required
+							{...register("uni_medida")}
 						/>
+						{errors.uni_medida && <span className="error-message">{errors.uni_medida.message}</span>}
 					</div>
 
 					<div className="form-group">
@@ -233,11 +179,9 @@ const IngresarProducto = () => {
 							type="number"
 							min="0"
 							step="0.01"
-							name="precio_venta"
-							value={formData.precio_venta}
-							onChange={handleChange}
-							required
+							{...register("precio_venta")}
 						/>
+						{errors.precio_venta && <span className="error-message">{errors.precio_venta.message}</span>}
 					</div>
 
 					<div className="form-group">
@@ -246,47 +190,35 @@ const IngresarProducto = () => {
 							type="number"
 							min="0"
 							step="0.01"
-							name="precio_compra"
-							value={formData.precio_compra}
-							onChange={handleChange}
-							required
+							{...register("precio_compra")}
 						/>
+						{errors.precio_compra && <span className="error-message">{errors.precio_compra.message}</span>}
 					</div>
 
                     <div className="form-group">
 						<label>Área:</label>
 						<select
-							name="id_area"
-							value={formData.id_area}
-							onChange={(event) => {
-								const { value } = event.target;
-								setFormData((prev) => ({ ...prev, id_area: value, id_cat: "" }));
-							}}
+							{...register("id_area")}
 							disabled={cargandoTablas || areas.length === 0}
-							required
 						>
-							<option value="">Seleccione un área</option>
+							<option value="">{cargandoTablas ? "Cargando..." : "Seleccione un área"}</option>
 							{areas.map((area) => (
 								<option key={area.id_area} value={area.id_area}>
 									{area.nombreArea}
 								</option>
 							))}
 						</select>
+						{errors.id_area && <span className="error-message">{errors.id_area.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>Categoría:</label>
 						<select
-							name="id_cat"
-							value={formData.id_cat}
-							onChange={handleChange}
-							disabled={
-								cargandoTablas || !formData.id_area || categoriasDisponibles.length === 0
-							}
-							required
+							{...register("id_cat")}
+							disabled={cargandoTablas || !selectedAreaId || categoriasDisponibles.length === 0}
 						>
 							<option value="">
-								{!formData.id_area
+								{!selectedAreaId
 									? "Seleccione un área primero"
 									: categoriasDisponibles.length === 0
 									? "Sin categorías disponibles"
@@ -298,28 +230,27 @@ const IngresarProducto = () => {
 								</option>
 							))}
 						</select>
+						{errors.id_cat && <span className="error-message">{errors.id_cat.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>Proveedor:</label>
 						<select
-							name="id_proveedor"
-							value={formData.id_proveedor}
-							onChange={handleChange}
+							{...register("id_proveedor")}
 							disabled={cargandoTablas || proveedores.length === 0}
-							required
 						>
-							<option value="">Seleccione un proveedor</option>
+							<option value="">{cargandoTablas ? "Cargando..." : "Seleccione un proveedor"}</option>
 							{proveedores.map((proveedor) => (
 								<option key={proveedor.id_proveedor || proveedor.id} value={proveedor.id_proveedor || proveedor.id}>
 									{proveedor.nombre_proveedor || proveedor.nombre}
 								</option>
 							))}
 						</select>
+						{errors.id_proveedor && <span className="error-message">{errors.id_proveedor.message}</span>}
 					</div>
 
-					<button type="submit" className="form-panel-submit" disabled={cargandoTablas}>
-						Registrar Producto
+					<button type="submit" className="form-panel-submit" disabled={cargandoTablas || createProductoMutation.isPending}>
+						{createProductoMutation.isPending ? "Registrando..." : "Registrar Producto"}
 					</button>
 				</form>
 			</div>

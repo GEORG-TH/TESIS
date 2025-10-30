@@ -2,27 +2,36 @@ import axios from "axios";
 import axiosInstance from "./axiosConfig";
 
 const API_URL = "http://localhost:8080/api/auth";
-
-export const login = (data) => axios.post(`${API_URL}/login`, data);
-export const forgotPassword = (email) => {
-  return axios.post(`${API_URL}/forgot-password`, { email });
+//SIN TOKEN
+export const login = async (data) => {
+  const response = await axios.post(`${API_URL}/login`, data);
+  return response.data;
 };
-
-export const resetPassword = (token, newPassword) => {
-  return axios.post(`${API_URL}/reset-password`, { token, newPassword });
+export const forgotPassword = async (email) => {
+  const response = await axios.post(`${API_URL}/forgot-password`, { email });
+  return response.data;
 };
-export const mfaLoginVerify = (payload) => {
-  return axios.post(`${API_URL}/mfa/login-verify`, payload);
+export const resetPassword = async (token, newPassword) => {
+  const response = await axios.post(`${API_URL}/reset-password`, {
+    token,
+    newPassword,
+  });
+  return response.data;
 };
-
-export const setupMfa = () => {
-  return axiosInstance.post(`${API_URL}/mfa/setup`);
+export const mfaLoginVerify = async (payload) => {
+  const response = await axios.post(`${API_URL}/mfa/login-verify`, payload);
+  return response.data;
 };
-
-export const verifyMfa = (payload) => {
-  return axiosInstance.post(`${API_URL}/mfa/verify`, payload);
+//CON TOKEN
+export const setupMfa = async () => {
+  const response = await axiosInstance.post(`${API_URL}/mfa/setup`);
+  return response.data;
 };
-
-export const disableMfa = () => {
-  return axiosInstance.post("/auth/mfa/disable");
+export const verifyMfa = async (payload) => {
+  const response = await axiosInstance.post(`${API_URL}/mfa/verify`, payload);
+  return response.data;
+};
+export const disableMfa = async () => {
+  const response = await axiosInstance.post(`${API_URL}/mfa/disable`);
+  return response.data;
 };
