@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
 import {
@@ -17,7 +18,7 @@ const MySwal = withReactContent(Swal);
 
 const ListaProveedores = () => {
   const navigate = useNavigate();
-  const [proveedores, setProveedores] = useState([]);
+  const queryClient = useQueryClient();
   const rowVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: (i) => ({
@@ -26,21 +27,63 @@ const ListaProveedores = () => {
       transition: { delay: i * 0.05, duration: 0.3 }, 
     }),
   };
-
-  useEffect(() => {
-    cargarProveedores();
-  }, []);
-
-  const cargarProveedores = async () => {
-    try {
-      const respuesta = await getProveedores();
-      setProveedores(respuesta.data || []);
-    } catch (error) {
-      console.error("Error al cargar proveedores:", error);
-      MySwal.fire("Error", "No se pudieron cargar los proveedores", "error");
-    }
-  };
-
+  const {
+		data: proveedoresData,
+		isLoading,
+		isError,  
+		error,
+		refetch,   
+	} = useQuery({
+		queryKey: ["proveedores"],
+		queryFn: getProveedores,
+	});
+  const proveedores = proveedoresData || [];
+  const deleteProveedorMutation = useMutation({
+		mutationFn: deleteProveedor,
+		onSuccess: () => {
+			queryClient.invalidateQueries(["proveedores"]);
+			MySwal.fire("Eliminado", "El proveedor fue eliminado.", "success");
+		},
+		onError: (error) => {
+			console.error("Error al eliminar proveedor:", error);
+			const mensaje =
+				error.response?.data?.message || "No se pudo eliminar el proveedor";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
+  const toggleEstadoMutation = useMutation({
+		mutationFn: (variables) =>
+			variables.activar
+				? activarProveedor(variables.id)
+				: desactivarProveedor(variables.id),
+		onSuccess: (data, variables) => {
+			queryClient.invalidateQueries(["proveedores"]);
+			const accion = variables.activar ? "Activado" : "Desactivado";
+			MySwal.fire(accion, `El proveedor fue ${accion.toLowerCase()}.`, "success");
+		},
+		onError: (error, variables) => {
+			const accion = variables.activar ? "activar" : "desactivar";
+			console.error(`Error al ${accion} proveedor:`, error);
+			MySwal.fire("Error", `No se pudo ${accion} el proveedor`, "error");
+		},
+	});
+  const updateProveedorMutation = useMutation({
+		mutationFn: (variables) => updateProveedor(variables.id, variables.data),
+		onSuccess: () => {
+			queryClient.invalidateQueries(["proveedores"]);
+			MySwal.fire(
+				"Actualizado",
+				"Proveedor actualizado correctamente",
+				"success"
+			);
+		},
+		onError: (error) => {
+			console.error("Error al actualizar proveedor:", error);
+			const mensaje =
+				error.response?.data?.message || "No se pudo actualizar el proveedor";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
   const handleEliminar = async (id) => {
     const result = await MySwal.fire({
       title: "¿Eliminar proveedor?",
@@ -55,16 +98,7 @@ const ListaProveedores = () => {
     if (!result.isConfirmed) {
       return;
     }
-
-    try {
-      await deleteProveedor(id);
-      setProveedores((prev) => prev.filter((prov) => prov.id_proveedor !== id));
-      MySwal.fire("Eliminado", "El proveedor fue eliminado.", "success");
-    } catch (error) {
-      console.error("Error al eliminar proveedor:", error);
-      const mensaje = error.response?.data?.message || "No se pudo eliminar el proveedor";
-      MySwal.fire("Error", mensaje, "error");
-    }
+    deleteProveedorMutation.mutate(id);
   };
 
   const handleDesactivar = async (id) => {
@@ -81,15 +115,7 @@ const ListaProveedores = () => {
     if (!result.isConfirmed) {
       return;
     }
-
-    try {
-      await desactivarProveedor(id);
-      MySwal.fire("Desactivado", "El proveedor fue desactivado.", "success");
-      cargarProveedores();
-    } catch (error) {
-      console.error("Error al desactivar proveedor:", error);
-      MySwal.fire("Error", "No se pudo desactivar el proveedor", "error");
-    }
+    toggleEstadoMutation.mutate({ id, activar: false });
   };
 
   const handleActivar = async (id) => {
@@ -106,15 +132,7 @@ const ListaProveedores = () => {
     if (!result.isConfirmed) {
       return;
     }
-
-    try {
-      await activarProveedor(id);
-      MySwal.fire("Activado", "El proveedor fue activado.", "success");
-      cargarProveedores();
-    } catch (error) {
-      console.error("Error al activar proveedor:", error);
-      MySwal.fire("Error", "No se pudo activar el proveedor", "error");
-    }
+    toggleEstadoMutation.mutate({ id, activar: true });
   };
 
   const handleEditar = async (proveedor) => {
@@ -158,16 +176,10 @@ const ListaProveedores = () => {
     if (!formValues) {
       return;
     }
-
-    try {
-      await updateProveedor(proveedor.id_proveedor, formValues);
-      MySwal.fire("Actualizado", "Proveedor actualizado correctamente", "success");
-      cargarProveedores();
-    } catch (error) {
-      console.error("Error al actualizar proveedor:", error);
-      const mensaje = error.response?.data?.message || "No se pudo actualizar el proveedor";
-      MySwal.fire("Error", mensaje, "error");
-    }
+    updateProveedorMutation.mutate({
+			id: proveedor.id_proveedor,
+			data: formValues,
+		});
   };
 
   return (
@@ -191,9 +203,10 @@ const ListaProveedores = () => {
             <button
               type="button"
               className="lista-panel-refresh"
-              onClick={cargarProveedores}
+              onClick={refetch()}
+              disabled={isLoading}
             >
-              Actualizar
+              {isLoading ? "Actualizando..." : "Actualizar"}
             </button>
             <button
               type="button"
@@ -220,12 +233,24 @@ const ListaProveedores = () => {
             </thead>
             <tbody>
               <AnimatePresence>
-              {proveedores.length === 0 ? (
-                <tr>
-                  <td className="sin-datos" colSpan={7}>
-                    No hay proveedores registrados.
-                  </td>
-                </tr>
+              {isLoading ? (
+										<tr>
+											<td className="sin-datos" colSpan={7}>
+												Cargando proveedores...
+											</td>
+										</tr>
+									) : isError ? (
+										<tr>
+											<td className="sin-datos" colSpan={7}>
+												{error.message || "No se pudieron cargar los datos."}
+											</td>
+										</tr>
+									) : proveedores.length === 0 ? (
+                    <tr>
+                      <td className="sin-datos" colSpan={7}>
+                        No hay proveedores registrados.
+                      </td>
+                    </tr>
               ) : (
                 proveedores.map((proveedor, i) => (
                   <motion.tr

@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAreas, deleteArea, updateArea } from "../../api/areaApi";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
@@ -11,9 +12,7 @@ const MySwal = withReactContent(Swal);
 
 const AreaList = () => {
   const navigate = useNavigate();
-  const [areas, setAreas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
   const rowVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: (i) => ({
@@ -22,25 +21,49 @@ const AreaList = () => {
       transition: { delay: i * 0.05, duration: 0.3 }, 
     }),
   };
-
-  const cargarAreas = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await getAreas();
-      setAreas(response.data || []);
-    } catch (err) {
-      console.error("Error al cargar áreas:", err);
-      setError("No se pudieron cargar las áreas. Intente más tarde.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    cargarAreas();
-  }, []);
-
+  const {
+		data: areasData,
+		isLoading,
+		isError,
+		error,
+		refetch, 
+	} = useQuery({
+		queryKey: ["areas"],
+		queryFn: getAreas,
+	});
+  const areas = areasData || [];
+  const deleteAreaMutation = useMutation({
+		mutationFn: deleteArea,
+		onSuccess: () => {
+			queryClient.invalidateQueries(["areas"]);
+			MySwal.fire("Eliminado", "El área fue eliminada correctamente", "success");
+		},
+		onError: (err) => {
+			let errorMessage = "No se pudo eliminar el área.";
+			if (err.response?.data?.message) {
+				errorMessage = err.response.data.message;
+			}
+			console.error("Error al eliminar área:", err);
+			MySwal.fire("Error", errorMessage, "error");
+		},
+	});
+  const updateAreaMutation = useMutation({
+		mutationFn: (variables) => updateArea(variables.id, variables.data),
+		onSuccess: () => {
+			queryClient.invalidateQueries(["areas"]);
+			MySwal.fire(
+				"Actualizado",
+				"El área se actualizó correctamente",
+				"success"
+			);
+		},
+		onError: (err) => {
+			console.error("Error al actualizar área:", err);
+			const mensaje =
+				err.response?.data?.message || "No se pudo actualizar el área";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
   const handleDelete = async (id) => {
     const result = await MySwal.fire({
       title: "¿Eliminar área?",
@@ -51,24 +74,9 @@ const AreaList = () => {
       cancelButtonText: "Cancelar",
       reverseButtons: true,
     });
-
     if (!result.isConfirmed) return;
-
-    try {
-      await deleteArea(id);
-      setAreas((prev) => prev.filter((area) => area.id_area !== id));
-      MySwal.fire("Eliminado", "El área fue eliminada correctamente", "success");
-    } catch (err) {
-        let errorMessage = "No se pudo eliminar el área.";
-
-        if (err.response && err.response.data && err.response.data.message) {
-        errorMessage = err.response.data.message;
-        }
-        console.error("Error al eliminar área:", err);
-        MySwal.fire("Error", errorMessage, "error");
-    }
+    deleteAreaMutation.mutate(id);
   };
-
   const handleEdit = async (area) => {
     const { value: nombreActualizado, isConfirmed } = await MySwal.fire({
       title: "Editar Área",
@@ -94,19 +102,10 @@ const AreaList = () => {
       return;
     }
 
-    try {
-      await updateArea(area.id_area, { nombreArea: nombreActualizado });
-      setAreas((prev) =>
-        prev.map((item) =>
-          item.id_area === area.id_area ? { ...item, nombreArea: nombreActualizado } : item
-        )
-      );
-      MySwal.fire("Actualizado", "El área se actualizó correctamente", "success");
-    } catch (err) {
-      console.error("Error al actualizar área:", err);
-      const mensaje = err.response?.data?.message || "No se pudo actualizar el área";
-      MySwal.fire("Error", mensaje, "error");
-    }
+    updateAreaMutation.mutate({
+			id: area.id_area,
+			data: { nombreArea: nombreActualizado },
+		});
   };
 
   return (
@@ -130,10 +129,10 @@ const AreaList = () => {
             <button
               type="button"
               className="lista-panel-refresh"
-              onClick={cargarAreas}
-              disabled={loading}
+              onClick={refetch()}
+              disabled={isLoading}
             >
-              {loading ? "Actualizando..." : "Actualizar"}
+              {isLoading ? "Actualizando..." : "Actualizar"}
             </button>
             <button
               type="button"
@@ -156,16 +155,16 @@ const AreaList = () => {
             </thead>
             <tbody>
               <AnimatePresence>
-              {loading ? (
+              {isLoading ? (
                 <tr>
                   <td className="sin-datos" colSpan={3}>
                     Cargando áreas...
                   </td>
                 </tr>
-              ) : error ? (
+              ) : isError ? (
                 <tr>
                   <td className="sin-datos" colSpan={3}>
-                    {error}
+                    {isError}
                   </td>
                 </tr>
               ) : areas.length === 0 ? (

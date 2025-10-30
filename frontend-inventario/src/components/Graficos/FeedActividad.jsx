@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getHistorialActividad } from '../../api/historialActividadApi';
 import './css/FeedActividad.css'; 
 import { FaUserCircle, FaClock, FaTag } from 'react-icons/fa';
@@ -8,24 +9,17 @@ const capitalize = (s) => {
 };
 
 const FeedActividad = () => {
-    const [actividades, setActividades] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchActividades = async () => {
-            try {
-                setLoading(true);
-                const response = await getHistorialActividad();
-                setActividades(response.data);
-            } catch (error) {
-                console.error("Error al cargar el feed de actividad:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchActividades();
-    }, []);
+    const { 
+        data: actividadesData, 
+        isLoading,
+        isError, 
+        error 
+    } = useQuery({
+        queryKey: ['historialActividad'],
+        queryFn: getHistorialActividad,
+        staleTime: 1000 * 60 * 5, 
+    });
+    const actividades = actividadesData || [];
 
     const formatRelativeTime = (fecha) => {
         const now = new Date();
@@ -41,8 +35,12 @@ const FeedActividad = () => {
         return `hace ${diffInDays} d`;
     };
 
-    if (loading) {
+    if (isLoading) {
         return <div className="feed-container">Cargando actividades...</div>;
+    }
+
+    if (isError) {
+        return <div className="feed-container">Error: {error.message}</div>;
     }
 
     return (
