@@ -1,8 +1,14 @@
 import axiosInstance from "./axiosConfig";
 
-export const getProveedores = () => axiosInstance.get("/proveedores");
+export const getProveedores = async () => {
+  const response = await axiosInstance.get("/proveedores");
+  return response.data;
+};
 
-export const getProveedor = (id) => axiosInstance.get(`/proveedores/${id}`);
+export const getProveedor = async (id) => {
+  const response = await axiosInstance.get(`/proveedores/${id}`);
+  return response.data;
+};
 
 export const createProveedor = (data) =>
   axiosInstance.post("/proveedores/registrar", data);

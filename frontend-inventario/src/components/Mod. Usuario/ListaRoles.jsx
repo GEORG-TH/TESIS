@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
 import { getRoles, deleteRol, updateRol } from "../../api/rolApi";
@@ -11,8 +12,7 @@ const MySwal = withReactContent(Swal);
 
 function ListaRoles() {
   const navigate = useNavigate();
-  const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const rowVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: (i) => ({
@@ -21,28 +21,47 @@ function ListaRoles() {
       transition: { delay: i * 0.05, duration: 0.3 }, 
     }),
   };
-
-  useEffect(() => {
-    cargarRoles();
-  }, []);
-
-  const cargarRoles = async () => {
-    try {
-      setLoading(true);
-      const response = await getRoles();
-      setRoles(response.data || []);
-    } catch (error) {
-      console.error("Error al cargar roles:", error);
-      MySwal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar los roles.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const {
+		data: rolesData,
+		isLoading,
+		isError,
+		error,
+		refetch,
+	} = useQuery({
+		queryKey: ["roles"],
+		queryFn: getRoles,
+	});
+  const roles = rolesData || [];
+  const deleteRolMutation = useMutation({
+		mutationFn: deleteRol,
+		onSuccess: () => {
+			queryClient.invalidateQueries(["roles"]);
+			MySwal.fire("Eliminado", "El rol fue eliminado correctamente.", "success");
+		},
+		onError: (error) => {
+			console.error("Error al eliminar rol:", error);
+			const mensaje =
+				error.response?.data?.message || "No se pudo eliminar el rol.";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
+  const updateRolMutation = useMutation({
+		mutationFn: (variables) => updateRol(variables.id, variables.data),
+		onSuccess: () => {
+			queryClient.invalidateQueries(["roles"]);
+			MySwal.fire(
+				"Actualizado",
+				"El rol fue actualizado correctamente.",
+				"success"
+			);
+		},
+		onError: (error) => {
+			console.error("Error al actualizar rol:", error);
+			const mensaje =
+				error.response?.data?.message || "No se pudo actualizar el rol.";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
   const handleEliminar = async (id) => {
     const result = await MySwal.fire({
       title: "¿Eliminar rol?",
@@ -57,16 +76,7 @@ function ListaRoles() {
     if (!result.isConfirmed) {
       return;
     }
-
-    try {
-      await deleteRol(id);
-      setRoles((prev) => prev.filter((rol) => rol.id_rol !== id));
-      MySwal.fire("Eliminado", "El rol fue eliminado correctamente.", "success");
-    } catch (error) {
-      console.error("Error al eliminar rol:", error);
-      const mensaje = error.response?.data?.message || "No se pudo eliminar el rol.";
-      MySwal.fire("Error", mensaje, "error");
-    }
+    deleteRolMutation.mutate(id);
   };
 
   const handleEditar = async (rol) => {
@@ -89,24 +99,10 @@ function ListaRoles() {
         return { nombreRol: nombre };
       },
     });
-
     if (!isConfirmed || !formValues) {
       return;
     }
-
-    try {
-      await updateRol(rol.id_rol, formValues);
-      setRoles((prev) =>
-        prev.map((item) =>
-          item.id_rol === rol.id_rol ? { ...item, ...formValues } : item
-        )
-      );
-      MySwal.fire("Actualizado", "El rol fue actualizado correctamente.", "success");
-    } catch (error) {
-      console.error("Error al actualizar rol:", error);
-      const mensaje = error.response?.data?.message || "No se pudo actualizar el rol.";
-      MySwal.fire("Error", mensaje, "error");
-    }
+    updateRolMutation.mutate({ id: rol.id_rol, data: formValues });
   };
 
   return (
@@ -130,10 +126,10 @@ function ListaRoles() {
             <button
               type="button"
               className="lista-panel-refresh"
-              onClick={cargarRoles}
-              disabled={loading}
+              onClick={refetch()}
+              disabled={isLoading}
             >
-              {loading ? "Actualizando..." : "Actualizar"}
+              {isLoading ? "Actualizando..." : "Actualizar"}
             </button>
             <button
               type="button"
@@ -159,7 +155,7 @@ function ListaRoles() {
               {roles.length === 0 ? (
                 <tr>
                   <td className="sin-datos" colSpan={3}>
-                    {loading ? "Cargando roles..." : "No hay roles registrados."}
+                    {isLoading ? "Cargando roles..." : "No hay roles registrados."}
                   </td>
                 </tr>
               ) : (

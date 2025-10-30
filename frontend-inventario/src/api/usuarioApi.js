@@ -1,7 +1,13 @@
 import axiosInstance from "./axiosConfig";
 
-export const getUsuarios = () => axiosInstance.get("/usuarios");
-export const getUsuario = (id) => axiosInstance.get(`/usuarios/${id}`);
+export const getUsuarios = async () => {
+  const response = await axiosInstance.get("/usuarios");
+  return response.data;
+};
+export const getUsuario = async (id) => {
+  const response = await axiosInstance.get(`/usuarios/${id}`);
+  return response.data;
+};
 export const createUsuario = (data) => axiosInstance.post("/usuarios", data);
 export const updateUsuario = (id, data) =>
   axiosInstance.put(`/usuarios/${id}`, data);

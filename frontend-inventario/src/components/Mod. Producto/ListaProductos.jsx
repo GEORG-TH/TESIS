@@ -6,6 +6,7 @@ import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
 import "../styles/listaProductos.css";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	getProductos,
 	deleteProducto,
@@ -20,11 +21,7 @@ const MySwal = withReactContent(Swal);
 
 const ListaProductos = () => {
 	const navigate = useNavigate();
-	const [productos, setProductos] = useState([]);
-	const [categorias, setCategorias] = useState([]);
-	const [proveedores, setProveedores] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
+	const queryClient = useQueryClient();
 	const rowVariants = {
 		hidden: { opacity: 0, y: 10 },
 		visible: (i) => ({
@@ -33,56 +30,76 @@ const ListaProductos = () => {
 		transition: { delay: i * 0.05, duration: 0.3 }, 
 		}),
 	};
+	const { 
+		data: productosData, 
+		isLoading: isLoadingProductos, 
+		isError: isErrorProductos, 
+		error: errorProductos,
+		refetch: refetchProductos 
+	} = useQuery({
+		queryKey: ['productos'],
+		queryFn: getProductos 
+	});
 
-	useEffect(() => {
-		cargarDatos();
-	}, []);
+	const { 
+		data: categoriasData, 
+		isLoading: isLoadingCategorias 
+	} = useQuery({
+		queryKey: ['categorias'],
+		queryFn: getCategorias, 
+		initialData: []
+	});
 
-	const cargarDatos = async () => {
-		try {
-			setLoading(true);
-			setError(null);
-			const [productosRes, categoriasRes, proveedoresRes] = await Promise.all([
-				getProductos(),
-				getCategorias(),
-				getProveedores(),
-			]);
+	const { 
+		data: proveedoresData, 
+		isLoading: isLoadingProveedores 
+	} = useQuery({
+		queryKey: ['proveedores'],
+		queryFn: getProveedores,
+		initialData: []
+	});
 
-			setProductos(productosRes.data || []);
-			setCategorias(categoriasRes.data || []);
-			setProveedores(proveedoresRes.data || []);
-		} catch (err) {
-			console.error("Error al cargar productos:", err);
-			setError("No se pudieron cargar los productos. Intente más tarde.");
-		} finally {
-			setLoading(false);
+	const isLoading = isLoadingProductos || isLoadingCategorias || isLoadingProveedores;
+  	const isError = isErrorProductos ? errorProductos.message : null;
+	const productos = productosData || [];
+	const categorias = categoriasData || [];
+	const proveedores = proveedoresData || [];
+
+	const deleteProductoMutation = useMutation({
+		mutationFn: deleteProducto,
+		onSuccess: () => {
+		queryClient.invalidateQueries(['productos']);
+		MySwal.fire("Eliminado", "El producto fue eliminado.", "success");
+		},
+		onError: (err) => {
+		const mensaje = err.response?.data?.message || "No se pudo eliminar el producto";
+		MySwal.fire("Error", mensaje, "error");
 		}
-	};
-
-	const obtenerNombreCategoria = (producto) => {
-		if (producto.categoria?.nombreCat) {
-			return producto.categoria.nombreCat;
+	});
+	const toggleEstadoMutation = useMutation({
+		mutationFn: (variables) => 
+		variables.activar ? activarProducto(variables.id) : desactivarProducto(variables.id),
+		onSuccess: (data, variables) => {
+		queryClient.invalidateQueries(['productos']);
+		const accion = variables.activar ? "Activado" : "Desactivado";
+		MySwal.fire(accion, `El producto fue ${accion.toLowerCase()}.`, "success");
+		},
+		onError: (err, variables) => {
+		const accion = variables.activar ? "activar" : "desactivar";
+		MySwal.fire("Error", `No se pudo ${accion} el producto`, "error");
 		}
-		const categoriaId =
-			producto.categoria?.id_cat || producto.categoria?.id_categoria || producto.id_cat;
-		const categoria = categorias.find(
-			(cat) => cat.id_cat === categoriaId || cat.id_categoria === categoriaId
-		);
-		return categoria?.nombreCat || "Sin categoría";
-	};
-
-	const obtenerNombreProveedor = (producto) => {
-		if (producto.proveedor?.nombre_proveedor) {
-			return producto.proveedor.nombre_proveedor;
+	});
+	const updateProductoMutation = useMutation({
+		mutationFn: (variables) => updateProducto(variables.id, variables.data),
+		onSuccess: () => {
+		queryClient.invalidateQueries(['productos']);
+		MySwal.fire("Actualizado", "Producto actualizado correctamente", "success");
+		},
+		onError: (err) => {
+		const mensaje = err.response?.data?.message || "No se pudo actualizar el producto";
+		MySwal.fire("Error", mensaje, "error");
 		}
-		const proveedorId =
-			producto.proveedor?.id_proveedor || producto.id_proveedor || producto.proveedorId;
-		const proveedor = proveedores.find((prov) => prov.id_proveedor === proveedorId || prov.id === proveedorId);
-		return proveedor?.nombre_proveedor || "Sin proveedor";
-	};
-
-	const resolveProductoId = (producto) => producto.id_producto;
-
+	});
 	const handleEliminar = async (producto) => {
 		const productoId = resolveProductoId(producto);
 		if (!productoId) {
@@ -103,16 +120,7 @@ const ListaProductos = () => {
 		if (!result.isConfirmed) {
 			return;
 		}
-
-		try {
-			await deleteProducto(productoId);
-			setProductos((prev) => prev.filter((item) => resolveProductoId(item) !== productoId));
-			MySwal.fire("Eliminado", "El producto fue eliminado.", "success");
-		} catch (err) {
-			console.error("Error al eliminar producto:", err);
-			const mensaje = err.response?.data?.message || "No se pudo eliminar el producto";
-			MySwal.fire("Error", mensaje, "error");
-		}
+		deleteProductoMutation.mutate(productoId);
 	};
 
 	const handleDesactivar = async (producto) => {
@@ -121,7 +129,6 @@ const ListaProductos = () => {
 			MySwal.fire("Error", "No se pudo determinar el producto a desactivar", "error");
 			return;
 		}
-
 		const result = await MySwal.fire({
 			title: "¿Desactivar producto?",
 			text: "El producto no estará disponible mientras esté desactivado.",
@@ -131,19 +138,10 @@ const ListaProductos = () => {
 			cancelButtonText: "Cancelar",
 			reverseButtons: true,
 		});
-
 		if (!result.isConfirmed) {
 			return;
 		}
-
-		try {
-			await desactivarProducto(productoId);
-			MySwal.fire("Desactivado", "El producto fue desactivado.", "success");
-			cargarDatos();
-		} catch (err) {
-			console.error("Error al desactivar producto:", err);
-			MySwal.fire("Error", "No se pudo desactivar el producto", "error");
-		}
+		toggleEstadoMutation.mutate({ id: productoId, activar: false });
 	};
 
 	const handleActivar = async (producto) => {
@@ -152,7 +150,6 @@ const ListaProductos = () => {
 			MySwal.fire("Error", "No se pudo determinar el producto a activar", "error");
 			return;
 		}
-
 		const result = await MySwal.fire({
 			title: "¿Activar producto?",
 			text: "El producto volverá a estar disponible tras la activación.",
@@ -162,19 +159,10 @@ const ListaProductos = () => {
 			cancelButtonText: "Cancelar",
 			reverseButtons: true,
 		});
-
 		if (!result.isConfirmed) {
 			return;
 		}
-
-		try {
-			await activarProducto(productoId);
-			MySwal.fire("Activado", "El producto fue activado.", "success");
-			cargarDatos();
-		} catch (err) {
-			console.error("Error al activar producto:", err);
-			MySwal.fire("Error", "No se pudo activar el producto", "error");
-		}
+		toggleEstadoMutation.mutate({ id: productoId, activar: true });
 	};
 
 	const handleEditar = async (producto) => {
@@ -183,10 +171,8 @@ const ListaProductos = () => {
 			MySwal.fire("Error", "No se pudo determinar el producto a editar", "error");
 			return;
 		}
-
 		const categoriaActualId = producto.categoria?.id_cat || "";
 		const proveedorActualId = producto.proveedor?.id_proveedor || "";
-
 		const { value: formValues } = await MySwal.fire({
 			title: "Editar Producto",
 			html: `
@@ -289,22 +275,32 @@ const ListaProductos = () => {
 				};
 			},
 		});
-
 		if (!formValues) {
 			return;
 		}
-
-		try {
-			await updateProducto(productoId, formValues);
-			MySwal.fire("Actualizado", "Producto actualizado correctamente", "success");
-			cargarDatos();
-		} catch (err) {
-			console.error("Error al actualizar producto:", err);
-			const mensaje = err.response?.data?.message || "No se pudo actualizar el producto";
-			MySwal.fire("Error", mensaje, "error");
-		}
+		updateProductoMutation.mutate({ id: productoId, data: formValues });
 	};
-
+	const obtenerNombreCategoria = (producto) => {
+		if (producto.categoria?.nombreCat) {
+			return producto.categoria.nombreCat;
+		}
+		const categoriaId =
+			producto.categoria?.id_cat || producto.categoria?.id_categoria || producto.id_cat;
+		const categoria = categorias.find(
+			(cat) => cat.id_cat === categoriaId || cat.id_categoria === categoriaId
+		);
+		return categoria?.nombreCat || "Sin categoría";
+	};
+	const obtenerNombreProveedor = (producto) => {
+		if (producto.proveedor?.nombre_proveedor) {
+			return producto.proveedor.nombre_proveedor;
+		}
+		const proveedorId =
+			producto.proveedor?.id_proveedor || producto.id_proveedor || producto.proveedorId;
+		const proveedor = proveedores.find((prov) => prov.id_proveedor === proveedorId || prov.id === proveedorId);
+		return proveedor?.nombre_proveedor || "Sin proveedor";
+	};
+	const resolveProductoId = (producto) => producto.id_producto;
 	const esEstadoActivo = (estado) => {
 		if (typeof estado === "string") {
 			const normalizado = estado.trim().toLowerCase();
@@ -353,10 +349,10 @@ const ListaProductos = () => {
 						<button
 							type="button"
 							className="lista-panel-refresh"
-							onClick={cargarDatos}
-							disabled={loading}
+							onClick={refetchProductos()}
+							disabled={isLoading}
 						>
-							{loading ? "Actualizando..." : "Actualizar"}
+							{isLoading ? "Actualizando..." : "Actualizar"}
 						</button>
 						<button
 							type="button"
@@ -388,16 +384,16 @@ const ListaProductos = () => {
 						</thead>
 						<tbody>
 							<AnimatePresence>
-							{loading ? (
+							{isLoading ? (
 								<tr>
 									<td className="sin-datos" colSpan={12}>
 										Cargando productos...
 									</td>
 								</tr>
-							) : error ? (
+							) : isError ? (
 								<tr>
 									<td className="sin-datos" colSpan={12}>
-										{error}
+										{isError}
 									</td>
 								</tr>
 							) : productos.length === 0 ? (

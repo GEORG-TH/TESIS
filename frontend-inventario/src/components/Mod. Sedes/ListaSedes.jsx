@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
 import { getSedes, deleteSede, updateSede } from "../../api/sedeApi";
@@ -11,36 +12,56 @@ const MySwal = withReactContent(Swal);
 
 const ListaSedes = () => {
 	const navigate = useNavigate();
-	const [sedes, setSedes] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
+	const queryClient = useQueryClient();
 	const rowVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.05, duration: 0.3 }, 
-    }),
-  };
-
-	useEffect(() => {
-		cargarSedes();
-	}, []);
-
-	const cargarSedes = async () => {
-		try {
-			setLoading(true);
-			setError(null);
-			const respuesta = await getSedes();
-			setSedes(respuesta.data || []);
-		} catch (err) {
-			console.error("Error al cargar sedes:", err);
-			setError("No se pudieron cargar las sedes. Intenta nuevamente.");
-		} finally {
-			setLoading(false);
-		}
+		hidden: { opacity: 0, y: 10 },
+		visible: (i) => ({
+		opacity: 1,
+		y: 0,
+		transition: { delay: i * 0.05, duration: 0.3 }, 
+		}),
 	};
 
+	const {
+		data: sedesData,
+		isLoading,
+		isError,
+		error,
+		refetch,
+	} = useQuery({
+		queryKey: ["sedes"],
+		queryFn: getSedes,
+	});
+	const sedes = sedesData || [];
+	const deleteSedeMutation = useMutation({
+		mutationFn: deleteSede,
+		onSuccess: () => {
+			queryClient.invalidateQueries(["sedes"]);
+			MySwal.fire("Eliminado", "La sede fue eliminada correctamente", "success");
+		},
+		onError: (err) => {
+			console.error("Error al eliminar sede:", err);
+			const mensaje = err.response?.data?.message || "No se pudo eliminar la sede";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
+	const updateSedeMutation = useMutation({
+		mutationFn: (variables) => updateSede(variables.id, variables.data),
+		onSuccess: () => {
+			queryClient.invalidateQueries(["sedes"]);
+			MySwal.fire(
+				"Actualizado",
+				"La sede se actualizó correctamente",
+				"success"
+			);
+		},
+		onError: (err) => {
+			console.error("Error al actualizar sede:", err);
+			const mensaje =
+				err.response?.data?.message || "No se pudo actualizar la sede";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
 	const handleEliminar = async (id) => {
 		const resultado = await MySwal.fire({
 			title: "¿Eliminar sede?",
@@ -55,16 +76,7 @@ const ListaSedes = () => {
 		if (!resultado.isConfirmed) {
 			return;
 		}
-
-		try {
-			await deleteSede(id);
-			setSedes((prev) => prev.filter((sede) => sede.idSede !== id));
-			MySwal.fire("Eliminado", "La sede fue eliminada correctamente", "success");
-		} catch (err) {
-			console.error("Error al eliminar sede:", err);
-			const mensaje = err.response?.data?.message || "No se pudo eliminar la sede";
-			MySwal.fire("Error", mensaje, "error");
-		}
+		deleteSedeMutation.mutate(id);
 	};
 
 	const handleEditar = async (sede) => {
@@ -107,22 +119,7 @@ const ListaSedes = () => {
 		if (!datosActualizados) {
 			return;
 		}
-
-		try {
-			await updateSede(sede.idSede, datosActualizados);
-			setSedes((prev) =>
-				prev.map((item) =>
-					item.idSede === sede.idSede
-						? { ...item, ...datosActualizados }
-						: item
-				)
-			);
-			MySwal.fire("Actualizado", "La sede se actualizó correctamente", "success");
-		} catch (err) {
-			console.error("Error al actualizar sede:", err);
-			const mensaje = err.response?.data?.message || "No se pudo actualizar la sede";
-			MySwal.fire("Error", mensaje, "error");
-		}
+		updateSedeMutation.mutate({ id: sede.idSede, data: datosActualizados });
 	};
 
 	return (
@@ -146,10 +143,10 @@ const ListaSedes = () => {
 						<button
 							type="button"
 							className="lista-panel-refresh"
-							onClick={cargarSedes}
-							disabled={loading}
+							onClick={refetch()}
+							disabled={isLoading}
 						>
-							{loading ? "Actualizando..." : "Actualizar"}
+							{isLoading ? "Actualizando..." : "Actualizar"}
 						</button>
 						<button
 							type="button"
@@ -174,16 +171,16 @@ const ListaSedes = () => {
 						</thead>
 						<tbody>
 							<AnimatePresence>
-							{loading ? (
+							{isLoading ? (
 								<tr>
 									<td className="sin-datos" colSpan={5}>
 										Cargando sedes...
 									</td>
 								</tr>
-							) : error ? (
+							) : isError ? (
 								<tr>
 									<td className="sin-datos" colSpan={5}>
-										{error}
+										{error.message || "No se pudieron cargar las sedes."}
 									</td>
 								</tr>
 							) : sedes.length === 0 ? (

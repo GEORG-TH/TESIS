@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { motion, AnimatePresence  } from "framer-motion";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom";
 import {
   getUsuarios,
   deleteUsuario,
@@ -12,14 +14,13 @@ import {
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import SkeletonRow from "../SkeletonRow";
 import "../styles/styleLista.css";
-import { useNavigate } from "react-router-dom";
 
 const usuarioLogueado = JSON.parse(localStorage.getItem("usuario"));
 const MySwal = withReactContent(Swal);
 
 function ListaUsuarios() {
   const navigate = useNavigate();
-  const [usuarios, setUsuarios] = useState([]);
+  const queryClient = useQueryClient();
   const [roles] = useState([
     { id_rol: 1, nombreRol: "Administrador" },
     { id_rol: 2, nombreRol: "Jefe de Inventario" },
@@ -35,27 +36,69 @@ function ListaUsuarios() {
       transition: { delay: i * 0.05, duration: 0.3 }, 
     }),
   };
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    cargarUsuarios();
-    setLoading(false);
-  }, []);
-
-  const cargarUsuarios = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await getUsuarios(token);
-      setUsuarios(res.data);
-    } catch (error) {
-      console.error("Error al cargar usuarios:", error);
-      MySwal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar los usuarios",
-      });
-    }
-  };
-
+  const {
+		data: usuariosData,
+		isLoading,
+		isError,
+		error,
+		refetch,
+	} = useQuery({
+		queryKey: ["usuarios"], 
+		queryFn: getUsuarios,
+	});
+  const usuarios = usuariosData || [];
+  const deleteUsuarioMutation = useMutation({
+		mutationFn: deleteUsuario, 
+		onSuccess: () => {
+			queryClient.invalidateQueries(["usuarios"]);
+			MySwal.fire("Eliminado", "El usuario fue eliminado.", "success");
+		},
+		onError: (error) => {
+			console.error("Error al eliminar usuario:", error);
+			MySwal.fire("Error", "No se pudo eliminar el usuario", "error");
+		},
+	});
+  const toggleEstadoMutation = useMutation({
+		mutationFn: (variables) =>
+			variables.activar
+				? activarUsuarioApi(variables.id)
+				: desactivarUsuarioApi(variables.id),
+		onSuccess: (data, variables) => {
+			queryClient.invalidateQueries(["usuarios"]);
+			const accion = variables.activar ? "Activado" : "Desactivado";
+			MySwal.fire(accion, `El usuario fue ${accion.toLowerCase()}.`, "success");
+		},
+		onError: (error, variables) => {
+			const accion = variables.activar ? "activar" : "desactivar";
+			console.error(`Error al ${accion} usuario:`, error);
+			MySwal.fire("Error", `No se pudo ${accion} el usuario`, "error");
+		},
+	});
+  const updateUsuarioMutation = useMutation({
+		mutationFn: (variables) => updateUsuario(variables.id, variables.data),
+		onSuccess: (data, variables) => {
+			queryClient.invalidateQueries(["usuarios"]);
+			if (usuarioLogueado && usuarioLogueado.id_u === variables.id) {
+				MySwal.fire(
+					"Actualizado",
+					"Tu cuenta ha sido actualizada, para que se reflejen los cambios, por favor cierra sesión y vuelve a iniciar sesión.",
+					"success"
+				);
+			} else {
+				MySwal.fire(
+					"Actualizado",
+					`Usuario [${variables.originalNombre}] actualizado correctamente`,
+					"success"
+				);
+			}
+		},
+		onError: (error) => {
+			console.error("Error al actualizar usuario:", error);
+			const mensaje =
+				error.response?.data?.message || "No se pudo actualizar el usuario";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
   const handleEliminar = async (id) => {
     if (usuarioLogueado?.id_u === id) {
       return MySwal.fire(
@@ -75,15 +118,7 @@ function ListaUsuarios() {
     });
 
     if (result.isConfirmed) {
-      try {
-        const token = localStorage.getItem("token");
-        await deleteUsuario(id, token);
-        MySwal.fire("Eliminado", "El usuario fue eliminado.", "success");
-        cargarUsuarios();
-      } catch (error) {
-        console.error("Error al eliminar usuario:", error);
-        MySwal.fire("Error", "No se pudo eliminar el usuario", "error");
-      }
+      deleteUsuarioMutation.mutate(id);
     }
   };
 
@@ -106,15 +141,7 @@ function ListaUsuarios() {
     });
 
     if (result.isConfirmed) {
-      try {
-        const token = localStorage.getItem("token");
-        await desactivarUsuarioApi(id, token);
-        MySwal.fire("Desactivado", "El usuario fue desactivado.", "success");
-        cargarUsuarios();
-      } catch (error) {
-        console.error("Error al desactivar usuario:", error);
-        MySwal.fire("Error", "No se pudo desactivar el usuario", "error");
-      }
+      toggleEstadoMutation.mutate({ id, activar: false });
     }
   };
 
@@ -130,15 +157,7 @@ function ListaUsuarios() {
     });
 
     if (result.isConfirmed) {
-      try {
-        const token = localStorage.getItem("token");
-        await activarUsuarioApi(id, token);
-        MySwal.fire("Activado", "El usuario fue activado.", "success");
-        cargarUsuarios();
-      } catch (error) {
-        console.error("Error al activar usuario:", error);
-        MySwal.fire("Error", "No se pudo activar el usuario", "error");
-      }
+      toggleEstadoMutation.mutate({ id, activar: true });
     }
   };
   const handleEditar = async (usuario) => {
@@ -177,21 +196,11 @@ function ListaUsuarios() {
   });
 
   if (formValues) {
-    try {
-      await updateUsuario(usuario.id_u, formValues);
-      if (usuarioLogueado && usuarioLogueado.id_u === usuario.id_u) {
-        MySwal.fire("Actualizado", "Tu cuenta ha sido actualizada, para que se reflejen los cambios, por favor cierra sesión y vuelve a iniciar sesión.", "success");
-      } else {
-        MySwal.fire("Actualizado", `Usuario [${usuario.nombre_u}] actualizado correctamente`, "success");
-      }
-      cargarUsuarios();
-    } catch (error) {
-      console.error("Error al actualizar usuario:", error);
-      const mensaje =
-        error.response?.data?.message || "No se pudo actualizar el usuario";
-
-      MySwal.fire("Error", mensaje, "error");
-    }
+    updateUsuarioMutation.mutate({
+			id: usuario.id_u,
+			data: formValues,
+			originalNombre: usuario.nombre_u, 
+		});
   }
 };
 
@@ -215,7 +224,7 @@ function ListaUsuarios() {
               >
                 Volver
               </button>
-              <button type="button" className="lista-panel-refresh" onClick={cargarUsuarios}>
+              <button type="button" className="lista-panel-refresh" onClick={refetch()} disabled={isLoading}>
                 Actualizar
               </button>
               <button
@@ -242,7 +251,7 @@ function ListaUsuarios() {
               </thead>
               <tbody>
                 <AnimatePresence>
-                {loading ? (
+                {isLoading ? (
                   <>
                     <SkeletonRow />
                     <SkeletonRow />

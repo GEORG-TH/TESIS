@@ -1,8 +1,14 @@
 import axiosInstance from "./axiosConfig";
 
-export const getCategorias = () => axiosInstance.get("/categorias");
+export const getCategorias = async () => {
+  const response = await axiosInstance.get("/categorias");
+  return response.data;
+};
 
-export const getCategoria = (id) => axiosInstance.get(`/categorias/${id}`);
+export const getCategoria = async (id) => {
+  const response = await axiosInstance.get(`/categorias/${id}`);
+  return response.data;
+};
 
 export const createCategoria = (data) =>
   axiosInstance.post("/categorias/registrar", data);

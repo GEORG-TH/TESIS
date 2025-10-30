@@ -1,7 +1,13 @@
 import axiosInstance from "./axiosConfig";
 
-export const getProductos = () => axiosInstance.get("/productos");
-export const getProducto = (id) => axiosInstance.get(`/productos/${id}`);
+export const getProductos = async () => {
+  const response = await axiosInstance.get("/productos");
+  return response.data;
+};
+export const getProducto = async (id) => {
+  const response = await axiosInstance.get(`/productos/${id}`);
+  return response.data;
+};
 export const createProducto = (data) =>
   axiosInstance.post("/productos/registrar", data);
 export const updateProducto = (id, data) =>

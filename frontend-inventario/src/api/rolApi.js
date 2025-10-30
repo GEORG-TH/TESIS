@@ -1,10 +1,13 @@
 import axiosInstance from "./axiosConfig";
 
 export const getRoles = async () => {
-    return await axiosInstance.get("/roles");
+    const response = await axiosInstance.get("/roles");
+    return response.data;
 };
+
 export const getRol = async (id) => {
-    return await axiosInstance.get(`/roles/${id}`);
+    const response = await axiosInstance.get(`/roles/${id}`);
+    return response.data;
 };
 
 export const createRol = async (data) => {

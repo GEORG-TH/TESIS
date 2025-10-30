@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
 import {
@@ -16,10 +17,7 @@ const MySwal = withReactContent(Swal);
 
 const ListaCategorias = () => {
   const navigate = useNavigate();
-  const [categorias, setCategorias] = useState([]);
-  const [areas, setAreas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
   const rowVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: (i) => ({
@@ -28,39 +26,78 @@ const ListaCategorias = () => {
       transition: { delay: i * 0.05, duration: 0.3 }, 
     }),
   };
+  const {
+		data: categoriasData,
+		isLoading: isLoadingCategorias,
+		isError: isErrorCategorias,
+		error: errorCategorias,
+		refetch: refetchCategorias,
+	} = useQuery({
+		queryKey: ["categorias"],
+		queryFn: getCategorias,
+	});
+	const {
+		data: areasData,
+		isLoading: isLoadingAreas,
+		isError: isErrorAreas,
+		error: errorAreas,
+		refetch: refetchAreas,
+	} = useQuery({
+		queryKey: ["areas"],
+		queryFn: getAreas,
+    initialData: [],
+	});
+  const isLoading = isLoadingCategorias || isLoadingAreas;
+  const isError = isErrorCategorias || isErrorAreas;
+  const error = errorCategorias || errorAreas;
+  const areas = areasData;
+  const categoriasEnriquecidas = useMemo(() => {
+    const areasMap = new Map(
+      areas.map((area) => [area.id_area, area.nombreArea])
+    );
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
-
-  const cargarDatos = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [categoriasRes, areasRes] = await Promise.all([
-        getCategorias(),
-        getAreas(),
-      ]);
-
-      const areasMap = new Map(
-        (areasRes.data || []).map((area) => [area.id_area, area.nombreArea])
-      );
-
-      const categoriasEnriquecidas = (categoriasRes.data || []).map((categoria) => ({
-        ...categoria,
-        nombreArea: areasMap.get(categoria.area?.id_area) || "Sin área",
-      }));
-
-      setCategorias(categoriasEnriquecidas);
-      setAreas(areasRes.data || []);
-    } catch (err) {
-      console.error("Error al cargar categorías:", err);
-      setError("No se pudieron cargar las categorías. Intente más tarde.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    return (categoriasData || []).map((categoria) => ({
+      ...categoria,
+      nombreArea: areasMap.get(categoria.area?.id_area) || "Sin área",
+    }));
+  }, [categoriasData, areas]);
+  const deleteCategoriaMutation = useMutation({
+		mutationFn: deleteCategoria,
+		onSuccess: () => {
+			queryClient.invalidateQueries(["categorias"]);
+			MySwal.fire(
+				"Eliminado",
+				"La categoría fue eliminada correctamente",
+				"success"
+			);
+		},
+		onError: (err) => {
+			let errorMessage = "No se pudo eliminar la categoría.";
+			if (err.response?.data?.message) {
+				errorMessage = err.response.data.message;
+			}
+			console.error("Error al eliminar categoría:", err);
+			MySwal.fire("Error", errorMessage, "error");
+		},
+	});
+  const updateCategoriaMutation = useMutation({
+		mutationFn: (variables) => updateCategoria(variables.id, variables.data),
+		onSuccess: () => {
+			queryClient.invalidateQueries(["categorias"]);
+      queryClient.invalidateQueries(["areas"]);
+			MySwal.fire(
+				"Actualizado",
+				"La categoría se actualizó correctamente",
+				"success"
+			);
+		},
+		onError: (err) => {
+			console.error("Error al actualizar categoría:", err);
+			const mensaje =
+				err.response?.data?.message || "No se pudo actualizar la categoría";
+			MySwal.fire("Error", mensaje, "error");
+		},
+	});
   const handleDelete = async (id) => {
     const result = await MySwal.fire({
       title: "¿Eliminar categoría?",
@@ -74,21 +111,8 @@ const ListaCategorias = () => {
 
     if (!result.isConfirmed) return;
 
-    try {
-      await deleteCategoria(id);
-      setCategorias((prev) => prev.filter((categoria) => categoria.id_cat !== id));
-      MySwal.fire("Eliminado", "La categoría fue eliminada correctamente", "success");
-    } catch (err) {
-      let errorMessage = "No se pudo eliminar la categoría.";
-
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      }
-      console.error("Error al eliminar categoría:", err);
-      MySwal.fire("Error", errorMessage, "error");
-    }
+    deleteCategoriaMutation.mutate(id);
   };
-
   const handleEdit = async (categoria) => {
     const { value: datosActualizados, isConfirmed } = await MySwal.fire({
       title: "Editar Categoría",
@@ -135,30 +159,15 @@ const ListaCategorias = () => {
       return;
     }
 
-    try {
-      await updateCategoria(categoria.id_cat, datosActualizados);
-      setCategorias((prev) =>
-        prev.map((item) =>
-          item.id_cat === categoria.id_cat
-            ? {
-                ...item,
-                nombreCat: datosActualizados.nombreCat,
-                nombreArea:
-                  areas.find((area) => area.id_area === datosActualizados.area.id_area)?.nombreArea ||
-                  item.nombreArea,
-                area: { id_area: datosActualizados.area.id_area },
-              }
-            : item
-        )
-      );
-      MySwal.fire("Actualizado", "La categoría se actualizó correctamente", "success");
-    } catch (err) {
-      console.error("Error al actualizar categoría:", err);
-      const mensaje = err.response?.data?.message || "No se pudo actualizar la categoría";
-      MySwal.fire("Error", mensaje, "error");
-    }
+    updateCategoriaMutation.mutate({
+			id: categoria.id_cat,
+			data: datosActualizados,
+		});
   };
-
+  const handleRefresh = () => {
+    refetchCategorias();
+    refetchAreas();
+  };
   return (
     <LayoutDashboard>
       <motion.div
@@ -180,10 +189,10 @@ const ListaCategorias = () => {
             <button
               type="button"
               className="lista-panel-refresh"
-              onClick={cargarDatos}
-              disabled={loading}
+              onClick={handleRefresh}
+              disabled={isLoading}
             >
-              {loading ? "Actualizando..." : "Actualizar"}
+              {isLoading ? "Actualizando..." : "Actualizar"}
             </button>
             <button
               type="button"
@@ -207,26 +216,26 @@ const ListaCategorias = () => {
             </thead>
             <tbody>
               <AnimatePresence>
-              {loading ? (
+              {isLoading ? (
                 <tr>
                   <td className="sin-datos" colSpan={4}>
                     Cargando categorías...
                   </td>
                 </tr>
-              ) : error ? (
+              ) : isError ? (
                 <tr>
                   <td className="sin-datos" colSpan={4}>
-                    {error}
+                    {error.message || "No se pudieron cargar los datos."}
                   </td>
                 </tr>
-              ) : categorias.length === 0 ? (
+              ) : categoriasEnriquecidas.length === 0 ? (
                 <tr>
                   <td className="sin-datos" colSpan={4}>
                     No hay categorías registradas.
                   </td>
                 </tr>
               ) : (
-                categorias.map((categoria, i) => (
+                categoriasEnriquecidas.map((categoria, i) => (
                   <motion.tr
                       key={categoria.id_cat}
                       custom={i}
@@ -250,7 +259,7 @@ const ListaCategorias = () => {
                         <button
                           type="button"
                           className="btn-accion eliminar"
-                          onClick={() => handleDelete(categoria.id_categoria)}
+                          onClick={() => handleDelete(categoria.id_cat)}
                         >
                           Eliminar
                         </button>
