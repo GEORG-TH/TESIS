@@ -13,7 +13,25 @@ import {
   activarProveedor,
   desactivarProveedor,
 } from "../../api/proveedorApi";
-
+import {
+  Paper,
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Chip,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { esES } from "@mui/x-data-grid/locales";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 const MySwal = withReactContent(Swal);
 
 const ListaProveedores = () => {
@@ -181,135 +199,153 @@ const ListaProveedores = () => {
 			data: formValues,
 		});
   };
+  const columns = [
+    { field: "id_proveedor", headerName: "ID", width: 50 },
+    { field: "ruc", headerName: "RUC", width: 120 },
+    { field: "nombre_proveedor", headerName: "Razón Social", flex: 1, minWidth: 200 },
+    { field: "telefono", headerName: "Teléfono", width: 120 },
+    { field: "email", headerName: "Email", minWidth: 200, flex: 1 },
+    { field: "direccion", headerName: "Dirección", minWidth: 250, flex: 1.5 },
+    /*{
+      field: "estado",
+      headerName: "Estado",
+      width: 100,
+      renderCell: (params) => (
+        <Chip
+          label={getEstadoTexto(params.value)}
+          color={params.value === 1 ? "success" : "default"}
+          size="small"
+        />
+      ),
+    },*/ 
+    {
+      field: "acciones",
+      headerName: "Acciones",
+      type: "actions",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={0.5} justifyContent="center">
+          <Tooltip title="Editar">
+            <IconButton
+              size="small"
+              color="info"
+              onClick={() => handleEditar(params.row)} 
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          
+          {params.row.estado === 1 ? (
+            <Tooltip title="Desactivar">
+              <IconButton
+                size="small"
+                color="warning"
+                onClick={() => handleDesactivar(params.row.id_proveedor)}
+              >
+                <HighlightOffIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Activar">
+              <IconButton
+                size="small"
+                color="success"
+                onClick={() => handleActivar(params.row.id_proveedor)}
+              >
+                <CheckCircleOutlineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+
+          <Tooltip title="Eliminar">
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleEliminar(params.row.id_proveedor)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
 
   return (
     <LayoutDashboard>
       <motion.div
-          initial={{ opacity: 0, y: 20 }}     
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Paper
+          sx={{
+            m: { xs: 1, sm: 2, md: 3 },
+            p: { xs: 2, sm: 3 },
+            borderRadius: 2,
+            boxShadow: 3,
+          }}
         >
-      <div className="lista-panel-container">
-        <div className="lista-panel-header">
-          <h2 className="lista-panel-title">Lista de Proveedores</h2>
-          <div className="lista-panel-actions">
-            <button
-              type="button"
-              className="lista-panel-back"
-              onClick={() => navigate("/dashboard-proveedores")}
-            >
-              Volver
-            </button>
-            <button
-              type="button"
-              className="lista-panel-refresh"
-              onClick={refetch()}
-              disabled={isLoading}
-            >
-              {isLoading ? "Actualizando..." : "Actualizar"}
-            </button>
-            <button
-              type="button"
-              className="lista-panel-nuevo"
-              onClick={() => navigate("/proveedores/nuevo")}
-            >
-              Ingresar Proveedor
-            </button>
-          </div>
-        </div>
-
-        <div className="panel-table-wrapper">
-          <table className="panel-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>RUC</th>
-                <th>Razón Social</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-                <th>Dirección</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence>
-              {isLoading ? (
-										<tr>
-											<td className="sin-datos" colSpan={7}>
-												Cargando proveedores...
-											</td>
-										</tr>
-									) : isError ? (
-										<tr>
-											<td className="sin-datos" colSpan={7}>
-												{error.message || "No se pudieron cargar los datos."}
-											</td>
-										</tr>
-									) : proveedores.length === 0 ? (
-                    <tr>
-                      <td className="sin-datos" colSpan={7}>
-                        No hay proveedores registrados.
-                      </td>
-                    </tr>
-              ) : (
-                proveedores.map((proveedor, i) => (
-                  <motion.tr
-                      key={proveedor.id_proveedor}
-                      custom={i}
-                      initial="hidden"
-                      animate="visible"
-                      variants={rowVariants}
-                      className="fila-proveedor"
-                    >
-                    <td>{proveedor.id_proveedor}</td>
-                    <td>{proveedor.ruc}</td>
-                    <td>{proveedor.nombre_proveedor}</td>
-                    <td>{proveedor.telefono}</td>
-                    <td>{proveedor.email}</td>
-                    <td>{proveedor.direccion}</td>
-                    <td>
-                      <div className="acciones-columna">
-                        <button
-                          type="button"
-                          className="btn-accion editar"
-                          onClick={() => handleEditar(proveedor)}
-                        >
-                          Editar
-                        </button>
-                        {proveedor.estado === 1 ? (
-                          <button
-                            type="button"
-                            className="btn-accion desactivar"
-                            onClick={() => handleDesactivar(proveedor.id_proveedor)}
-                          >
-                            Desactivar
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn-accion activar"
-                            onClick={() => handleActivar(proveedor.id_proveedor)}
-                          >
-                            Activar
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="btn-accion eliminar"
-                          onClick={() => handleEliminar(proveedor.id_proveedor)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      </div>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              mb: 2,
+              gap: 2,
+            }}
+          >
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+              Lista de Proveedores
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate("/dashboard-proveedores")}
+              >
+                Volver
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                {isLoading ? "Cargando..." : "Actualizar"}
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate("/proveedores/nuevo")}
+              >
+                Ingresar Proveedor
+              </Button>
+            </Stack>
+          </Box>
+          <Box sx={{ height: 600, width: "100%" }}>
+            <DataGrid
+              rows={proveedores}
+              columns={columns}
+              loading={isLoading}
+              
+              getRowId={(row) => row.id_proveedor} 
+              
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: { sortModel: [{ field: 'nombre_proveedor', sort: 'asc' }] }
+              }}
+              pageSizeOptions={[10, 25, 50]}
+              disableRowSelectionOnClick
+              
+              localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+              autoHeight
+            />
+          </Box>
+        </Paper>
       </motion.div>
     </LayoutDashboard>
   );

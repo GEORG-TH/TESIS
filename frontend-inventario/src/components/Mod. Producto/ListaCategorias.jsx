@@ -12,6 +12,22 @@ import {
   updateCategoria,
 } from "../../api/categoriaApi";
 import { getAreas } from "../../api/areaApi";
+import {
+  Paper,
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { esES } from "@mui/x-data-grid/locales";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const MySwal = withReactContent(Swal);
 
@@ -57,6 +73,7 @@ const ListaCategorias = () => {
     );
 
     return (categoriasData || []).map((categoria) => ({
+      id: categoria.id_cat,
       ...categoria,
       nombreArea: areasMap.get(categoria.area?.id_area) || "Sin área",
     }));
@@ -168,111 +185,127 @@ const ListaCategorias = () => {
     refetchCategorias();
     refetchAreas();
   };
+  const columns = [
+    { 
+      field: "id_cat", 
+      headerName: "ID", 
+      width: 100 
+    },
+    { 
+      field: "nombreCat", 
+      headerName: "Nombre Categoría", 
+      flex: 1, 
+      minWidth: 200 
+    },
+    {
+      field: "nombreArea", 
+      headerName: "Área",
+      flex: 1,
+      minWidth: 200,
+    },
+    {
+      field: "acciones",
+      headerName: "Acciones",
+      type: "actions",
+      width: 100, 
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={0.5} justifyContent="center">
+          <Tooltip title="Editar">
+            <IconButton
+              size="small"
+              color="info"
+              onClick={() => handleEdit(params.row)} 
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Eliminar">
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleDelete(params.row.id_cat)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
   return (
     <LayoutDashboard>
       <motion.div
-          initial={{ opacity: 0, y: 20 }}     
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Paper
+          sx={{
+            m: { xs: 1, sm: 2, md: 3 },
+            p: { xs: 2, sm: 3 },
+            borderRadius: 2,
+            boxShadow: 3,
+          }}
         >
-      <div className="lista-panel-container">
-        <div className="lista-panel-header">
-          <h2 className="lista-panel-title">Lista de Categorías</h2>
-          <div className="lista-panel-actions">
-            <button
-              type="button"
-              className="lista-panel-back"
-              onClick={() => navigate("/dashboard-productos")}
-            >
-              Volver
-            </button>
-            <button
-              type="button"
-              className="lista-panel-refresh"
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              {isLoading ? "Actualizando..." : "Actualizar"}
-            </button>
-            <button
-              type="button"
-              className="lista-panel-nuevo"
-              onClick={() => navigate("/categorias/nuevo")}
-            >
-              Nueva Categoría
-            </button>
-          </div>
-        </div>
-
-        <div className="panel-table-wrapper">
-          <table className="panel-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre Categoría</th>
-                <th>Área</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence>
-              {isLoading ? (
-                <tr>
-                  <td className="sin-datos" colSpan={4}>
-                    Cargando categorías...
-                  </td>
-                </tr>
-              ) : isError ? (
-                <tr>
-                  <td className="sin-datos" colSpan={4}>
-                    {error.message || "No se pudieron cargar los datos."}
-                  </td>
-                </tr>
-              ) : categoriasEnriquecidas.length === 0 ? (
-                <tr>
-                  <td className="sin-datos" colSpan={4}>
-                    No hay categorías registradas.
-                  </td>
-                </tr>
-              ) : (
-                categoriasEnriquecidas.map((categoria, i) => (
-                  <motion.tr
-                      key={categoria.id_cat}
-                      custom={i}
-                      initial="hidden"
-                      animate="visible"
-                      variants={rowVariants}
-                      className="fila-categoria"
-                    >
-                    <td>{categoria.id_cat}</td>
-                    <td>{categoria.nombreCat}</td>
-                    <td>{categoria.nombreArea}</td>
-                    <td>
-                      <div className="acciones-columna">
-                        <button
-                          type="button"
-                          className="btn-accion editar"
-                          onClick={() => handleEdit(categoria)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-accion eliminar"
-                          onClick={() => handleDelete(categoria.id_cat)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      </div>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              mb: 2,
+              gap: 2,
+            }}
+          >
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+              Lista de Categorías
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate("/dashboard-productos")}
+              >
+                Volver
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={handleRefresh}
+                disabled={isLoading}
+              >
+                {isLoading ? "Cargando..." : "Actualizar"}
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate("/categorias/nuevo")}
+              >
+                Nueva Categoría
+              </Button>
+            </Stack>
+          </Box>
+          <Box sx={{ height: 400, width: "100%" }}>
+            <DataGrid
+              rows={categoriasEnriquecidas}
+              columns={columns}
+              loading={isLoading}
+              
+              getRowId={(row) => row.id}
+              
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: { sortModel: [{ field: 'id_cat', sort: 'asc' }] }
+              }}
+              pageSizeOptions={[10, 25, 50]}
+              disableRowSelectionOnClick
+              autoHeight
+              localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+            />
+          </Box>
+        </Paper>
       </motion.div>
     </LayoutDashboard>
   );

@@ -128,12 +128,12 @@ body.light-theme {
 }
 
 body.dark-theme {
-  --background-color: #0f172a;
+  --background-color: #202123;
   --surface-color: #1f2937;
   --surface-border: rgba(148, 163, 184, 0.15);
   --text-color: #e2e8f0;
   --text-muted: #94a3b8;
-  --sidebar-bg: #0f172a;
+  --sidebar-bg: #202123;
   --sidebar-text: #f8fafc;
   --sidebar-border: rgba(148, 163, 184, 0.1);
   --sidebar-hover: rgba(59, 130, 246, 0.25);

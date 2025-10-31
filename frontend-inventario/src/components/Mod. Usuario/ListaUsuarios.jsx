@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { motion, AnimatePresence  } from "framer-motion";
@@ -12,30 +12,33 @@ import {
   updateUsuario,
 } from "../../api/usuarioApi";
 import LayoutDashboard from "../layouts/LayoutDashboard";
-import SkeletonRow from "../SkeletonRow";
-import "../styles/styleLista.css";
+import {
+  Paper,
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Chip,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { esES } from "@mui/x-data-grid/locales";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useGlobalStore } from "../../store/useGlobalStore";
+import { getRoles } from "../../api/rolApi";
 
-const usuarioLogueado = JSON.parse(localStorage.getItem("usuario"));
 const MySwal = withReactContent(Swal);
-
 function ListaUsuarios() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [roles] = useState([
-    { id_rol: 1, nombreRol: "Administrador" },
-    { id_rol: 2, nombreRol: "Jefe de Inventario" },
-    { id_rol: 3, nombreRol: "Operador de Recepción de Mercadería" },
-    { id_rol: 4, nombreRol: "Auditor de Inventarios" },
-    { id_rol: 5, nombreRol: "Operador de Tienda" }
-  ]);
-  const rowVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.05, duration: 0.3 }, 
-    }),
-  };
+  const usuarioLogueado = useGlobalStore((state) => state.user);
   const {
 		data: usuariosData,
 		isLoading,
@@ -46,6 +49,26 @@ function ListaUsuarios() {
 		queryKey: ["usuarios"], 
 		queryFn: getUsuarios,
 	});
+  const { 
+      data: rolesData, 
+      isLoading: isLoadingRoles 
+    } = useQuery({
+      queryKey: ['roles'], 
+      queryFn: getRoles
+    });
+  const roles = rolesData || [];
+  const processedUsuarios = useMemo(() => {
+    if (!usuariosData) {
+      return [];
+    }
+    return usuariosData.map((u) => ({
+      ...u,
+      nombreCompleto: `${u.nombre_u || ""} ${u.apellido_pat || ""} ${
+        u.apellido_mat || ""
+      }`.trim(),
+      rolNombre: u.rol?.nombreRol || "N/A",
+    }));
+  }, [usuariosData]);
   const usuarios = usuariosData || [];
   const deleteUsuarioMutation = useMutation({
 		mutationFn: deleteUsuario, 
@@ -196,13 +219,109 @@ function ListaUsuarios() {
   });
 
   if (formValues) {
-    updateUsuarioMutation.mutate({
-			id: usuario.id_u,
-			data: formValues,
-			originalNombre: usuario.nombre_u, 
-		});
-  }
-};
+      updateUsuarioMutation.mutate({
+        id: usuario.id_u,
+        data: formValues,
+        originalNombre: usuario.nombre_u, 
+      });
+    }
+  };
+  const columns = [
+    { 
+      field: "id_u", 
+      headerName: "ID", 
+      width: 70 
+    },
+    { 
+      field: "dni", 
+      headerName: "DNI", 
+      width: 100 
+    },
+    {
+      field: "nombreCompleto",
+      headerName: "Nombre",
+      flex: 1,
+      minWidth: 200,
+    },
+    { 
+      field: "email", 
+      headerName: "Email", 
+      flex: 1, 
+      minWidth: 200 
+    },
+    {
+      field: "rolNombre",
+      headerName: "Rol",
+      width: 150,
+    },
+    {
+      field: "estado_u",
+      headerName: "Estado",
+      width: 100,
+      renderCell: (params) => (
+        <Chip
+          label={getEstadoTexto(params.value)}
+          color={params.value === 1 ? "success" : "default"}
+          size="small"
+        />
+      ),
+    },
+    {
+      field: "acciones",
+      headerName: "Acciones",
+      type: "actions", 
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+          <Stack direction="row" spacing={0.5} justifyContent="center">
+            <Tooltip title="Editar">
+              <IconButton
+                size="small"
+                color="info"
+                onClick={() => handleEditar(params.row)}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          {params.row.estado_u === 1 ? (
+            <Tooltip title="Desactivar">
+                <span>
+                  <IconButton
+                    size="small"
+                    color="warning"
+                    onClick={() => handleDesactivar(params.row.id_u)}
+                  >
+                    <HighlightOffIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            ) : (
+              <Tooltip title="Activar">
+                <IconButton
+                  size="small"
+                  color="success"
+                  onClick={() => handleActivar(params.row.id_u)}
+                >
+                  <CheckCircleOutlineIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          <Tooltip title="Eliminar">
+              <span>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleEliminar(params.row.id_u)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+        </Stack>
+      )
+    },
+  ];
 
   const getEstadoTexto = (estado) => (estado === 1 ? "Activo" : "Inactivo");
 
@@ -213,121 +332,73 @@ function ListaUsuarios() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-        <div className="lista-panel-container">
-          <div className="lista-panel-header">
-            <h2 className="lista-panel-title">Lista de Usuarios</h2>
-            <div className="lista-panel-actions">
-              <button
-                type="button"
-                className="lista-panel-back"
+        <Paper
+          sx={{
+            m: { xs: 1, sm: 2, md: 3 },
+            p: { xs: 2, sm: 3 },
+            borderRadius: 2,
+            boxShadow: 3,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              mb: 2,
+              gap: 2,
+            }}
+          >
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+              Lista de Usuarios
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
                 onClick={() => navigate("/dashboard-usuarios")}
               >
                 Volver
-              </button>
-              <button type="button" className="lista-panel-refresh" onClick={refetch()} disabled={isLoading}>
-                Actualizar
-              </button>
-              <button
-                type="button"
-                className="lista-panel-nuevo"
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                {isLoading ? "Cargando..." : "Actualizar"}
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
                 onClick={() => navigate("/usuarios/nuevo")}
               >
                 Ingresar Usuario
-              </button>
-            </div>
-          </div>
-          <div className="panel-table-wrapper">
-            <table className="panel-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>DNI</th>
-                  <th>Nombre</th>
-                  <th>Email</th>
-                  <th>Rol</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                {isLoading ? (
-                  <>
-                    <SkeletonRow />
-                    <SkeletonRow />
-                    <SkeletonRow />
-                  </>
-                ) : usuarios.length === 0 ? (
-                  <tr>
-                    <td className="sin-datos" colSpan={7}>
-                      No hay usuarios registrados.
-                    </td>
-                  </tr>
-                ) : (
-                  usuarios.map((u, i) => (
-                    <motion.tr
-                      key={u.id_u}
-                      custom={i}
-                      initial="hidden"
-                      animate="visible"
-                      variants={rowVariants}
-                      className="fila-usuario"
-                    >
-                      <td>{u.id_u}</td>
-                      <td>{u.dni}</td>
-                      <td>
-                        {u.nombre_u} {u.apellido_pat} {u.apellido_mat}
-                      </td>
-                      <td>{u.email}</td>
-                      <td>{u.rol?.nombreRol}</td>
-                      <td>
-                        <span className={`estado-chip ${u.estado_u === 1 ? "activo" : "inactivo"}`}>
-                          {getEstadoTexto(u.estado_u)}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="acciones-columna">
-                          <button
-                            type="button"
-                            className="btn-accion editar"
-                            onClick={() => handleEditar(u)}
-                          >
-                            Editar
-                          </button>
-                          {u.estado_u === 1 ? (
-                            <button
-                              type="button"
-                              className="btn-accion desactivar"
-                              onClick={() => handleDesactivar(u.id_u)}
-                            >
-                              Desactivar
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn-accion activar"
-                              onClick={() => handleActivar(u.id_u)}
-                            >
-                              Activar
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="btn-accion eliminar"
-                            onClick={() => handleEliminar(u.id_u)}
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))
-                )}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </Button>
+            </Stack>
+          </Box>
+          <Box sx={{ height: 600, width: "100%" }}>
+            <DataGrid
+              rows={processedUsuarios}
+              columns={columns}   
+              loading={isLoading}   
+
+              getRowId={(row) => row.id_u} 
+              
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+              }}
+              pageSizeOptions={[10, 25, 50]} 
+              disableRowSelectionOnClick
+
+              autoHeight
+              sx={{ "--DataGrid-overlayHeight": "300px" }}
+              
+              localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+            />
+          </Box>
+        </Paper>
       </motion.div>
     </LayoutDashboard>
   );
