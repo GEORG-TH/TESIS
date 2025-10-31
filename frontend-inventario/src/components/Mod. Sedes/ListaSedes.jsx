@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence  } from "framer-motion";
@@ -7,20 +6,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
 import { getSedes, deleteSede, updateSede } from "../../api/sedeApi";
+import {
+  Paper,
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Tooltip, 
+  IconButton, 
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { esES } from "@mui/x-data-grid/locales";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete"; 
 
 const MySwal = withReactContent(Swal);
 
 const ListaSedes = () => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const rowVariants = {
-		hidden: { opacity: 0, y: 10 },
-		visible: (i) => ({
-		opacity: 1,
-		y: 0,
-		transition: { delay: i * 0.05, duration: 0.3 }, 
-		}),
-	};
 
 	const {
 		data: sedesData,
@@ -121,116 +128,135 @@ const ListaSedes = () => {
 		}
 		updateSedeMutation.mutate({ id: sede.idSede, data: datosActualizados });
 	};
-
+	const columns = [
+		{ 
+		field: "idSede", 
+		headerName: "ID", 
+		width: 80 
+		},
+		{ 
+		field: "nombreSede", 
+		headerName: "Sede", 
+		minWidth: 200,
+		flex: 1 
+		},
+		{
+		field: "direccion", 
+		headerName: "Dirección", 
+		minWidth: 250,
+		flex: 1
+		},
+		{ 
+		field: "anexo", 
+		headerName: "Anexo", 
+		width: 120 
+		},
+		{
+		field: "acciones",
+		headerName: "Acciones",
+		type: "actions",
+		width: 100,
+		align: "center",
+		headerAlign: "center",
+		renderCell: (params) => (
+			<Stack direction="row" spacing={0.5} justifyContent="center">
+			<Tooltip title="Editar">
+				<IconButton
+				size="small"
+				color="info"
+				onClick={() => handleEditar(params.row)} 
+				>
+				<EditIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
+			<Tooltip title="Eliminar">
+				<IconButton
+				size="small"
+				color="error"
+				onClick={() => handleEliminar(params.row.idSede)}
+				>
+				<DeleteIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
+			</Stack>
+		),
+		},
+	];
 	return (
 		<LayoutDashboard>
-			<motion.div
-				initial={{ opacity: 0, y: 20 }}     
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.4, ease: "easeOut" }}
-			>
-			<div className="lista-panel-container">
-				<div className="lista-panel-header">
-					<h2 className="lista-panel-title">Lista de Sedes</h2>
-					<div className="lista-panel-actions">
-						<button
-							type="button"
-							className="lista-panel-back"
-							onClick={() => navigate("/dashboard-sedes")}
-						>
-							Volver
-						</button>
-						<button
-							type="button"
-							className="lista-panel-refresh"
-							onClick={refetch()}
-							disabled={isLoading}
-						>
-							{isLoading ? "Actualizando..." : "Actualizar"}
-						</button>
-						<button
-							type="button"
-							className="lista-panel-nuevo"
-							onClick={() => navigate("/sedes/nuevo")}
-						>
-							Nueva Sede
-						</button>
-					</div>
-				</div>
-
-				<div className="panel-table-wrapper">
-					<table className="panel-table">
-						<thead>
-							<tr>
-								<th>ID</th>
-								<th>Sede</th>
-								<th>Dirección</th>
-								<th>Anexo</th>
-								<th>Acciones</th>
-							</tr>
-						</thead>
-						<tbody>
-							<AnimatePresence>
-							{isLoading ? (
-								<tr>
-									<td className="sin-datos" colSpan={5}>
-										Cargando sedes...
-									</td>
-								</tr>
-							) : isError ? (
-								<tr>
-									<td className="sin-datos" colSpan={5}>
-										{error.message || "No se pudieron cargar las sedes."}
-									</td>
-								</tr>
-							) : sedes.length === 0 ? (
-								<tr>
-									<td className="sin-datos" colSpan={5}>
-										No hay sedes registradas.
-									</td>
-								</tr>
-							) : (
-								sedes.map((sede, i) => (
-									<motion.tr
-										key={sede.idSede}
-										custom={i}
-										initial="hidden"
-										animate="visible"
-										variants={rowVariants}
-										className="fila-sede"
-									>
-										<td>{sede.idSede}</td>
-										<td>{sede.nombreSede}</td>
-										<td>{sede.direccion}</td>
-										<td>{sede.anexo}</td>
-										<td>
-											<div className="acciones-columna">
-												<button
-													type="button"
-													className="btn-accion editar"
-													onClick={() => handleEditar(sede)}
-												>
-													Editar
-												</button>
-												<button
-													type="button"
-													className="btn-accion eliminar"
-													onClick={() => handleEliminar(sede.idSede)}
-												>
-													Eliminar
-												</button>
-											</div>
-										</td>
-									</motion.tr>
-								))
-							)}
-							</AnimatePresence>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			</motion.div>
-		</LayoutDashboard>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Paper
+          sx={{
+            m: { xs: 1, sm: 2, md: 3 },
+            p: { xs: 2, sm: 3 },
+            borderRadius: 2,
+            boxShadow: 3,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              mb: 2,
+              gap: 2,
+            }}
+          >
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+              Lista de Sedes
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate("/dashboard-sedes")}
+              >
+                Volver
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                {isLoading ? "Cargando..." : "Actualizar"}
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate("/sedes/nuevo")}
+              >
+                Nueva Sede
+              </Button>
+            </Stack>
+          </Box>
+          <Box sx={{ height: 400, width: "100%" }}>
+            <DataGrid
+              rows={sedes}
+              columns={columns}
+              loading={isLoading}
+              
+              getRowId={(row) => row.idSede}
+              
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: { sortModel: [{ field: 'idSede', sort: 'asc' }] }
+              }}
+              pageSizeOptions={[10, 25, 50]}
+              disableRowSelectionOnClick
+              autoHeight
+              localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+              
+            />
+          </Box>
+        </Paper>
+      </motion.div>
+    </LayoutDashboard>
 	);
 };
 

@@ -2,6 +2,8 @@ import './App.css';
 import './components/styles/SweetAlert.css';
 import React, { useEffect } from "react";
 import { useGlobalStore } from './store/useGlobalStore';
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes } from "react-router-dom";
 import AppRoutes from "./routes";
 
@@ -27,11 +29,23 @@ function App() {
     body.classList.add(`font-size-${fontSize}`);
     body.classList.add(`density-${density}`);
   }, [theme, fontSize, density]);
+  const muiTheme = React.useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: theme,
+        },
+      }),
+    [theme]
+  );
 
   return (
-    <Router>
-      <Routes>{AppRoutes}</Routes>
-    </Router>
+    <ThemeProvider theme={muiTheme}>
+      <CssBaseline />
+      <Router>
+        <Routes>{AppRoutes}</Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

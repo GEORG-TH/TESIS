@@ -5,22 +5,29 @@ import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LayoutDashboard from "../layouts/LayoutDashboard";
-import "../styles/styleLista.css";
 import { getRoles, deleteRol, updateRol } from "../../api/rolApi";
+import {
+  Paper,
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { esES } from "@mui/x-data-grid/locales";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const MySwal = withReactContent(Swal);
 
 function ListaRoles() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const rowVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.05, duration: 0.3 }, 
-    }),
-  };
   const {
 		data: rolesData,
 		isLoading,
@@ -104,98 +111,122 @@ function ListaRoles() {
     }
     updateRolMutation.mutate({ id: rol.id_rol, data: formValues });
   };
-
+  const columns = [
+    { 
+      field: "id_rol", 
+      headerName: "ID", 
+      width: 70 
+    },
+    { 
+      field: "nombreRol", 
+      headerName: "Nombre del Rol", 
+      flex: 1, 
+      minWidth: 300 
+    },
+    {
+      field: "acciones",
+      headerName: "Acciones",
+      type: "actions",
+      width: 150,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={0.5} justifyContent="center">
+          <Tooltip title="Editar">
+            <IconButton
+              size="small"
+              color="info"
+              onClick={() => handleEditar(params.row)}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Eliminar">
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleEliminar(params.row.id_rol)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
   return (
     <LayoutDashboard>
       <motion.div
-          initial={{ opacity: 0, y: 20 }}     
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Paper
+          sx={{
+            m: { xs: 1, sm: 2, md: 3 },
+            p: { xs: 2, sm: 3 },
+            borderRadius: 2,
+            boxShadow: 3,
+          }}
         >
-      <div className="lista-panel-container">
-        <div className="lista-panel-header">
-          <h2 className="lista-panel-title">Lista de Roles</h2>
-          <div className="lista-panel-actions">
-            <button
-              type="button"
-              className="lista-panel-back"
-              onClick={() => navigate("/dashboard-usuarios")}
-            >
-              Volver
-            </button>
-            <button
-              type="button"
-              className="lista-panel-refresh"
-              onClick={refetch()}
-              disabled={isLoading}
-            >
-              {isLoading ? "Actualizando..." : "Actualizar"}
-            </button>
-            <button
-              type="button"
-              className="lista-panel-nuevo"
-              onClick={() => navigate("/roles/nuevo")}
-            >
-              Nuevo Rol
-            </button>
-          </div>
-        </div>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              mb: 2,
+              gap: 2,
+            }}
+          >
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+              Lista de Roles
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate("/dashboard-usuarios")}
+              >
+                Volver
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                {isLoading ? "Cargando..." : "Actualizar"}
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate("/roles/nuevo")}
+              >
+                Nuevo Rol
+              </Button>
+            </Stack>
+          </Box>
 
-        <div className="panel-table-wrapper">
-          <table className="panel-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre del Rol</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence>
-              {roles.length === 0 ? (
-                <tr>
-                  <td className="sin-datos" colSpan={3}>
-                    {isLoading ? "Cargando roles..." : "No hay roles registrados."}
-                  </td>
-                </tr>
-              ) : (
-                roles.map((rol, i) => (
-                  <motion.tr
-                      key={rol.id_rol}
-                      custom={i}
-                      initial="hidden"
-                      animate="visible"
-                      variants={rowVariants}
-                      className="fila-rol"
-                    >
-                    <td>{rol.id_rol}</td>
-                    <td>{rol.nombreRol}</td>
-                    <td>
-                      <div className="acciones-columna">
-                        <button
-                          type="button"
-                          className="btn-accion editar"
-                          onClick={() => handleEditar(rol)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-accion eliminar"
-                          onClick={() => handleEliminar(rol.id_rol)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      </div>
+          <Box sx={{ height: 400, width: "100%" }}>
+            <DataGrid
+              rows={roles}
+              columns={columns} 
+              loading={isLoading} 
+              
+              getRowId={(row) => row.id_rol}
+              
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: { sortModel: [{ field: 'id_rol', sort: 'asc' }] }
+              }}
+              pageSizeOptions={[10, 25, 50]}
+              disableRowSelectionOnClick
+              
+              localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+            />
+          </Box>
+        </Paper>
       </motion.div>
     </LayoutDashboard>
   );

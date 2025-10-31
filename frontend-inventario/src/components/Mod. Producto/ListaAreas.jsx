@@ -1,26 +1,33 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { motion, AnimatePresence  } from "framer-motion";
+import { motion } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAreas, deleteArea, updateArea } from "../../api/areaApi";
 import LayoutDashboard from "../layouts/LayoutDashboard";
 import "../styles/styleLista.css";
+import {
+  Paper,
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { esES } from "@mui/x-data-grid/locales";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const MySwal = withReactContent(Swal);
 
 const AreaList = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const rowVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.05, duration: 0.3 }, 
-    }),
-  };
   const {
 		data: areasData,
 		isLoading,
@@ -107,110 +114,122 @@ const AreaList = () => {
 			data: { nombreArea: nombreActualizado },
 		});
   };
-
+  const columns = [
+    { 
+      field: "id_area", 
+      headerName: "ID", 
+      width: 100 
+    },
+    { 
+      field: "nombreArea", 
+      headerName: "Nombre del Área", 
+      flex: 1, 
+      minWidth: 250 
+    },
+    {
+      field: "acciones",
+      headerName: "Acciones",
+      type: "actions",
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => (
+        <Stack direction="row" spacing={0.5} justifyContent="center">
+          <Tooltip title="Editar">
+            <IconButton
+              size="small"
+              color="info"
+              onClick={() => handleEdit(params.row)}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Eliminar">
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleDelete(params.row.id_area)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ),
+    },
+  ];
   return (
     <LayoutDashboard>
       <motion.div
-          initial={{ opacity: 0, y: 20 }}     
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Paper
+          sx={{
+            m: { xs: 1, sm: 2, md: 3 },
+            p: { xs: 2, sm: 3 },
+            borderRadius: 2,
+            boxShadow: 3,
+          }}
         >
-      <div className="lista-panel-container">
-        <div className="lista-panel-header">
-          <h2 className="lista-panel-title">Lista de Áreas</h2>
-          <div className="lista-panel-actions">
-            <button
-              type="button"
-              className="lista-panel-back"
-              onClick={() => navigate("/dashboard-productos")}
-            >
-              Volver
-            </button>
-            <button
-              type="button"
-              className="lista-panel-refresh"
-              onClick={refetch()}
-              disabled={isLoading}
-            >
-              {isLoading ? "Actualizando..." : "Actualizar"}
-            </button>
-            <button
-              type="button"
-              className="lista-panel-nuevo"
-              onClick={() => navigate("/areas/nuevo")}
-            >
-              Nueva Área
-            </button>
-          </div>
-        </div>
-
-        <div className="panel-table-wrapper">
-          <table className="panel-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre del Área</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence>
-              {isLoading ? (
-                <tr>
-                  <td className="sin-datos" colSpan={3}>
-                    Cargando áreas...
-                  </td>
-                </tr>
-              ) : isError ? (
-                <tr>
-                  <td className="sin-datos" colSpan={3}>
-                    {isError}
-                  </td>
-                </tr>
-              ) : areas.length === 0 ? (
-                <tr>
-                  <td className="sin-datos" colSpan={3}>
-                    No hay áreas registradas.
-                  </td>
-                </tr>
-              ) : (
-                areas.map((area, i) => (
-                  <motion.tr
-                      key={area.id_area}
-                      custom={i}
-                      initial="hidden"
-                      animate="visible"
-                      variants={rowVariants}
-                      className="fila-areas"
-                    >
-                    <td>{area.id_area}</td>
-                    <td>{area.nombreArea}</td>
-                    <td>
-                      <div className="acciones-columna">
-                        <button
-                          type="button"
-                          className="btn-accion editar"
-                          onClick={() => handleEdit(area)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-accion eliminar"
-                          onClick={() => handleDelete(area.id_area)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      </div>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              mb: 2,
+              gap: 2,
+            }}
+          >
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+              Lista de Áreas
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate("/dashboard-productos")}
+              >
+                Volver
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                {isLoading ? "Cargando..." : "Actualizar"}
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate("/areas/nuevo")}
+              >
+                Nueva Área
+              </Button>
+            </Stack>
+          </Box>
+          <Box sx={{ height: 400, width: "100%" }}>
+            <DataGrid
+              rows={areas}
+              columns={columns}
+              loading={isLoading}
+              
+              getRowId={(row) => row.id_area}
+              
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: { sortModel: [{ field: 'id_area', sort: 'asc' }] }
+              }}
+              pageSizeOptions={[10, 25, 50]}
+              disableRowSelectionOnClick
+              
+              localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+              
+            />
+          </Box>
+        </Paper>
       </motion.div>
     </LayoutDashboard>
   );
