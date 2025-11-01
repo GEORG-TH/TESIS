@@ -7,7 +7,19 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const storage = localStorage.getItem("global-storage");
+    let token = null;
+
+    if (storage) {
+      try {
+        const parsedStorage = JSON.parse(storage);
+        if (parsedStorage.state && parsedStorage.state.token) {
+          token = parsedStorage.state.token;
+        }
+      } catch (e) {
+        console.error("Error al parsear el storage de Zustand", e);
+      }
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
