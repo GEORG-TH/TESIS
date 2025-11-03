@@ -1,140 +1,180 @@
 import React, { useState } from 'react';
-import { setupMfa, verifyMfa, disableMfa } from '../api/authApi'; 
-import Swal from 'sweetalert2';
-import './styles/MfaSetup.css'; 
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { setupMfa, verifyMfa, disableMfa } from '../api/authApi';
+import { useGlobalStore } from '../store/useGlobalStore';
+import { toast } from 'react-hot-toast';
 
-const MfaSetup = ({ usuario, onMfaStatusChange }) => {
+import {
+    Box,
+    Button,
+    TextField,
+    Typography,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    CircularProgress,
+} from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+const MfaSetup = () => {
+    const queryClient = useQueryClient();
+    const usuario = useGlobalStore((state) => state.user);
+    const setUser = useGlobalStore((state) => state.setUser);
+
     const [qrCode, setQrCode] = useState(null);
     const [mfaCode, setMfaCode] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [isConfirmOpen, setConfirmOpen] = useState(false);
+    const { mutate: handleSetup, isPending: isSetupPending } = useMutation({
+        mutationFn: setupMfa,
+        onSuccess: (response) => {
+            setQrCode(response.qrCodeUri);
+            toast.info('Escanea el código QR con tu app de autenticación.');
+        },
+        onError: () => {
+            toast.error('No se pudo iniciar la configuración de 2FA.');
+        },
+    });
 
-    const handleSetupClick = async () => {
-        setIsLoading(true);
-        try {
-            const response = await setupMfa();
-            setQrCode(response.data.qrCodeUri);
-            Swal.fire(
-                '¡Escanea el QR!',
-                'Usa tu app (Google Authenticator, Microsoft Authenticator, Authy) para escanear el código QR.',
-                'info'
-            );
-        } catch (error) {
-            Swal.fire('Error', 'No se pudo iniciar la configuración de 2FA.', 'error');
-        }
-        setIsLoading(false);
-    };
-
-    const handleVerifyClick = async () => {
-        setIsLoading(true);
-        try {
-            await verifyMfa({ code: mfaCode });
-            Swal.fire(
-                '¡Activado!',
-                'La autenticación de 2 factores se ha habilitado correctamente.',
-                'success'
-            );
+    const { mutate: handleVerify, isPending: isVerifyPending } = useMutation({
+        mutationFn: verifyMfa,
+        onSuccess: () => {
+            toast.success('¡2FA habilitado correctamente!');
             setQrCode(null);
             setMfaCode('');
-            
-            if (onMfaStatusChange) {
-                onMfaStatusChange(true);
-            }
-        } catch (error) {
-            Swal.fire('Error', 'Código inválido. Inténtalo de nuevo.', 'error');
-        }
-        setIsLoading(false);
-    };
+            setUser({ ...usuario, mfaEnabled: true });
+        },
+        onError: () => {
+            toast.error('Código inválido. Inténtalo de nuevo.');
+        },
+    });
 
-    const handleDisableClick = async () => {
-        const result = await Swal.fire({
-            title: '¿Estás seguro?',
-            text: "Se desactivará la protección de 2 factores de tu cuenta.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, desactivar',
-            cancelButtonText: 'Cancelar'
-        });
+    const { mutate: handleDisable, isPending: isDisablePending } = useMutation({
+        mutationFn: disableMfa,
+        onSuccess: () => {
+            toast.success('El 2FA se ha deshabilitado.');
+            setConfirmOpen(false);
+            setUser({ ...usuario, mfaEnabled: false });
+        },
+        onError: () => {
+            toast.error('No se pudo deshabilitar el 2FA.');
+            setConfirmOpen(false);
+        },
+    });
 
-        if (result.isConfirmed) {
-            setIsLoading(true);
-            try {
-                await disableMfa();
-                Swal.fire(
-                    '¡Desactivado!',
-                    'El 2FA se ha deshabilitado.',
-                    'success'
-                );
-                
-                if (onMfaStatusChange) {
-                    onMfaStatusChange(false);
-                }
-
-            } catch (error) {
-                Swal.fire('Error', 'No se pudo deshabilitar el 2FA.', 'error');
-            }
-            setIsLoading(false);
+    const onVerifySubmit = (e) => {
+        e.preventDefault();
+        if (mfaCode.length === 6) {
+            handleVerify({ code: mfaCode });
         }
     };
 
     if (!usuario) {
-        return <div className="mfa-setup-container"><p>Cargando seguridad...</p></div>;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     return (
-        <div className="mfa-setup-container">
-            <h3>Autenticación de 2 Factores (2FA)</h3>
-            
+        <Box>
             {usuario.mfaEnabled ? (
                 <>
-                    <p className="mfa-status-active"> Estado: Activado</p>
-                    <p className="mfa-description">Tu cuenta está protegida con una capa adicional de seguridad.</p>
-                    <button 
-                        onClick={handleDisableClick} 
-                        disabled={isLoading} 
-                        className="mfa-button-disable" 
+                    <Chip label="Activado" color="success" size="small" />
+                    <Typography variant="body2" sx={{ my: 2 }}>
+                        Tu cuenta está protegida con una capa adicional de seguridad.
+                    </Typography>
+                    <LoadingButton
+                        variant="contained"
+                        color="error"
+                        onClick={() => setConfirmOpen(true)}
+                        loading={isDisablePending}
                     >
-                        {isLoading ? 'Desactivando...' : 'Desactivar 2FA'}
-                    </button>
+                        Desactivar 2FA
+                    </LoadingButton>
                 </>
-
             ) : !qrCode ? (
                 <>
-                    <p className="mfa-status-inactive"> Estado: Inactivo</p>
-                    <p className="mfa-description">Protege tu cuenta con una capa adicional de seguridad.</p>
-                    <button 
-                        onClick={handleSetupClick} 
-                        disabled={isLoading} 
-                        className="mfa-button"
+                    <Chip label="Inactivo" size="small" />
+                    <Typography variant="body2" sx={{ my: 2 }}>
+                        Protege tu cuenta con una capa adicional de seguridad.
+                    </Typography>
+                    <LoadingButton
+                        variant="contained"
+                        onClick={() => handleSetup()}
+                        loading={isSetupPending}
                     >
-                        {isLoading ? 'Generando...' : 'Activar 2FA'}
-                    </button>
+                        Activar 2FA
+                    </LoadingButton>
                 </>
-
             ) : (
-                <div className="mfa-verification">
-                    <p className="mfa-description">Escanea el código QR con tu app de autenticación:</p>
-                    <img src={qrCode} alt="Código QR para 2FA" className="mfa-qr-code" />
-                    <p className="mfa-description">Luego, ingresa el código de 6 dígitos:</p>
-                    <input
-                        type="text"
-                        value={mfaCode}
-                        onChange={(e) => setMfaCode(e.target.value)}
-                        placeholder="Código de 6 dígitos"
-                        maxLength={6}
-                        className="mfa-input"
+                <Box
+                    component="form"
+                    onSubmit={onVerifySubmit}
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 2,
+                    }}
+                >
+                    <Typography variant="body2">
+                        Escanea el código QR con tu app de autenticación:
+                    </Typography>
+                    <Box
+                        component="img"
+                        src={qrCode}
+                        alt="Código QR para 2FA"
+                        sx={{
+                            width: 200,
+                            height: 200,
+                            border: 1,
+                            borderColor: 'divider',
+                            borderRadius: 2,
+                        }}
                     />
-                    <button 
-                        onClick={handleVerifyClick} 
-                        disabled={isLoading}
-                        className="mfa-button verify"
+                    <TextField
+                        label="Código de 6 dígitos"
+                        variant="outlined"
+                        value={mfaCode}
+                        onChange={(e) => setMfaCode(e.target.value.trim())}
+                        inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
+                        sx={{ width: '100%', maxWidth: '250px' }}
+                    />
+                    <LoadingButton
+                        type="submit"
+                        variant="contained"
+                        loading={isVerifyPending}
+                        disabled={mfaCode.length !== 6}
+                        sx={{ width: '100%', maxWidth: '250px' }}
                     >
-                        {isLoading ? 'Verificando...' : 'Verificar y Activar'}
-                    </button>
-                </div>
+                        Verificar y Activar
+                    </LoadingButton>
+                </Box>
             )}
-        </div>
+            <Dialog open={isConfirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>¿Estás seguro?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Se desactivará la protección de 2 factores de tu cuenta.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)} disabled={isDisablePending}>
+                        Cancelar
+                    </Button>
+                    <LoadingButton
+                        color="error"
+                        onClick={() => handleDisable()}
+                        loading={isDisablePending}
+                    >
+                        Sí, desactivar
+                    </LoadingButton>
+                </DialogActions>
+            </Dialog>
+        </Box>
     );
 };
 

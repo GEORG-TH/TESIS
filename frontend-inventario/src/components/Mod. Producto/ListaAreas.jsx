@@ -5,7 +5,6 @@ import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAreas, deleteArea, updateArea } from "../../api/areaApi";
 import LayoutDashboard from "../layouts/LayoutDashboard";
-import "../styles/styleLista.css";
 import {
   Paper,
   Box,

@@ -16,7 +16,7 @@ export default function LoadingScreen() {
       <div className="loading-content">
         <div className="loading-badge">SW+</div>
         <div className="loading-logo">
-          <img src="/logo_SWCI+.jpg" alt="Logo Corporativo" />
+          <img src="/logo.png" alt="Logo Corporativo" />
         </div>
   <h2 className="loading-text">Cargando su respectivo panel...</h2>
         <div className="spinner"></div>

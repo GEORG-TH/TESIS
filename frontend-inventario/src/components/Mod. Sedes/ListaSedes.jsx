@@ -4,7 +4,6 @@ import { motion, AnimatePresence  } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LayoutDashboard from "../layouts/LayoutDashboard";
-import "../styles/styleLista.css";
 import { getSedes, deleteSede, updateSede } from "../../api/sedeApi";
 import {
   Paper,
