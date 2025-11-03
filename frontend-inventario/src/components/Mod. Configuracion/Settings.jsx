@@ -1,204 +1,212 @@
 import React from "react";
-import { useGlobalStore } from '../../store/useGlobalStore';
+import { useGlobalStore } from "../../store/useGlobalStore";
 import LayoutDashboard from "../layouts/LayoutDashboard";
-import "../styles/Settings.css";
 
+// --- MUI Imports ---
+import {
+    Container,
+    Typography,
+    Paper,
+    Box,
+    Divider,
+    ToggleButton,
+    ToggleButtonGroup,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    FormControlLabel,
+    Switch,
+    Grid,
+} from "@mui/material";
+
+// Opciones (movidas fuera para mayor limpieza)
 const themeOptions = [
-    {
-        value: "light",
-        label: "Claro",
-        emoji: "☀️",
-        description: "Modo ideal para espacios bien iluminados",
-    },
-    {
-        value: "dark",
-        label: "Oscuro",
-        emoji: "🌙",
-        description: "Reduce el brillo para trabajar de noche",
-    },
+    { value: "light", label: "Claro", emoji: "☀️" },
+    { value: "dark", label: "Oscuro", emoji: "🌙" },
 ];
-
-const fontSizeLabels = {
-    small: "Pequeño",
-    medium: "Mediano",
-    large: "Grande",
-};
-
 const densityOptions = [
-    {
-        value: "comfortable",
-        label: "Cómodo",
-        description: "Espaciado amplio en tablas y tarjetas",
-    },
-    {
-        value: "compact",
-        label: "Compacto",
-        description: "Más información visible en pantalla",
-    },
+    { value: "comfortable", label: "Cómodo" },
+    { value: "compact", label: "Compacto" },
 ];
 
+// --- Componente de Selector de Color (de la petición anterior) ---
+const ColorPicker = ({ label, color, onChange }) => (
+    <Box
+        sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            p: 2,
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 2,
+        }}
+    >
+        <Typography variant="body2">{label}</Typography>
+        <input
+            type="color"
+            value={color}
+            onChange={(e) => onChange(e.target.value)}
+            style={{
+                width: "60px",
+                height: "30px",
+                border: "none",
+                padding: 0,
+                backgroundColor: "transparent",
+                cursor: "pointer",
+            }}
+        />
+    </Box>
+);
+
+// --- Componente Principal ---
 const Settings = () => {
-    const { 
-      theme, fontSize, density, sidebarCollapsed, showFooter,
-      setTheme, setFontSize, setDensity, setSidebarCollapsed, setShowFooter 
+    // Obtenemos todos los estados y setters de Zustand
+    const {
+        theme,
+        fontSize,
+        density,
+        sidebarCollapsed,
+        showFooter,
+        lightThemeColor, // <-- Nuevo estado de color
+        setTheme,
+        setFontSize,
+        setDensity,
+        setSidebarCollapsed,
+        setShowFooter,
+        setLightThemeColor, // <-- Nuevo setter de color
     } = useGlobalStore();
+
     return (
         <LayoutDashboard>
-            <div className="settings-panel">
-                <header className="settings-header">
-                    <h2>Preferencias de la Interfaz</h2>
-                    <p>
-                        Personaliza el aspecto y la lectura del sistema de inventario para
-                        adecuarlo a tu espacio de trabajo.
-                    </p>
-                </header>
+            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+                {/* --- Cabecera --- */}
+                <Typography variant="h4" gutterBottom>
+                    Preferencias de la Interfaz
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                    Personaliza el aspecto y la lectura del sistema para adecuarlo a tu
+                    espacio de trabajo.
+                </Typography>
 
-                <section className="settings-section">
-                    <div className="settings-section-header">
-                        <h3>Tema de la aplicación</h3>
-                        <p>Selecciona el estilo visual que prefieras para el dashboard.</p>
-                    </div>
-                    <div className="settings-options settings-options--grid">
-                        {themeOptions.map((option) => {
-                            const isActive = theme === option.value;
-                            return (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    className={`settings-button ${isActive ? "is-active" : ""}`}
-                                    onClick={() => setTheme(option.value)}
-                                    aria-pressed={isActive}
+                {/* --- Sección de Tema y Color --- */}
+                <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+                    <Typography variant="h6">Tema de la aplicación</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Selecciona el estilo visual que prefieras.
+                    </Typography>
+
+                    {/* Reemplazamos los botones por un ToggleButtonGroup */}
+                    <ToggleButtonGroup
+                        value={theme}
+                        exclusive
+                        onChange={(e, newTheme) => {
+                            if (newTheme) setTheme(newTheme);
+                        }}
+                        aria-label="Selección de tema"
+                    >
+                        {themeOptions.map((opt) => (
+                            <ToggleButton key={opt.value} value={opt.value} sx={{ px: 3 }}>
+                                <span style={{ marginRight: "8px" }}>{opt.emoji}</span>
+                                {opt.label}
+                            </ToggleButton>
+                        ))}
+                    </ToggleButtonGroup>
+
+                    {/* --- ¡AQUÍ ESTÁ LA NUEVA SECCIÓN DE COLOR! --- */}
+                    {/* Solo se muestra si el tema claro está activo */}
+                    {theme === "light" && (
+                        <Box sx={{ mt: 3 }}>
+                            <Divider sx={{ mb: 3 }} />
+                            <ColorPicker
+                                label="Color del Sidebar y Footer (Tema Claro):"
+                                color={lightThemeColor || "#FFFFFF"}
+                                onChange={setLightThemeColor}
+                            />
+                        </Box>
+                    )}
+                </Paper>
+
+                {/* --- Sección de Tamaño y Densidad --- */}
+                <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+                    <Typography variant="h6">Lectura y Densidad</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Ajusta la escala tipográfica y el espaciado de los elementos.
+                    </Typography>
+                    <Grid container spacing={3}>
+                        {/* Control de Tamaño de Fuente */}
+                        <Grid item xs={12} md={6}>
+                            <FormControl fullWidth>
+                                <InputLabel id="font-size-select-label">
+                                    Tamaño de fuente
+                                </InputLabel>
+                                <Select
+                                    labelId="font-size-select-label"
+                                    id="font-size-select"
+                                    value={fontSize}
+                                    label="Tamaño de fuente"
+                                    onChange={(e) => setFontSize(e.target.value)}
                                 >
-                                    <span
-                                        className="settings-button-emoji"
-                                        aria-hidden="true"
-                                    >
-                                        {option.emoji}
-                                    </span>
-                                    <span className="settings-button-text">
-                                        <strong>{option.label}</strong>
-                                        <small>{option.description}</small>
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </section>
-
-                <section className="settings-section">
-                    <div className="settings-section-header">
-                        <h3>Tamaño de fuente</h3>
-                        <p>Ajusta la escala tipográfica para leer con mayor comodidad.</p>
-                    </div>
-                    <div className="settings-control">
-                        <label className="settings-label" htmlFor="font-size-select">
-                            Preferencia de tamaño
-                        </label>
-                        <div className="settings-select-wrapper">
-                            <select
-                                id="font-size-select"
-                                className="settings-select"
-                                value={fontSize}
-                                onChange={(event) => setFontSize(event.target.value)}
+                                    <MenuItem value="small">Pequeño</MenuItem>
+                                    <MenuItem value="medium">Mediano</MenuItem>
+                                    <MenuItem value="large">Grande</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        {/* Control de Densidad */}
+                        <Grid item xs={12} md={6}>
+                            <ToggleButtonGroup
+                                value={density}
+                                exclusive
+                                fullWidth
+                                onChange={(e, newDensity) => {
+                                    if (newDensity) setDensity(newDensity);
+                                }}
+                                aria-label="Selección de densidad"
                             >
-                                {Object.entries(fontSizeLabels).map(([value, label]) => (
-                                    <option key={value} value={value}>
-                                        {label}
-                                    </option>
+                                {densityOptions.map((opt) => (
+                                    <ToggleButton key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </ToggleButton>
                                 ))}
-                            </select>
-                            <span className="settings-hint">
-                                Se aplica inmediatamente a todos los módulos.
-                            </span>
-                        </div>
-                    </div>
-                </section>
+                            </ToggleButtonGroup>
+                        </Grid>
+                    </Grid>
+                </Paper>
 
-                <section className="settings-section">
-                    <div className="settings-section-header">
-                        <h3>Densidad de interfaz</h3>
-                        <p>Ajusta el espacio ocupado por listas y tarjetas según tu preferencia.</p>
-                    </div>
-                    <div className="settings-options settings-options--grid">
-                        {densityOptions.map((option) => {
-                            const isActive = density === option.value;
-                            return (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    className={`settings-button ${isActive ? "is-active" : ""}`}
-                                    onClick={() => setDensity(option.value)}
-                                    aria-pressed={isActive}
-                                >
-                                    <span className="settings-button-text">
-                                        <strong>{option.label}</strong>
-                                        <small>{option.description}</small>
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </section>
+                {/* --- Sección de Visibilidad y Comportamiento --- */}
+                <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
+                    <Typography variant="h6">Visibilidad y Comportamiento</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Define los elementos auxiliares y el estado inicial del menú.
+                    </Typography>
 
-                <section className="settings-section">
-                    <div className="settings-section-header">
-                        <h3>Barra lateral</h3>
-                        <p>Define el estado con el que se mostrará el menú principal al iniciar sesión.</p>
-                    </div>
-                    <div className="settings-toggle">
-                        <div className="settings-toggle-copy">
-                            <span className="settings-toggle-title">Colapsada por defecto</span>
-                            <p className="settings-toggle-description">
-                                Muestra sólo los iconos del menú para tener más espacio de trabajo.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            className={`settings-switch ${sidebarCollapsed ? "is-on" : ""}`}
-                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                            aria-pressed={sidebarCollapsed}
-                        >
-                            <span className="settings-switch-track" aria-hidden="true">
-                                <span className="settings-switch-thumb" aria-hidden="true" />
-                            </span>
-                            <span className="settings-switch-label">{sidebarCollapsed ? "Activado" : "Desactivado"}</span>
-                        </button>
-                    </div>
-                </section>
-
-                <section className="settings-section">
-                    <div className="settings-section-header">
-                        <h3>Visibilidad general</h3>
-                        <p>Selecciona los elementos auxiliares que deseas mostrar en el dashboard.</p>
-                    </div>
-                    <div className="settings-toggle">
-                        <div className="settings-toggle-copy">
-                            <span className="settings-toggle-title">Mostrar pie de página</span>
-                            <p className="settings-toggle-description">
-                                Incluye créditos e información del usuario activo en la parte inferior.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            className={`settings-switch ${showFooter ? "is-on" : ""}`}
-                            onClick={() => setShowFooter(!showFooter)}
-                            aria-pressed={showFooter}
-                        >
-                            <span className="settings-switch-track" aria-hidden="true">
-                                <span className="settings-switch-thumb" aria-hidden="true" />
-                            </span>
-                            <span className="settings-switch-label">{showFooter ? "Visible" : "Oculto"}</span>
-                        </button>
-                    </div>
-                </section>
-
-                <footer className="settings-footer">
-                    <p>
-                        Los cambios se guardan automáticamente en este dispositivo para que
-                        retomes tu sesión con la misma experiencia.
-                    </p>
-                </footer>
-            </div>
+                    {/* Reemplazamos los botones-switch por el <Switch> de MUI */}
+                    <Box>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={sidebarCollapsed}
+                                    onChange={() => setSidebarCollapsed(!sidebarCollapsed)}
+                                />
+                            }
+                            label="Colapsar barra lateral por defecto"
+                        />
+                    </Box>
+                    <Box>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={showFooter}
+                                    onChange={() => setShowFooter(!showFooter)}
+                                />
+                            }
+                            label="Mostrar pie de página"
+                        />
+                    </Box>
+                </Paper>
+            </Container>
         </LayoutDashboard>
     );
 };

@@ -7,6 +7,8 @@ export const useGlobalStore = create(
       token: null,
       user: null,
 
+      lightThemeColor: "#ffffffff",
+      setLightThemeColor: (color) => set({ lightThemeColor: color }),
       theme: "light",
       fontSize: "medium",
       density: "comfortable",

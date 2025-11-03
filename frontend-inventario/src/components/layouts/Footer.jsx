@@ -1,49 +1,93 @@
-import { useState, useEffect } from "react";
-import "../styles/Footer.css";
 import { useGlobalStore } from "../../store/useGlobalStore";
+import { HookTiempoReal } from "../Hooks/HookTiempo";
+import { Box, Typography, useTheme } from "@mui/material";
 
-export default function Footer({ mostrarUsuario = true, empresa = "Empresa S.A.", version = "v1.0.0" }) {
+export default function Footer({mostrarUsuario = true, empresa = "Empresa S.A.", version = "v1.0.0",}) {
   const user = useGlobalStore((state) => state.user);
+  const horaFormateada = HookTiempoReal();
+  const theme = useTheme();
+  const mode = theme.palette.mode;
+  const lightThemeColor = useGlobalStore((state) => state.lightThemeColor);
 
-  const nombreUsuario = user ? `${user.nombre_u || ""} ${user.apellido_pat || ""}`.trim() : null;
+  const nombreUsuario = user
+    ? `${user.nombre_u || ""} ${user.apellido_pat || ""}`.trim()
+    : null;
   const rolUsuario = user?.rol || null;
   const anio = new Date().getFullYear();
 
-  const [horaActual, setHoraActual] = useState(new Date());
-  useEffect(() => {
-    const timerId = setInterval(() => {
-      setHoraActual(new Date());
-    }, 1000);
-    return () => {
-      clearInterval(timerId);
-    };
-  }, []);
-  const horaFormateada = horaActual.toLocaleTimeString('es-PE', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
   return (
-    <footer className="app-footer">
-      <div className="footer-left">
-        <div className="footer-empresa">
-          <strong>{empresa}</strong>
-          <span className="footer-version">{version}</span>
-        </div>
-        <div className="footer-copy">© {anio}</div>
-      </div>
-
-      <div className="footer-right">
+    <Box
+      component="footer"
+      sx={{
+        p: 2,
+        borderTop: 1,
+        borderColor: "divider",
+        backgroundColor: mode === 'light'
+          ? lightThemeColor
+          : 'background.paper',
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexShrink: 0, 
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box
+          component="img"
+          src="/logo.png"
+          alt="Logo"
+          sx={{
+            width: 28, 
+            height: 28, 
+            mr: 1.5, 
+          }}
+        />
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+            {empresa}
+            <Typography
+              component="span"
+              variant="caption"
+              sx={{ ml: 1, color: "text.secondary" }}
+            >
+              {version}
+            </Typography>
+          </Typography>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            © {anio}
+          </Typography>
+        </Box>
+      </Box>
+      <Box>
         {mostrarUsuario && nombreUsuario ? (
-          <div className="footer-user">
-            <span className="user-name">{nombreUsuario}</span>
-            {rolUsuario && <span className="user-role"> — {rolUsuario}</span>}
-            <span className="footer-time"> | {horaFormateada}</span>
-          </div>
+          <Typography variant="body2" sx={{ textAlign: "right" }}>
+            <Typography component="span" sx={{ fontWeight: "bold" }}>
+              {nombreUsuario}
+            </Typography>
+            {rolUsuario && (
+              <Typography
+                component="span"
+                variant="caption"
+                sx={{ color: "text.secondary" }}
+              >
+                {" — "}
+                {rolUsuario}
+              </Typography>
+            )}
+            <Typography
+              component="span"
+              variant="body2"
+              sx={{ color: "text.primary", ml: 1 }}
+            >
+              | {horaFormateada}
+            </Typography>
+          </Typography>
         ) : (
-          <div className="footer-note">Sistema de Control de Inventarios</div>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Sistema de Control de Inventarios
+          </Typography>
         )}
-      </div>
-    </footer>
+      </Box>
+    </Box>
   );
 }

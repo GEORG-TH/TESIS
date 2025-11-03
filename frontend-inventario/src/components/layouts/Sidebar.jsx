@@ -1,91 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import {
-  FaUsers, FaBoxes, FaChartBar, FaCog,
-  FaBars, FaSignOutAlt, FaTags, FaStore, FaClipboardList,
-  FaTruck, FaHome
-} from "react-icons/fa";
-import "../styles/Sidebar.css";
-import { motion } from "framer-motion";
 import { useGlobalStore } from "../../store/useGlobalStore";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import {
+  Drawer, Box, List, ListItemButton, ListItemIcon, ListItemText,
+  Typography, Avatar, IconButton, Divider, useMediaQuery, useTheme,
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button
+} from "@mui/material";
+import {
+  FaUsers, FaBoxes, FaChartBar, FaCog, FaBars, FaSignOutAlt,
+  FaTags, FaStore, FaClipboardList, FaTruck, FaHome,
+  FaChevronLeft
+} from "react-icons/fa";
 
-export default function Sidebar({ collapsed = false, onCollapsedChange }) {
-  const navigate = useNavigate();
-  const user = useGlobalStore((state) => state.user);
-  console.log("[Sidebar] Datos del usuario en Zustand:", user);
-  const MOBILE_QUERY = "(max-width: 420px)";
-  const getIsMobile = () =>
-    typeof window !== "undefined" && window.matchMedia
-      ? window.matchMedia(MOBILE_QUERY).matches
-      : false;
-  const [isMobile, setIsMobile] = useState(getIsMobile);
-  const isOpen = isMobile ? isMobileOpen : !collapsed;
-  const logout = useGlobalStore((state) => state.logout);
-  const nombreCompleto = `${user?.nombre_u || ""} ${user?.apellido_pat || ""}`;
-  const email = user?.email || "";
-  const rolUsuario = user?.rol || null;
-
-  const toggleSidebar = () => {
-    if (isMobile) {
-      setIsOpen((prev) => !prev);
-      return;
-    }
-    onCollapsedChange(!collapsed);
-  };
-
-  const handleMenuNavigation = (path) => {
-    if (isMobile) {
-      setIsOpen(false);
-      setTimeout(() => navigate(path), 0);
-      return;
-    }
-
-    navigate(path);
-  };
-
-  const handleLogout = async () => {
-    const result = await Swal.fire({
-      title: "¿Cerrar sesión?",
-      text: "Se cerrará tu sesión actual y volverás al inicio de sesión.",
-      showCancelButton: true,
-      confirmButtonColor: "#0d6efd",
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: "Sí, cerrar sesión",
-      cancelButtonText: "Cancelar",
-      reverseButtons: true,
-      imageUrl: "/logo_SWCI+.jpg",
-      imageWidth: 80,
-      imageHeight: 80,
-    });
-
-    if (result.isConfirmed) {
-      logout();
-      Swal.fire({
-        title: "Sesión cerrada",
-        text: "Has salido del sistema correctamente.",
-        icon: "success",
-        timer: 1800,
-        showConfirmButton: false,
-      });
-      setTimeout(() => navigate("/"), 1800);
-    }
-  };
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(MOBILE_QUERY);
-    const handleMediaChange = (event) => {
-      setIsMobile(event.matches);
-      if (event.matches) {
-        setIsMobileOpen(false);
-      }
-    };
-    setIsMobile(mediaQuery.matches);
-    mediaQuery.addEventListener("change", handleMediaChange);
-    return () => mediaQuery.removeEventListener("change", handleMediaChange);
-  }, []);
-
-  const menuPorRol = {
+const SIDEBAR_WIDTH = 250;
+const SIDEBAR_COLLAPSED_WIDTH = 60;
+const getMenuItems = (rol) => {
+  const allMenus = {
     "Administrador": [
       { icon: <FaHome />, label: "Inicio", path: "/dashboard-administrador" },
       { icon: <FaUsers />, label: "Usuarios", path: "/dashboard-usuarios" },
@@ -95,7 +27,6 @@ export default function Sidebar({ collapsed = false, onCollapsedChange }) {
       { icon: <FaBoxes />, label: "Inventario", path: "/inventario" },
       { icon: <FaClipboardList />, label: "Conteo Inventario", path: "/mov_inventario" },
       { icon: <FaChartBar />, label: "Reportes", path: "/reportes" },
-      { icon: <FaCog />, label: "Configuración", path: "/settings" },
     ],
     "Jefe de Inventario": [
       { icon: <FaHome />, label: "Inicio", path: "/dashboard-jefe-inventario" },
@@ -104,7 +35,6 @@ export default function Sidebar({ collapsed = false, onCollapsedChange }) {
       { icon: <FaBoxes />, label: "Inventario", path: "/inventario" },
       { icon: <FaClipboardList />, label: "Conteo Inventario", path: "/mov_inventario" },
       { icon: <FaChartBar />, label: "Reportes", path: "/reportes" },
-      { icon: <FaCog />, label: "Configuración", path: "/settings" },
     ],
     "Operador de Recepción de Mercadería": [
       { icon: <FaHome />, label: "Inicio", path: "/dashboard-operador-recepcion" },
@@ -112,12 +42,10 @@ export default function Sidebar({ collapsed = false, onCollapsedChange }) {
       { icon: <FaBoxes />, label: "Inventario", path: "/inventario" },
       { icon: <FaClipboardList />, label: "Conteo Inventario", path: "/mov_inventario" },
       { icon: <FaChartBar />, label: "Reportes", path: "/reportes" },
-      { icon: <FaCog />, label: "Configuración", path: "/settings" },
     ],
     "Auditor de Inventarios": [
       { icon: <FaHome />, label: "Inicio", path: "/dashboard-auditor-inventarios" },
       { icon: <FaChartBar />, label: "Reportes", path: "/reportes" },
-      { icon: <FaCog />, label: "Configuración", path: "/settings" },
     ],
     "Operador de Tienda": [
       { icon: <FaHome />, label: "Inicio", path: "/dashboard-operador-tienda" },
@@ -125,98 +53,188 @@ export default function Sidebar({ collapsed = false, onCollapsedChange }) {
       { icon: <FaBoxes />, label: "Inventario", path: "/inventario" },
       { icon: <FaClipboardList />, label: "Conteo Inventario", path: "/mov_inventario" },
       { icon: <FaChartBar />, label: "Reportes", path: "/reportes" },
-      { icon: <FaCog />, label: "Configuración", path: "/settings" },
     ],
   };
+  const baseMenu = allMenus[rol] || [
+    { icon: <FaHome />, label: "Inicio", path: "/" },
+  ];
+  
+  return [
+    ...baseMenu,
+    { icon: <FaCog />, label: "Configuración", path: "/settings" },
+  ];
+};
+export default function Sidebar({ collapsed, onCollapsedChange }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const theme = useTheme();
+  const mode = theme.palette.mode;
+  const lightThemeColor = useGlobalStore((state) => state.lightThemeColor);
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  const menu = menuPorRol[rolUsuario] || [];
 
-  useEffect(() => {
-    if (!isMobile) {
-      document.body.style.overflow = "";
-      return undefined;
+  const user = useGlobalStore((state) => state.user);
+  const logout = useGlobalStore((state) => state.logout);
+
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isLogoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
+  const isOpen = isMobile ? isMobileOpen : !collapsed;
+  const handleMenuNavigation = (path) => {
+    if (isMobile) {
+      setIsMobileOpen(false); 
     }
+    navigate(path);
+  };
 
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMobile, isOpen]);
+  const { mutate: performLogout, isPending: isLoggingOut } = useMutation({
+    mutationFn: async () => {
+      logout();
+    },
+    onSuccess: () => {
+      setLogoutDialogOpen(false);
+      toast.success("Has salido del sistema correctamente.");
+      queryClient.clear(); 
+      navigate("/");
+    },
+    onError: () => {
+      toast.error("Hubo un error al cerrar sesión.");
+    },
+  });
+
+  const menuItems = useMemo(() => getMenuItems(user?.rol), [user?.rol]);
+  const drawerContent = (
+    <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden', }}>
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Avatar
+          src="/logo.png"
+          sx={{ width: isOpen ? 80 : 40, height: isOpen ? 80 : 40, mb: 1, cursor: 'pointer', transition: 'width 0.2s, height 0.2s' }}
+          onClick={() => handleMenuNavigation("/perfil")}
+        />
+        <Typography variant="subtitle1" noWrap sx={{ display: isOpen ? 'block' : 'none' }}>
+          {`${user?.nombre_u || ""} ${user?.apellido_pat || ""}`}
+        </Typography>
+        <Typography variant="caption" noWrap sx={{ display: isOpen ? 'block' : 'none', color: 'text.secondary' }}>
+          {user?.email}
+        </Typography>
+        <Typography variant="overline" noWrap sx={{ display: isOpen ? 'block' : 'none', color: 'primary.main' }}>
+          {user?.rol}
+        </Typography>
+      </Box>
+      <Divider />
+
+      <List sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+        {menuItems.map((item) => (
+          <ListItemButton
+            key={item.label}
+            onClick={() => handleMenuNavigation(item.path)}
+            title={item.label} 
+            sx={{ 
+              justifyContent: isOpen ? 'initial' : 'center',
+              px: 2.5,
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 0, mr: isOpen ? 3 : 'auto', justifyContent: 'center' }}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText primary={item.label} sx={{ opacity: isOpen ? 1 : 0 }} noWrap />
+          </ListItemButton>
+        ))}
+      </List>
+      <Divider />
+      <List sx={{overflowX: 'hidden'}}>
+        <ListItemButton
+          onClick={() => setLogoutDialogOpen(true)}
+          title="Cerrar sesión"
+          sx={{ 
+            justifyContent: isOpen ? 'initial' : 'center',
+            px: 2.5,
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 0, mr: isOpen ? 3 : 'auto', justifyContent: 'center' }}>
+            <FaSignOutAlt />
+          </ListItemIcon>
+          <ListItemText primary="Cerrar sesión" sx={{ opacity: isOpen ? 1 : 0 }} noWrap />
+        </ListItemButton>
+      </List>
+    </Box>
+  );
 
   return (
-    <motion.aside
-      initial={{ x: -250 }} 
-      animate={{ x: 0 }}  
-      exit={{ x: -250 }}         
-      transition={{ duration: 0.3 }}
-      className="fixed left-0 top-0 h-full w-64 bg-gray-800 text-white shadow-lg"
-    >
     <>
       {isMobile && (
-        <button
-          type="button"
-          className={`mobile-toggle-btn${isOpen ? " active" : ""}`}
-          onClick={toggleSidebar}
-          aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+        <IconButton
+          onClick={() => setIsMobileOpen(true)}
+          sx={{
+            position: 'fixed',
+            top: 16,
+            left: 16,
+            zIndex: theme.zIndex.drawer + 1,
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          }}
         >
           <FaBars />
-        </button>
+        </IconButton>
       )}
-      {isMobile && (
-        <div
-          className={`mobile-overlay ${isOpen ? "" : "hidden"}`}
-          onClick={toggleSidebar}
-        />
-      )}
-
-      <aside className={`sidebar ${isOpen ? "open" : "closed"} ${isMobile ? "mobile" : ""}`}>
-        <div className="sidebar-header">
+      <Drawer
+        variant={isMobile ? "temporary" : "permanent"}
+        open={isMobile ? isMobileOpen : isOpen}
+        onClose={() => setIsMobileOpen(false)}
+        ModalProps={{ keepMounted: true }}
+        PaperProps={{
+          sx: {
+            width: isMobile ? SIDEBAR_WIDTH : (isOpen ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH),
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+            overflowX: 'hidden',
+            backgroundColor: mode === 'light'
+              ? lightThemeColor
+              : 'background.paper', 
+          },
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isOpen ? 'space-between' : 'center',
+            p: 1.5,
+          }}
+        >
+          {isOpen && <Typography variant="h6" sx={{ ml: 1 }}>Bienvenido</Typography>}
           {!isMobile && (
-            <button className="toggle-btn" onClick={toggleSidebar}>
-              <FaBars />
-            </button>
+            <IconButton onClick={onCollapsedChange}>
+              {isOpen ? <FaChevronLeft /> : <FaBars />}
+            </IconButton>
           )}
-          {isOpen && !isMobile && <h2 className="sidebar-title">Panel</h2>}
-        </div>
+        </Box>
+        <Divider />
+        
+        {drawerContent}
+      </Drawer>
 
-        {(isOpen || !isMobile) && (
-          <>
-            <div className="profile-section">
-              <img
-                src="../../logo_madrid.png"
-                alt="Perfil"
-                className="profile-img"
-              />
-              {isOpen && (
-                <>
-                  <h3 className="profile-name" onClick={() => navigate("/perfil")}>
-                    {nombreCompleto}
-                  </h3>
-                  <p className="profile-email">{email}</p>
-                  <p className="profile-rol">{rolUsuario}</p>
-                </>
-              )}
-            </div>
-            <nav className="menu">
-              <ul>
-                {menu.map((item, i) => (
-                  <li
-                    key={i}
-                    onClick={() => handleMenuNavigation(item.path)}
-                  >
-                    {item.icon} {isOpen && item.label}
-                  </li>
-                ))}
-              </ul>
-            </nav>
-            <div className="logout-section" onClick={handleLogout}>
-              <FaSignOutAlt className="menu-icon" />
-              {isOpen && <span>Cerrar sesión</span>}
-            </div>
-          </>
-        )}
-      </aside>
+      {/* --- Diálogo de Confirmación de Logout (reemplaza SweetAlert) --- */}
+      <Dialog
+        open={isLogoutDialogOpen}
+        onClose={() => setLogoutDialogOpen(false)}
+      >
+        <DialogTitle>¿Cerrar sesión?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Se cerrará tu sesión actual y volverás al inicio de sesión.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLogoutDialogOpen(false)} disabled={isLoggingOut}>
+            Cancelar
+          </Button>
+          <Button onClick={performLogout} color="primary" disabled={isLoggingOut}>
+            {isLoggingOut ? "Cerrando..." : "Sí, cerrar sesión"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
-    </motion.aside>
   );
 }
