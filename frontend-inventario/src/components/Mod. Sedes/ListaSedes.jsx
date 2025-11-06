@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { motion, AnimatePresence  } from "framer-motion";
+import { motion } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import LayoutDashboard from "../layouts/LayoutDashboard";
