@@ -39,7 +39,7 @@ public class SecurityConfig {
                 "/api/auth/forgot-password", 
                 "/api/auth/reset-password",
                 "/api/auth/mfa/login-verify"
-            ).permitAll() 
+            ).permitAll()
                 .anyRequest().authenticated()                 
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
