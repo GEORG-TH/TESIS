@@ -74,6 +74,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 throw new ResourceConflictException("El email ya está en uso");
             }
             uDB.setNombre_u(usuarioUpdateDto.getNombre_u());
+            uDB.setApellido_pat(usuarioUpdateDto.getApellido_pat());
+            uDB.setApellido_mat(usuarioUpdateDto.getApellido_mat());
             uDB.setEmail(usuarioUpdateDto.getEmail());
 
             Rol rol = rolRepository.findById(usuarioUpdateDto.getRol().getId_rol())

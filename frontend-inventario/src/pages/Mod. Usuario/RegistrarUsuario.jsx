@@ -5,24 +5,13 @@ import { createUsuario } from "../../api/usuarioApi";
 import LayoutDashboard from "../../components/layouts/LayoutDashboard";
 import "../../components/styles/styleRegistrar.css";
 import { useForm } from "react-hook-form";
-import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRoles } from "../../api/rolApi";
+import { IngresarUsuarioSchema } from "../../Utils/usuarioSchema";
 
 const MySwal = withReactContent(Swal);
-const usuarioSchema = z.object({
-  dni: z.string().trim().length(8, "El DNI debe tener 8 dígitos"),
-  nombre_u: z.string().trim().min(4, "El nombre es obligatorio"),
-  apellido_pat: z.string().optional(),
-  apellido_mat: z.string().optional(),
-  email: z.string().trim().email("Debe ser un email válido"),
-  pass: z.string()
-  .min(8, "La contraseña debe tener al menos 8 caracteres")
-  .regex(/[A-Z]/, "La contraseña debe tener al menos una letra mayúscula")
-  .regex(/[!@#$%^&*(),.?":{}|<>]/, "La contraseña debe tener al menos un caracter especial"),
-  id_rol: z.string().nonempty("Debes seleccionar un rol"),
-});
+const usuarioSchema = IngresarUsuarioSchema;
 
 function RegistrarUsuario() {
   const navigate = useNavigate();

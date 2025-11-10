@@ -12,12 +12,16 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TablaLista from "../../components/TablaLista";
+import FormularioDialogo from "../../components/FomularioDialogo";
+import { rolSchema } from "../../Utils/usuarioSchema";
 
 const MySwal = withReactContent(Swal);
 
 function ListaRoles() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [rolSeleccionado, setRolSeleccionado] = useState(null);
   const {
 		data: rolesData,
 		isLoading,
@@ -29,6 +33,9 @@ function ListaRoles() {
 		queryFn: getRoles,
 	});
   const roles = rolesData || [];
+  const rolesFields = [
+    { name: "nombreRol", label: "Nombre del Rol", type: "text" },
+  ];
   const deleteRolMutation = useMutation({
 		mutationFn: deleteRol,
 		onSuccess: () => {
@@ -46,6 +53,7 @@ function ListaRoles() {
 		mutationFn: (variables) => updateRol(variables.id, variables.data),
 		onSuccess: () => {
 			queryClient.invalidateQueries(["roles"]);
+      setOpenEditDialog(false);
 			MySwal.fire(
 				"Actualizado",
 				"El rol fue actualizado correctamente.",
@@ -77,29 +85,20 @@ function ListaRoles() {
   };
 
   const handleEditar = async (rol) => {
-    const { value: formValues, isConfirmed } = await MySwal.fire({
-      title: "Editar Rol",
-      html: `<div class="swal-form">
-                <label>Nombre del Rol:</label>
-                <input id="swal-nombre" class="swal-input" value="${rol.nombreRol ?? ""}">
-             </div>`,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Guardar",
-      cancelButtonText: "Cancelar",
-      preConfirm: () => {
-        const nombre = document.getElementById("swal-nombre").value.trim();
-        if (!nombre) {
-          Swal.showValidationMessage("El nombre del rol es obligatorio");
-          return false;
-        }
-        return { nombreRol: nombre };
-      },
+    setRolSeleccionado({
+      id_rol: rol.id_rol,
+      nombreRol: rol.nombreRol,
     });
-    if (!isConfirmed || !formValues) {
-      return;
-    }
-    updateRolMutation.mutate({ id: rol.id_rol, data: formValues });
+    setOpenEditDialog(true);
+  };
+  const onSaveEdit = (formData) => {
+    const payload = {
+      nombreRol: formData.nombreRol,
+    };
+    updateRolMutation.mutate({
+      id: rolSeleccionado.id_rol,
+      data: payload,
+    });
   };
   const columns = [
     { 
@@ -145,17 +144,29 @@ function ListaRoles() {
     },
   ];
   return (
-    <TablaLista
-      title="Lista de Roles"
-      data={roles}
-      columns={columns}
-      isLoading={isLoading}
-      getRowId={(row) => row.id_rol}
-      onRefresh={refetch}
-      onBack={() => navigate("/dashboard-usuarios")}
-      onAdd={() => navigate("/roles/nuevo")}
-      addButtonLabel="Ingresar Rol"
-    />
+    <>
+      <TablaLista
+        title="Lista de Roles"
+        data={roles}
+        columns={columns}
+        isLoading={isLoading}
+        getRowId={(row) => row.id_rol}
+        onRefresh={refetch}
+        onBack={() => navigate("/dashboard-usuarios")}
+        onAdd={() => navigate("/roles/nuevo")}
+        addButtonLabel="Ingresar Rol"
+      />
+      <FormularioDialogo
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        title="Editar Rol"
+        fields={rolesFields}
+        validationSchema={rolSchema}
+        initialValues={rolSeleccionado}
+        onConfirm={onSaveEdit}
+        isSaving={updateRolMutation.isPending}
+      />
+    </>
   );
 }
 
