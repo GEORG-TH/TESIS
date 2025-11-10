@@ -1,14 +1,13 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import axios from 'axios';
-import './styles/Login.css';
-import LoadingScreen from './LoadingScreen_login';
+import '../../components/styles/Login.css';
+import LoadingScreen from '../../components/LoadingScreen_login';
 import { useForm } from "react-hook-form";
 import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { mfaLoginVerify } from '../api/authApi';
-import { useGlobalStore } from '../store/useGlobalStore';
+import { mfaLoginVerify } from '../../api/authApi';
+import { useGlobalStore } from '../../store/useGlobalStore';
 const mfaSchema = z.object({
   mfaCode: z.string().trim().length(6, "El código debe tener 6 dígitos"),
 });

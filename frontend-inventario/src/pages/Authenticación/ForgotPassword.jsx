@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { forgotPassword } from '../api/authApi';
-import './styles/Login.css';
+import { forgotPassword } from '../../api/authApi';
+import '../../components/styles/Login.css';
 import Swal from 'sweetalert2';
 
 const ForgotPassword = () => {

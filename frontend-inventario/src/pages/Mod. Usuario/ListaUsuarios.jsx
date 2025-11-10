@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,28 +10,19 @@ import {
   activarUsuarioApi,
   updateUsuario,
 } from "../../api/usuarioApi";
-import LayoutDashboard from "../layouts/LayoutDashboard";
 import {
-  Paper,
-  Box,
-  Typography,
-  Button,
   Stack,
   Chip,
   IconButton,
   Tooltip,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import { esES } from "@mui/x-data-grid/locales";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import AddIcon from "@mui/icons-material/Add";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useGlobalStore } from "../../store/useGlobalStore";
 import { getRoles } from "../../api/rolApi";
+import TablaLista from "../../components/TablaLista";
 
 const MySwal = withReactContent(Swal);
 function ListaUsuarios() {
@@ -69,7 +59,6 @@ function ListaUsuarios() {
       rolNombre: u.rol?.nombreRol || "N/A",
     }));
   }, [usuariosData]);
-  const usuarios = usuariosData || [];
   const deleteUsuarioMutation = useMutation({
 		mutationFn: deleteUsuario, 
 		onSuccess: () => {
@@ -241,18 +230,18 @@ function ListaUsuarios() {
       field: "nombreCompleto",
       headerName: "Nombre",
       flex: 1,
-      minWidth: 200,
+      minWidth: 150,
     },
     { 
       field: "email", 
       headerName: "Email", 
       flex: 1, 
-      minWidth: 200 
+      minWidth: 150 
     },
     {
       field: "rolNombre",
       headerName: "Rol",
-      width: 150,
+      width: 280,
     },
     {
       field: "estado_u",
@@ -270,7 +259,7 @@ function ListaUsuarios() {
       field: "acciones",
       headerName: "Acciones",
       type: "actions", 
-      width: 150,
+      width: 180,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
@@ -326,81 +315,17 @@ function ListaUsuarios() {
   const getEstadoTexto = (estado) => (estado === 1 ? "Activo" : "Inactivo");
 
   return (
-    <LayoutDashboard>
-      <motion.div
-          initial={{ opacity: 0, y: 20 }}     
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-        <Paper
-          sx={{
-            m: { xs: 1, sm: 2, md: 3 },
-            p: { xs: 2, sm: 3 },
-            borderRadius: 2,
-            boxShadow: 3,
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              mb: 2,
-              gap: 2,
-            }}
-          >
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-              Lista de Usuarios
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBackIcon />}
-                onClick={() => navigate("/dashboard-usuarios")}
-              >
-                Volver
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={() => refetch()}
-                disabled={isLoading}
-              >
-                {isLoading ? "Cargando..." : "Actualizar"}
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => navigate("/usuarios/nuevo")}
-              >
-                Ingresar Usuario
-              </Button>
-            </Stack>
-          </Box>
-          <Box sx={{ height: 600, width: "100%" }}>
-            <DataGrid
-              rows={processedUsuarios}
-              columns={columns}   
-              loading={isLoading}   
-
-              getRowId={(row) => row.id_u} 
-              
-              initialState={{
-                pagination: { paginationModel: { pageSize: 10 } },
-              }}
-              pageSizeOptions={[10, 25, 50]} 
-              disableRowSelectionOnClick
-
-              autoHeight
-              sx={{ "--DataGrid-overlayHeight": "300px" }}
-              
-              localeText={esES.components.MuiDataGrid.defaultProps.localeText}
-            />
-          </Box>
-        </Paper>
-      </motion.div>
-    </LayoutDashboard>
+    <TablaLista
+      title="Lista de Usuarios"
+      data={processedUsuarios}
+      columns={columns}
+      isLoading={isLoading}
+      getRowId={(row) => row.id_u}
+      onRefresh={refetch}
+      onBack={() => navigate("/dashboard-usuarios")}
+      onAdd={() => navigate("/usuarios/nuevo")}
+      addButtonLabel="Ingresar Usuario"
+    />
   );
 }
 

@@ -1,7 +1,7 @@
 import React from "react";
-import LayoutDashboard from "../layouts/LayoutDashboard";
-import MfaSetup from "../MfaSetup";
-import { useGlobalStore } from "../../store/useGlobalStore";
+import LayoutDashboard from "../components/layouts/LayoutDashboard";
+import MfaSetup from "./MfaSetup";
+import { useGlobalStore } from "../store/useGlobalStore";
 import {
   Container,
   Typography,

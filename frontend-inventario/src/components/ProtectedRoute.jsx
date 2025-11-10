@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useGlobalStore } from '../../store/useGlobalStore';
+import { useGlobalStore } from '../store/useGlobalStore';
 
 function ProtectedRoute({ children, roles }) {
   const user = useGlobalStore((state) => state.user);

@@ -1,8 +1,6 @@
 import React from "react";
 import { useGlobalStore } from "../../store/useGlobalStore";
-import LayoutDashboard from "../layouts/LayoutDashboard";
-
-// --- MUI Imports ---
+import LayoutDashboard from "../../components/layouts/LayoutDashboard";
 import {
     Container,
     Typography,
@@ -20,7 +18,6 @@ import {
     Grid,
 } from "@mui/material";
 
-// Opciones (movidas fuera para mayor limpieza)
 const themeOptions = [
     { value: "light", label: "Claro", emoji: "☀️" },
     { value: "dark", label: "Oscuro", emoji: "🌙" },
@@ -30,7 +27,6 @@ const densityOptions = [
     { value: "compact", label: "Compacto" },
 ];
 
-// --- Componente de Selector de Color (de la petición anterior) ---
 const ColorPicker = ({ label, color, onChange }) => (
     <Box
         sx={{
@@ -60,28 +56,25 @@ const ColorPicker = ({ label, color, onChange }) => (
     </Box>
 );
 
-// --- Componente Principal ---
 const Settings = () => {
-    // Obtenemos todos los estados y setters de Zustand
     const {
         theme,
         fontSize,
         density,
         sidebarCollapsed,
         showFooter,
-        lightThemeColor, // <-- Nuevo estado de color
+        lightThemeColor,
         setTheme,
         setFontSize,
         setDensity,
         setSidebarCollapsed,
         setShowFooter,
-        setLightThemeColor, // <-- Nuevo setter de color
+        setLightThemeColor, 
     } = useGlobalStore();
 
     return (
         <LayoutDashboard>
             <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-                {/* --- Cabecera --- */}
                 <Typography variant="h4" gutterBottom>
                     Preferencias de la Interfaz
                 </Typography>
@@ -90,14 +83,12 @@ const Settings = () => {
                     espacio de trabajo.
                 </Typography>
 
-                {/* --- Sección de Tema y Color --- */}
                 <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
                     <Typography variant="h6">Tema de la aplicación</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         Selecciona el estilo visual que prefieras.
                     </Typography>
 
-                    {/* Reemplazamos los botones por un ToggleButtonGroup */}
                     <ToggleButtonGroup
                         value={theme}
                         exclusive
@@ -113,9 +104,6 @@ const Settings = () => {
                             </ToggleButton>
                         ))}
                     </ToggleButtonGroup>
-
-                    {/* --- ¡AQUÍ ESTÁ LA NUEVA SECCIÓN DE COLOR! --- */}
-                    {/* Solo se muestra si el tema claro está activo */}
                     {theme === "light" && (
                         <Box sx={{ mt: 3 }}>
                             <Divider sx={{ mb: 3 }} />
@@ -128,14 +116,12 @@ const Settings = () => {
                     )}
                 </Paper>
 
-                {/* --- Sección de Tamaño y Densidad --- */}
                 <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
                     <Typography variant="h6">Lectura y Densidad</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         Ajusta la escala tipográfica y el espaciado de los elementos.
                     </Typography>
                     <Grid container spacing={3}>
-                        {/* Control de Tamaño de Fuente */}
                         <Grid item xs={12} md={6}>
                             <FormControl fullWidth>
                                 <InputLabel id="font-size-select-label">
@@ -154,7 +140,6 @@ const Settings = () => {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        {/* Control de Densidad */}
                         <Grid item xs={12} md={6}>
                             <ToggleButtonGroup
                                 value={density}
@@ -174,15 +159,11 @@ const Settings = () => {
                         </Grid>
                     </Grid>
                 </Paper>
-
-                {/* --- Sección de Visibilidad y Comportamiento --- */}
                 <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
                     <Typography variant="h6">Visibilidad y Comportamiento</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Define los elementos auxiliares y el estado inicial del menú.
                     </Typography>
-
-                    {/* Reemplazamos los botones-switch por el <Switch> de MUI */}
                     <Box>
                         <FormControlLabel
                             control={

@@ -1,10 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { motion } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import LayoutDashboard from "../layouts/LayoutDashboard";
 import {
   getCategorias,
   deleteCategoria,
@@ -12,35 +10,19 @@ import {
 } from "../../api/categoriaApi";
 import { getAreas } from "../../api/areaApi";
 import {
-  Paper,
-  Box,
-  Typography,
-  Button,
   Stack,
   Tooltip,
   IconButton,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import { esES } from "@mui/x-data-grid/locales";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import AddIcon from "@mui/icons-material/Add";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import TablaLista from "../../components/TablaLista";
 
 const MySwal = withReactContent(Swal);
 
 const ListaCategorias = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const rowVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.05, duration: 0.3 }, 
-    }),
-  };
   const {
 		data: categoriasData,
 		isLoading: isLoadingCategorias,
@@ -63,8 +45,6 @@ const ListaCategorias = () => {
     initialData: [],
 	});
   const isLoading = isLoadingCategorias || isLoadingAreas;
-  const isError = isErrorCategorias || isErrorAreas;
-  const error = errorCategorias || errorAreas;
   const areas = areasData;
   const categoriasEnriquecidas = useMemo(() => {
     const areasMap = new Map(
@@ -234,79 +214,17 @@ const ListaCategorias = () => {
     },
   ];
   return (
-    <LayoutDashboard>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
-        <Paper
-          sx={{
-            m: { xs: 1, sm: 2, md: 3 },
-            p: { xs: 2, sm: 3 },
-            borderRadius: 2,
-            boxShadow: 3,
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              mb: 2,
-              gap: 2,
-            }}
-          >
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-              Lista de Categorías
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBackIcon />}
-                onClick={() => navigate("/dashboard-productos")}
-              >
-                Volver
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={handleRefresh}
-                disabled={isLoading}
-              >
-                {isLoading ? "Cargando..." : "Actualizar"}
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => navigate("/categorias/nuevo")}
-              >
-                Nueva Categoría
-              </Button>
-            </Stack>
-          </Box>
-          <Box sx={{ height: 400, width: "100%" }}>
-            <DataGrid
-              rows={categoriasEnriquecidas}
-              columns={columns}
-              loading={isLoading}
-              
-              getRowId={(row) => row.id}
-              
-              initialState={{
-                pagination: { paginationModel: { pageSize: 10 } },
-                sorting: { sortModel: [{ field: 'id_cat', sort: 'asc' }] }
-              }}
-              pageSizeOptions={[10, 25, 50]}
-              disableRowSelectionOnClick
-              autoHeight
-              localeText={esES.components.MuiDataGrid.defaultProps.localeText}
-            />
-          </Box>
-        </Paper>
-      </motion.div>
-    </LayoutDashboard>
+    <TablaLista
+      title="Lista de Categorías"
+      columns={columns}
+      data={categoriasEnriquecidas}
+      isLoading={isLoading}
+      onRefresh={handleRefresh}
+      onAdd={() => navigate("/categorias/nuevo")}
+      onBack={() => navigate("/dashboard-productos")}
+      getRowId={(row) => row.id_cat}
+      addButtonLabel="Ingresar Nueva Categoría"
+    />
   );
 };
 

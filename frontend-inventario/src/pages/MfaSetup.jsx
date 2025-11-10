@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { setupMfa, verifyMfa, disableMfa } from '../api/authApi';
 import { useGlobalStore } from '../store/useGlobalStore';
 import { toast } from 'react-hot-toast';
-
 import {
     Box,
     Button,

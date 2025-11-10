@@ -112,7 +112,7 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
           onClick={() => handleMenuNavigation("/perfil")}
         />
         <Typography variant="subtitle1" noWrap sx={{ display: isOpen ? 'block' : 'none' }}>
-          {`${user?.nombre_u || ""} ${user?.apellido_pat || ""}`}
+          {`${user?.nombre_u || ""} ${user?.apellido_pat || ""} ${user?.apellido_mat || ""}`}
         </Typography>
         <Typography variant="caption" noWrap sx={{ display: isOpen ? 'block' : 'none', color: 'text.secondary' }}>
           {user?.email}
