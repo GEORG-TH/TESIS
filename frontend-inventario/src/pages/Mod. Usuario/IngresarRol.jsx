@@ -4,15 +4,12 @@ import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../../components/layouts/LayoutDashboard";
 import "../../components/styles/styleRegistrar.css";
 import { useForm } from "react-hook-form";
-import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createRol } from "../../api/rolApi";
+import { rolSchema } from "../../Utils/usuarioSchema";
 
 const MySwal = withReactContent(Swal);
-const rolSchema = z.object({
-  nombreRol: z.string().trim().min(4, "El nombre del rol debe tener al menos 4 caracteres"),
-});
 function IngresarRol() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();

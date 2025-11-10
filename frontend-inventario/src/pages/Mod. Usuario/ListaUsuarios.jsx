@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -23,12 +23,15 @@ import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import { useGlobalStore } from "../../store/useGlobalStore";
 import { getRoles } from "../../api/rolApi";
 import TablaLista from "../../components/TablaLista";
-
+import FormularioDialogo from "../../components/FomularioDialogo";
+import { usuarioEditSchema } from "../../Utils/usuarioSchema";
 const MySwal = withReactContent(Swal);
 function ListaUsuarios() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const usuarioLogueado = useGlobalStore((state) => state.user);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const {
 		data: usuariosData,
 		isLoading,
@@ -47,6 +50,18 @@ function ListaUsuarios() {
       queryFn: getRoles
     });
   const roles = rolesData || [];
+  const usuarioFields = useMemo(() => [
+    { name: 'nombre_u', label: 'Nombre', type: 'text' },
+    { name: 'apellido_pat', label: 'Apellido Paterno', type: 'text' },
+    { name: 'apellido_mat', label: 'Apellido Materno', type: 'text' },
+    { name: 'email', label: 'Email', type: 'email' },
+    {
+      name: 'id_rol',
+      label: 'Rol',
+      type: 'select',
+      options: roles.map(rol => ({ label: rol.nombreRol, value: String(rol.id_rol) }))
+    }
+  ], [roles]);
   const processedUsuarios = useMemo(() => {
     if (!usuariosData) {
       return [];
@@ -90,6 +105,7 @@ function ListaUsuarios() {
 		mutationFn: (variables) => updateUsuario(variables.id, variables.data),
 		onSuccess: (data, variables) => {
 			queryClient.invalidateQueries(["usuarios"]);
+      setOpenEditDialog(false);
 			if (usuarioLogueado && usuarioLogueado.id_u === variables.id) {
 				MySwal.fire(
 					"Actualizado",
@@ -172,48 +188,30 @@ function ListaUsuarios() {
       toggleEstadoMutation.mutate({ id, activar: true });
     }
   };
-  const handleEditar = async (usuario) => {
-  const { value: formValues } = await MySwal.fire({
-    title: "Editar Usuario",
-    html:
-      `<div class="swal-form">
-        <label>Nombre:</label>
-        <input id="swal-nombre" class="swal-input" value="${usuario.nombre_u}">
-        
-        <label>Email:</label>
-        <input id="swal-email" class="swal-input" value="${usuario.email}">
-        
-        <label>Rol:</label>
-        <select id="swal-rol" class="swal-input">
-          ${roles.map(r => `<option value="${r.id_rol}" ${usuario.rol?.id_rol===r.id_rol ? "selected":""}>${r.nombreRol}</option>`).join("")}
-        </select>
-      </div>`,
-    focusConfirm: false,
-    preConfirm: () => {
-      const nombre = document.getElementById("swal-nombre").value.trim();
-      const email = document.getElementById("swal-email").value.trim();
-      const rolId = parseInt(document.getElementById("swal-rol").value);
-
-      if (!nombre || !email || !rolId) {
-        Swal.showValidationMessage("Todos los campos son obligatorios");
-        return false;
-      }
-
-      return {
-        nombre_u: nombre,
-        email: email,
-        rol: { id_rol: rolId },
-      };
-    },
-  });
-
-  if (formValues) {
-      updateUsuarioMutation.mutate({
-        id: usuario.id_u,
-        data: formValues,
-        originalNombre: usuario.nombre_u, 
-      });
-    }
+  const handleEditar = (usuario) => {
+    setUsuarioSeleccionado({
+      id_u: usuario.id_u,
+      nombre_u: usuario.nombre_u,
+      apellido_pat: usuario.apellido_pat,
+      apellido_mat: usuario.apellido_mat,
+      email: usuario.email,
+      id_rol: usuario.rol?.id_rol ? String(usuario.rol.id_rol) : ''
+    });
+    setOpenEditDialog(true);
+  };
+  const onSaveEdit = (formData) => {
+    const payload = {
+      nombre_u: formData.nombre_u,
+      apellido_pat: formData.apellido_pat,
+      apellido_mat: formData.apellido_mat,
+      email: formData.email,
+      rol: { id_rol: parseInt(formData.id_rol) }
+    };
+    updateUsuarioMutation.mutate({
+      id: usuarioSeleccionado.id_u,
+      data: payload,
+      originalNombre: usuarioSeleccionado.nombre_u,
+    });
   };
   const columns = [
     { 
@@ -315,17 +313,29 @@ function ListaUsuarios() {
   const getEstadoTexto = (estado) => (estado === 1 ? "Activo" : "Inactivo");
 
   return (
-    <TablaLista
-      title="Lista de Usuarios"
-      data={processedUsuarios}
-      columns={columns}
-      isLoading={isLoading}
-      getRowId={(row) => row.id_u}
-      onRefresh={refetch}
-      onBack={() => navigate("/dashboard-usuarios")}
-      onAdd={() => navigate("/usuarios/nuevo")}
-      addButtonLabel="Ingresar Usuario"
-    />
+    <>
+      <TablaLista
+        title="Lista de Usuarios"
+        data={processedUsuarios}
+        columns={columns}
+        isLoading={isLoading}
+        getRowId={(row) => row.id_u}
+        onRefresh={refetch}
+        onBack={() => navigate("/dashboard-usuarios")}
+        onAdd={() => navigate("/usuarios/nuevo")}
+        addButtonLabel="Ingresar Usuario"
+      />
+      <FormularioDialogo
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        title="Editar Usuario"
+        fields={usuarioFields}
+        validationSchema={usuarioEditSchema}
+        initialValues={usuarioSeleccionado}
+        onConfirm={onSaveEdit}
+        isSaving={updateUsuarioMutation.isPending}
+      />
+    </>
   );
 }
 
