@@ -2,37 +2,37 @@ import React from "react";
 import { Route } from "react-router-dom";
 
 // --- Componentes ---
-import Login from "./components/Login";
-import ForgotPassword from "./components/ForgotPassword";
-import ResetPassword from "./components/ResetPassword";
-import MfaVerify from "./components/MfaVerify";
+import Login from "./pages/Authenticación/Login";
+import ForgotPassword from "./pages/Authenticación/ForgotPassword";
+import ResetPassword from "./pages/Authenticación/ResetPassword";
+import MfaVerify from "./pages/Authenticación/MfaVerify";
 import DashboardAdmin from "./components/Dashboards/dashboardAdmin";
 import DashboardJefeInventario from "./components/Dashboards/dashboardJInventario";
 import DashboardOperadorRecepcion from "./components/Dashboards/dashboardORecepcion";
 import DashboardAuditor from "./components/Dashboards/dashboardAuditor";
 import DashboardOperadorTienda from "./components/Dashboards/dashboardOTienda";
-import ProtectedRoute from "./components/Dashboards/ProtectedRoute";
-import PerfilUsuario from "./components/Dashboards/PerfilUsuario";
-import ListaUsuarios from "./components/Mod. Usuario/ListaUsuarios";
-import CrearUsuario from "./components/Mod. Usuario/RegistrarUsuario";
+import ProtectedRoute from "./components/ProtectedRoute";
+import PerfilUsuario from "./pages/PerfilUsuario";
+import ListaUsuarios from "./pages/Mod. Usuario/ListaUsuarios";
+import CrearUsuario from "./pages/Mod. Usuario/RegistrarUsuario";
 import LoadingScreen from "./components/LoadingScreen_login";
 import DashboardProductos from "./components/Dashboards/dashboardProductos";
-import ListaAreas from "./components/Mod. Producto/ListaAreas";
-import ListaProductos from "./components/Mod. Producto/ListaProductos";
-import IngresarProducto from "./components/Mod. Producto/IngresarProducto";
+import ListaAreas from "./pages/Mod. Producto/ListaAreas";
+import ListaProductos from "./pages/Mod. Producto/ListaProductos";
+import IngresarProducto from "./pages/Mod. Producto/IngresarProducto";
 import DashboardUsuarios from "./components/Dashboards/dashboardUsuarios";
-import IngresarArea from "./components/Mod. Producto/IngresarArea";
-import ListaRoles from "./components/Mod. Usuario/ListaRoles";
-import IngresarRol from "./components/Mod. Usuario/IngresarRol";
-import ListaCategorias from "./components/Mod. Producto/ListaCategorias";
-import IngresarCategoria from "./components/Mod. Producto/IngresarCategoria";
+import IngresarArea from "./pages/Mod. Producto/IngresarArea";
+import ListaRoles from "./pages/Mod. Usuario/ListaRoles";
+import IngresarRol from "./pages/Mod. Usuario/IngresarRol";
+import ListaCategorias from "./pages/Mod. Producto/ListaCategorias";
+import IngresarCategoria from "./pages/Mod. Producto/IngresarCategoria";
 import DashboardProveedores from "./components/Dashboards/dashboardProveedores";
-import ListaProveedores from "./components/Mod. Proveedor/ListaProveedores";
-import IngresarProveedor from "./components/Mod. Proveedor/IngresarProveedor";
+import ListaProveedores from "./pages/Mod. Proveedor/ListaProveedores";
+import IngresarProveedor from "./pages/Mod. Proveedor/IngresarProveedor";
 import DashboardSedes from "./components/Dashboards/dashboardSedes";
-import ListaSedes from "./components/Mod. Sedes/ListaSedes";
-import RegistrarSede from "./components/Mod. Sedes/RegistrarSede";
-import Settings from "./components/Mod. Configuracion/Settings";
+import ListaSedes from "./pages/Mod. Sedes/ListaSedes";
+import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
+import Settings from "./pages/Mod. Configuracion/Settings";
 
 // --- Roles ---
 const ROLES = {

@@ -1,14 +1,12 @@
 import React from "react";
-import "./styles/Login.css";
-import axios from "axios";
-import { useState } from "react";
+import "../../components/styles/Login.css";
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { login } from "../api/authApi";
-import { useGlobalStore } from '../store/useGlobalStore';
+import { login } from "../../api/authApi";
+import { useGlobalStore } from '../../store/useGlobalStore';
 const loginSchema = z.object({
   email: z.string().trim().email("Debe ser un email válido"),
   pass: z.string().min(1, "La contraseña no puede estar vacía"),

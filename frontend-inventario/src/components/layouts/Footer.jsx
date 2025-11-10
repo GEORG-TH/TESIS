@@ -10,7 +10,7 @@ export default function Footer({mostrarUsuario = true, empresa = "Empresa S.A.",
   const lightThemeColor = useGlobalStore((state) => state.lightThemeColor);
 
   const nombreUsuario = user
-    ? `${user.nombre_u || ""} ${user.apellido_pat || ""}`.trim()
+    ? `${user.nombre_u || ""} ${user.apellido_pat || ""} ${user.apellido_mat || ""}`.trim()
     : null;
   const rolUsuario = user?.rol || null;
   const anio = new Date().getFullYear();

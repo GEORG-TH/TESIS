@@ -1,11 +1,8 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { motion } from "framer-motion";
 import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import LayoutDashboard from "../layouts/LayoutDashboard";
-
 import {
   getProductos,
   deleteProducto,
@@ -16,26 +13,18 @@ import {
 import { getCategorias } from "../../api/categoriaApi";
 import { getProveedores } from "../../api/proveedorApi";
 import {
-  Paper,
-  Box,
-  Typography,
-  Button,
   Stack,
   Chip,
   Tooltip,
   IconButton,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import { esES } from "@mui/x-data-grid/locales";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import AddIcon from "@mui/icons-material/Add";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
+import TablaLista from "../../components/TablaLista";
 
 const MySwal = withReactContent(Swal);
 
@@ -69,7 +58,6 @@ const ListaProductos = () => {
 
   const isLoading =
     isLoadingProductos || isLoadingCategorias || isLoadingProveedores;
-  const isError = isErrorProductos ? errorProductos.message : null;
   const productos = productosData || [];
   const categorias = categoriasData || [];
   const proveedores = proveedoresData || [];
@@ -119,8 +107,6 @@ const ListaProductos = () => {
     const proveedor = proveedores.find((prov) => prov.id_proveedor === proveedorId);
     return proveedor?.nombre_proveedor || "Sin proveedor";
   };
-
-
   const processedProductos = useMemo(() => {
     if (!productos) return [];
 
@@ -367,18 +353,18 @@ const ListaProductos = () => {
     { field: "nombreProducto", headerName: "Nombre", flex: 1, minWidth: 110 },
 	...(isDesktop ? [{ field: "marca", headerName: "Marca", width: 100 },] : []),
     { field: "categoriaNombre", headerName: "Categoría", width: 150 },
-    ...(isDesktop ? [{ field: "uni_medida", headerName: "Unidad", width: 50 },] : []),
+    ...(isDesktop ? [{ field: "uni_medida", headerName: "Unidad", width: 70 },] : []),
     ...(isDesktop ? [{ 
         field: "precioVentaFormatted", 
         headerName: "P.V. (S/)", 
-        width: 70,
+        width: 90,
         align: 'right',
         headerAlign: 'right'
     },
     { 
         field: "precioCompraFormatted", 
         headerName: "P.C. (S/)", 
-        width: 70,
+        width: 90,
         align: 'right',
         headerAlign: 'right'
     }] : []),
@@ -458,78 +444,17 @@ const ListaProductos = () => {
   ];
 
   return (
-    <LayoutDashboard>
-      <Paper
-        component={motion.div}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        sx={{
-          m: { xs: 1, sm: 2, md: 2 },
-          p: { xs: 2, sm: 3 },
-          borderRadius: 2,
-          boxShadow: 3,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            mb: 2,
-            gap: 2,
-          }}
-        >
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-            Lista de Productos
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate("/dashboard-productos")}
-            >
-              Volver
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={() => refetchProductos()}
-              disabled={isLoading}
-            >
-              {isLoading ? "Cargando..." : "Actualizar"}
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate("/productos/nuevo")}
-            >
-              Ingresar Producto
-            </Button>
-          </Stack>
-        </Box>
-        <Box sx={{ height: 600, width: "100%" }}>
-          <DataGrid
-            rows={processedProductos}
-            columns={columns}
-            loading={isLoading}
-            
-            getRowId={(row) => row.id} 
-            
-            initialState={{
-              pagination: { paginationModel: { pageSize: 10 } },
-            }}
-            pageSizeOptions={[10, 25, 50]}
-            disableRowSelectionOnClick
-            sx={{ "& .MuiDataGrid-virtualScroller": {
-                overflowX: 'auto', 
-              },}}
-            localeText={esES.components.MuiDataGrid.defaultProps.localeText}
-          />
-        </Box>
-      </Paper>
-    </LayoutDashboard>
+    <TablaLista
+      title="Lista de Productos"
+      columns={columns}
+      data={processedProductos}
+      isLoading={isLoading}
+      onRefresh={() => refetchProductos()}
+      onAdd={() => navigate("/productos/nuevo")}
+      onBack={() => navigate("/dashboard-productos")}
+      getRowId={(row) => row.id_producto}
+      addButtonLabel="Ingresar Nuevo Producto"
+    />
   );
 };
 
