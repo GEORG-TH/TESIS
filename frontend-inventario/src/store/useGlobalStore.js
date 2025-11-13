@@ -17,6 +17,13 @@ export const useGlobalStore = create(
 
       login: (token, user) => set({ token, user }),
       logout: () => set({ token: null, user: null }),
+      setUser: (updater) =>
+        set((state) => ({
+          user:
+            typeof updater === "function"
+              ? updater(state.user)
+              : updater,
+        })),
 
       setTheme: (theme) => set({ theme }),
       setFontSize: (fontSize) => set({ fontSize }),
