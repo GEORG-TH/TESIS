@@ -243,15 +243,16 @@ const ListaProductos = () => {
   };
   const onSaveEdit = (formData) => {
     const payload = {
+      id_producto: productoSeleccionado.id_producto,
       sku: formData.sku,
       codEan: formData.codEan,
-      nombre_producto: formData.nombre_producto,
+      nombre: formData.nombre_producto,
       marca: formData.marca,
       uni_medida: formData.uni_medida,
       precio_venta: Number(formData.precio_venta),
       precio_compra: Number(formData.precio_compra),
-      categoria: { id_cat: Number(formData.id_cat) },
-      proveedor: { id_proveedor: Number(formData.id_proveedor) }
+      categoria: { id_cat: parseInt(formData.id_cat,10) },
+      proveedor: { id_proveedor: parseInt(formData.id_proveedor,10) }
     };
 
     updateProductoMutation.mutate({
