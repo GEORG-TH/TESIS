@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -11,12 +12,17 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TablaLista from "../../components/TablaLista";
+import FormularioDialogo from "../../components/FomularioDialogo";
+import { areaSchema } from "../../Utils/productoSchema";
+
 
 const MySwal = withReactContent(Swal);
 
 const AreaList = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [areaSeleccionada, setAreaSeleccionada] = useState(null);
   const {
 		data: areasData,
 		isLoading,
@@ -28,6 +34,7 @@ const AreaList = () => {
 		queryFn: getAreas,
 	});
   const areas = areasData || [];
+  const areaFields = [{ name: "nombreArea", label: "Área", type: "text" }];
   const deleteAreaMutation = useMutation({
 		mutationFn: deleteArea,
 		onSuccess: () => {
@@ -47,6 +54,7 @@ const AreaList = () => {
 		mutationFn: (variables) => updateArea(variables.id, variables.data),
 		onSuccess: () => {
 			queryClient.invalidateQueries(["areas"]);
+      setOpenEditDialog(false);
 			MySwal.fire(
 				"Actualizado",
 				"El área se actualizó correctamente",
@@ -74,34 +82,20 @@ const AreaList = () => {
     deleteAreaMutation.mutate(id);
   };
   const handleEdit = async (area) => {
-    const { value: nombreActualizado, isConfirmed } = await MySwal.fire({
-      title: "Editar Área",
-      html: `<div class="swal-form">
-                <label>Nombre del Área:</label>
-                <input id="swal-nombre-area" class="swal-input" value="${area.nombreArea ?? ""}">
-             </div>`,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Guardar",
-      cancelButtonText: "Cancelar",
-      preConfirm: () => {
-        const nombre = document.getElementById("swal-nombre-area").value.trim();
-        if (!nombre) {
-          Swal.showValidationMessage("El nombre del área es obligatorio");
-          return false;
-        }
-        return nombre;
-      },
+    setAreaSeleccionada({
+      id_area: area.id_area,
+      nombreArea: area.nombreArea,
     });
-
-    if (!isConfirmed || !nombreActualizado) {
-      return;
-    }
-
+    setOpenEditDialog(true);
+  };
+  const onSaveEdit = (formData) => {
+    const payload = {
+      nombreArea: formData.nombreArea,
+    };
     updateAreaMutation.mutate({
-			id: area.id_area,
-			data: { nombreArea: nombreActualizado },
-		});
+      id: areaSeleccionada.id_area,
+      data: payload,
+    });
   };
   const columns = [
     { 
@@ -147,17 +141,30 @@ const AreaList = () => {
     },
   ];
   return (
-    <TablaLista
-      title="Lista de Áreas"
-      columns={columns}
-      data={areas}
-      isLoading={isLoading}
-      onRefresh={() => refetch()}
-      onAdd={() => navigate("/areas/nuevo")}
-      onBack={() => navigate("/dashboard-productos")}
-      getRowId={(row) => row.id_area}
-      addButtonLabel="Ingresar Nueva Área"
-    />
+    <>
+      <TablaLista
+        title="Lista de Áreas"
+        columns={columns}
+        data={areas}
+        isLoading={isLoading}
+        onRefresh={() => refetch()}
+        onAdd={() => navigate("/areas/nuevo")}
+        onBack={() => navigate("/dashboard-productos")}
+        getRowId={(row) => row.id_area}
+        addButtonLabel="Ingresar Nueva Área"
+      />
+      <FormularioDialogo
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        title="Editar Área"
+        fields={areaFields}
+        validationSchema={areaSchema}
+        initialValues={areaSeleccionada}
+        onConfirm={onSaveEdit}
+        isSaving={updateAreaMutation.isPending}
+      />
+    </>
+    
   );
 };
 

@@ -5,15 +5,11 @@ import { createArea } from "../../api/areaApi";
 import LayoutDashboard from "../../components/layouts/LayoutDashboard";
 import "../../components/styles/styleRegistrar.css";
 import { useForm } from "react-hook-form";
-import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { areaSchema } from "../../Utils/productoSchema";
 
 const MySwal = withReactContent(Swal);
-const areaSchema = z.object({
-  nombreArea: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
-});
-
 function IngresarArea() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();

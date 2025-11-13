@@ -5,27 +5,15 @@ import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../../components/layouts/LayoutDashboard";
 import "../../components/styles/styleRegistrar.css";
 import { useForm } from "react-hook-form";
-import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProducto } from "../../api/productoApi";
 import { getCategorias } from "../../api/categoriaApi";
 import { getProveedores } from "../../api/proveedorApi";
 import { getAreas } from "../../api/areaApi";
+import { IngresarProductoSchema } from "../../Utils/productoSchema";
 
 const MySwal = withReactContent(Swal);
-const productoSchema = z.object({
-  sku: z.string().trim().min(4, "El SKU es obligatorio (mín. 4 caracteres)"),
-  ean: z.string().trim().min(13, "El EAN es obligatorio (mín. 13 caracteres)"),
-  nombre_producto: z.string().trim().min(4, "El nombre es obligatorio (mín. 4 caracteres)"),
-  marca: z.string().trim().min(2, "La marca es obligatoria"),
-  uni_medida: z.string().trim().min(1, "La unidad de medida es obligatoria"),
-  precio_venta: z.coerce.number().positive("El precio de venta debe ser positivo"),
-  precio_compra: z.coerce.number().positive("El precio de compra debe ser positivo"),
-  id_area: z.string().nonempty("Debes seleccionar un área"),
-  id_cat: z.string().nonempty("Debes seleccionar una categoría"),
-  id_proveedor: z.string().nonempty("Debes seleccionar un proveedor"),
-});
 
 const IngresarProducto = () => {
 	const navigate = useNavigate();
@@ -76,7 +64,7 @@ const IngresarProducto = () => {
 		watch,
 		setValue,
 	} = useForm({
-		resolver: zodResolver(productoSchema),
+		resolver: zodResolver(IngresarProductoSchema),
 		defaultValues: {
 		sku: "", ean: "", nombre_producto: "", marca: "", uni_medida: "",
 		precio_venta: "", precio_compra: "", id_area: "", id_cat: "", id_proveedor: ""

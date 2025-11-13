@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -20,11 +20,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import TablaLista from "../../components/TablaLista";
+import FormularioDialogo from "../../components/FomularioDialogo";
+import { proveedorSchema } from "../../Utils/proveedorSchema";
 const MySwal = withReactContent(Swal);
-
 const ListaProveedores = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   const {
 		data: proveedoresData,
 		isLoading,
@@ -36,6 +39,13 @@ const ListaProveedores = () => {
 		queryFn: getProveedores,
 	});
   const proveedores = proveedoresData || [];
+  const proveedorFields = [
+    { name: "ruc", label: "RUC", type: "text" },
+    { name: "nombre_proveedor", label: "Razón Social", type: "text" },
+    { name: "telefono", label: "Teléfono", type: "text" },
+    { name: "email", label: "Email", type: "text" },
+    { name: "direccion", label: "Dirección", type: "text" },
+  ];
   const deleteProveedorMutation = useMutation({
 		mutationFn: deleteProveedor,
 		onSuccess: () => {
@@ -69,6 +79,7 @@ const ListaProveedores = () => {
 		mutationFn: (variables) => updateProveedor(variables.id, variables.data),
 		onSuccess: () => {
 			queryClient.invalidateQueries(["proveedores"]);
+      setOpenEditDialog(false);
 			MySwal.fire(
 				"Actualizado",
 				"Proveedor actualizado correctamente",
@@ -134,50 +145,28 @@ const ListaProveedores = () => {
   };
 
   const handleEditar = async (proveedor) => {
-    const { value: formValues } = await MySwal.fire({
-      title: "Editar Proveedor",
-      html: `
-        <div class="swal-form">
-          <label>RUC:</label>
-          <input id="swal-ruc" class="swal-input" value="${proveedor.ruc || ""}">
-
-          <label>Razón Social:</label>
-          <input id="swal-razon" class="swal-input" value="${proveedor.nombre_proveedor || ""}">
-
-          <label>Teléfono:</label>
-          <input id="swal-telefono" class="swal-input" value="${proveedor.telefono || ""}">
-
-          <label>Email:</label>
-          <input id="swal-email" class="swal-input" value="${proveedor.email || ""}">
-
-          <label>Dirección:</label>
-          <input id="swal-direccion" class="swal-input" value="${proveedor.direccion || ""}">
-        </div>
-      `,
-      focusConfirm: false,
-      preConfirm: () => {
-        const ruc = document.getElementById("swal-ruc").value.trim();
-        const nombre_proveedor = document.getElementById("swal-razon").value.trim();
-        const telefono = document.getElementById("swal-telefono").value.trim();
-        const email = document.getElementById("swal-email").value.trim();
-        const direccion = document.getElementById("swal-direccion").value.trim();
-
-        if (!ruc || !nombre_proveedor || !telefono || !email || !direccion) {
-          Swal.showValidationMessage("Todos los campos son obligatorios");
-          return false;
-        }
-
-        return { ruc, nombre_proveedor, telefono, email, direccion };
-      },
+    setProveedorSeleccionado({
+      id_proveedor: proveedor.id_proveedor,
+      ruc: proveedor.ruc,
+      nombre_proveedor: proveedor.nombre_proveedor,
+      telefono: proveedor.telefono,
+      email: proveedor.email,
+      direccion: proveedor.direccion,
     });
-
-    if (!formValues) {
-      return;
-    }
+    setOpenEditDialog(true);
+  };
+  const onSaveEdit = (formData) => {
+    const payload = {
+      ruc: formData.ruc,
+      nombre_proveedor: formData.nombre_proveedor,
+      telefono: formData.telefono,
+      email: formData.email,
+      direccion: formData.direccion,
+    };
     updateProveedorMutation.mutate({
-			id: proveedor.id_proveedor,
-			data: formValues,
-		});
+      id: proveedorSeleccionado.id_proveedor,
+      data: payload,
+    });
   };
   const columns = [
     { field: "id_proveedor", headerName: "ID", width: 50 },
@@ -254,17 +243,30 @@ const ListaProveedores = () => {
   ];
 
   return (
-    <TablaLista
-      title="Lista de Proveedores"
-      columns={columns}
-      data={proveedores}
-      isLoading={isLoading}
-      onRefresh={refetch}
-      onAdd={() => navigate("/proveedores/nuevo")}
-      onBack={() => navigate("/dashboard-proveedores")}
-      getRowId={(row) => row.id_proveedor}
-      addButtonLabel="Ingresar Nuevo Proveedor"
-    />
+    <>
+      <TablaLista
+        title="Lista de Proveedores"
+        columns={columns}
+        data={proveedores}
+        isLoading={isLoading}
+        onRefresh={refetch}
+        onAdd={() => navigate("/proveedores/nuevo")}
+        onBack={() => navigate("/dashboard-proveedores")}
+        getRowId={(row) => row.id_proveedor}
+        addButtonLabel="Ingresar Nuevo Proveedor"
+      />
+      <FormularioDialogo
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        title="Editar Proveedor"
+        fields={proveedorFields}
+        validationSchema={proveedorSchema}
+        initialValues={proveedorSeleccionado}
+        onConfirm={onSaveEdit}
+        isSaving={updateProveedorMutation.isPending}
+      />
+    </>
+    
   );
 };
 

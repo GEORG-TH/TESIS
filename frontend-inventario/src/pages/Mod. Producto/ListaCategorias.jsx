@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -17,12 +17,16 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TablaLista from "../../components/TablaLista";
+import FormularioDialogo from "../../components/FomularioDialogo";
+import { categoriaSchema } from "../../Utils/productoSchema";
 
 const MySwal = withReactContent(Swal);
 
 const ListaCategorias = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
   const {
 		data: categoriasData,
 		isLoading: isLoadingCategorias,
@@ -57,6 +61,10 @@ const ListaCategorias = () => {
       nombreArea: areasMap.get(categoria.area?.id_area) || "Sin área",
     }));
   }, [categoriasData, areas]);
+  const categoriasFields = [
+    { name: "nombreCat", label: "Nombre de la Categoría", type: "text" },
+    { name: "area", label: "Área", type: "select", options: areas.map(area => ({ value: String(area.id_area), label: area.nombreArea })) },
+  ];
   const deleteCategoriaMutation = useMutation({
 		mutationFn: deleteCategoria,
 		onSuccess: () => {
@@ -81,6 +89,7 @@ const ListaCategorias = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries(["categorias"]);
       queryClient.invalidateQueries(["areas"]);
+      setOpenEditDialog(false);
 			MySwal.fire(
 				"Actualizado",
 				"La categoría se actualizó correctamente",
@@ -110,55 +119,22 @@ const ListaCategorias = () => {
     deleteCategoriaMutation.mutate(id);
   };
   const handleEdit = async (categoria) => {
-    const { value: datosActualizados, isConfirmed } = await MySwal.fire({
-      title: "Editar Categoría",
-      html: `<div class="swal-form">
-                <label>Nombre de la Categoría:</label>
-                <input id="swal-nombre-categoria" class="swal-input" value="${categoria.nombreCat ?? ""}">
-                <label>Área:</label>
-                <select id="swal-area" class="swal-input">
-                  ${areas
-                    .map(
-                      (area) =>
-                        `<option value="${area.id_area}" ${
-                          area.id_area === categoria.area?.id_area ? "selected" : ""
-                        }>${area.nombreArea}</option>`
-                    )
-                    .join("")}
-                </select>
-             </div>`,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Guardar",
-      cancelButtonText: "Cancelar",
-      preConfirm: () => {
-        const nombre = document.getElementById("swal-nombre-categoria").value.trim();
-        const areaId = document.getElementById("swal-area").value;
-
-        if (!nombre) {
-          Swal.showValidationMessage("El nombre de la categoría es obligatorio");
-          return false;
-        }
-        if (!areaId) {
-          Swal.showValidationMessage("Selecciona un área");
-          return false;
-        }
-
-        return {
-          nombreCat: nombre,
-          area: { id_area: parseInt(areaId, 10) },
-        };
-      },
+    setCategoriaSeleccionada({
+      id_cat: categoria.id_cat,
+      nombreCat: categoria.nombreCat,
+      area: categoria.area?.id_area ? String(categoria.area.id_area) : '',
     });
-
-    if (!isConfirmed || !datosActualizados) {
-      return;
-    }
-
+    setOpenEditDialog(true);
+  };
+  const onSaveEdit = (formData) => {
+    const payload = {
+      nombreCat: formData.nombreCat,
+      area: { id_area: parseInt(formData.area) },
+    };
     updateCategoriaMutation.mutate({
-			id: categoria.id_cat,
-			data: datosActualizados,
-		});
+      id: categoriaSeleccionada.id_cat,
+      data: payload,
+    });
   };
   const handleRefresh = () => {
     refetchCategorias();
@@ -214,17 +190,30 @@ const ListaCategorias = () => {
     },
   ];
   return (
-    <TablaLista
-      title="Lista de Categorías"
-      columns={columns}
-      data={categoriasEnriquecidas}
-      isLoading={isLoading}
-      onRefresh={handleRefresh}
-      onAdd={() => navigate("/categorias/nuevo")}
-      onBack={() => navigate("/dashboard-productos")}
-      getRowId={(row) => row.id_cat}
-      addButtonLabel="Ingresar Nueva Categoría"
-    />
+    <>
+      <TablaLista
+        title="Lista de Categorías"
+        columns={columns}
+        data={categoriasEnriquecidas}
+        isLoading={isLoading}
+        onRefresh={handleRefresh}
+        onAdd={() => navigate("/categorias/nuevo")}
+        onBack={() => navigate("/dashboard-productos")}
+        getRowId={(row) => row.id_cat}
+        addButtonLabel="Ingresar Nueva Categoría"
+      />
+      <FormularioDialogo
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        title="Editar Categoría"
+        fields={categoriasFields}
+        validationSchema={categoriaSchema}
+        initialValues={categoriaSeleccionada}
+        onConfirm={onSaveEdit}
+        isSaving={updateCategoriaMutation.isPending}
+      />
+    </>
+    
   );
 };
 
