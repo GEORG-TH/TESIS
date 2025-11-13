@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -10,6 +10,7 @@ import {
   activarProducto,
   desactivarProducto,
 } from "../../api/productoApi";
+import { getAreas } from "../../api/areaApi";
 import { getCategorias } from "../../api/categoriaApi";
 import { getProveedores } from "../../api/proveedorApi";
 import {
@@ -25,12 +26,14 @@ import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import TablaLista from "../../components/TablaLista";
+import FormularioDialogoProducto from "../../components/FormularioDialogoProducto";
 
 const MySwal = withReactContent(Swal);
-
 const ListaProductos = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const {
@@ -43,13 +46,16 @@ const ListaProductos = () => {
     queryKey: ["productos"],
     queryFn: getProductos,
   });
-
+  const { data: areasData, isLoading: isLoadingAreas } = useQuery({
+    queryKey: ["areas"],
+    queryFn: getAreas,
+    initialData: [],
+  });
   const { data: categoriasData, isLoading: isLoadingCategorias } = useQuery({
     queryKey: ["categorias"],
     queryFn: getCategorias,
     initialData: [],
   });
-
   const { data: proveedoresData, isLoading: isLoadingProveedores } = useQuery({
     queryKey: ["proveedores"],
     queryFn: getProveedores,
@@ -57,8 +63,9 @@ const ListaProductos = () => {
   });
 
   const isLoading =
-    isLoadingProductos || isLoadingCategorias || isLoadingProveedores;
+    isLoadingProductos || isLoadingAreas || isLoadingCategorias || isLoadingProveedores;
   const productos = productosData || [];
+  const areas = areasData || [];
   const categorias = categoriasData || [];
   const proveedores = proveedoresData || [];
 
@@ -158,6 +165,7 @@ const ListaProductos = () => {
     mutationFn: (variables) => updateProducto(variables.id, variables.data),
     onSuccess: () => {
       queryClient.invalidateQueries(['productos']);
+      setOpenEditDialog(false);
       MySwal.fire("Actualizado", "Producto actualizado correctamente", "success");
     },
     onError: (err) => {
@@ -229,121 +237,33 @@ const ListaProductos = () => {
     toggleEstadoMutation.mutate({ id: productoId, activar: true });
   };
 
-	const handleEditar = async (producto) => {
-		const productoId = resolveProductoId(producto);
-		if (!productoId) {
-			MySwal.fire("Error", "No se pudo determinar el producto a editar", "error");
-			return;
-		}
-		const categoriaActualId = producto.categoria?.id_cat || "";
-		const proveedorActualId = producto.proveedor?.id_proveedor || "";
-		const { value: formValues } = await MySwal.fire({
-			title: "Editar Producto",
-			html: `
-				<div class="swal-form">
-					<label>SKU:</label>
-					<input id="swal-sku" class="swal-input" value="${producto.sku ?? ""}">
+  const handleEditar = (producto) => {
+    setProductoSeleccionado(producto);
+    setOpenEditDialog(true);
+  };
+  const onSaveEdit = (formData) => {
+    const payload = {
+      sku: formData.sku,
+      codEan: formData.codEan,
+      nombre_producto: formData.nombre_producto,
+      marca: formData.marca,
+      uni_medida: formData.uni_medida,
+      precio_venta: Number(formData.precio_venta),
+      precio_compra: Number(formData.precio_compra),
+      categoria: { id_cat: Number(formData.id_cat) },
+      proveedor: { id_proveedor: Number(formData.id_proveedor) }
+    };
 
-					<label>EAN:</label>
-					<input id="swal-ean" class="swal-input" value="${producto.codEan ?? ""}">
-
-					<label>Nombre:</label>
-					<input id="swal-nombre" class="swal-input" value="${
-						producto.nombre || ""
-					}">
-
-					<label>Marca:</label>
-					<input id="swal-marca" class="swal-input" value="${producto.marca ?? ""}">
-
-					<label>Unidad de Medida:</label>
-					<input id="swal-uni-medida" class="swal-input" value="${
-						producto.uni_medida || ""
-					}">
-
-					<label>Precio Venta:</label>
-					<input id="swal-precio-venta" type="number" min="0" step="0.01" class="swal-input" value="${
-						producto.precio_venta ?? ""
-					}">
-
-					<label>Precio Compra:</label>
-					<input id="swal-precio-compra" type="number" min="0" step="0.01" class="swal-input" value="${
-						producto.precio_compra ?? ""
-					}">
-
-					<label>Categoría:</label>
-					<select id="swal-categoria" class="swal-input">
-						${categorias
-							.map(
-								(cat) => `
-									<option value="${cat.id_cat}" ${
-									String(cat.id_cat) === String(categoriaActualId) ? "selected" : ""
-								}>
-										${cat.nombreCat || "Sin nombre"}
-									</option>
-								`
-							)
-							.join("")}
-					</select>
-
-					<label>Proveedor:</label>
-					<select id="swal-proveedor" class="swal-input">
-						${proveedores
-							.map(
-								(prov) => `
-									<option value="${prov.id_proveedor}" ${
-									String(prov.id_proveedor) === String(proveedorActualId) ? "selected" : ""
-								}>
-										${prov.nombre_proveedor || "Sin nombre"}
-									</option>
-								`
-							)
-							.join("")}
-					</select>
-				</div>
-			`,
-			focusConfirm: false,
-			preConfirm: () => {
-				const sku = document.getElementById("swal-sku").value.trim();
-				const codEan = document.getElementById("swal-ean").value.trim();
-				const nombre = document.getElementById("swal-nombre").value.trim();
-				const marca = document.getElementById("swal-marca").value.trim();
-				const uni_medida = document.getElementById("swal-uni-medida").value.trim();
-				const precio_venta = parseFloat(document.getElementById("swal-precio-venta").value);
-				const precio_compra = parseFloat(document.getElementById("swal-precio-compra").value);
-				const categoriaId = document.getElementById("swal-categoria").value;
-				const proveedorId = document.getElementById("swal-proveedor").value;
-
-				if (!sku || !codEan || !nombre || !marca || !uni_medida) {
-					Swal.showValidationMessage("Todos los campos son obligatorios");
-					return false;
-				}
-				if (Number.isNaN(precio_venta) || Number.isNaN(precio_compra)) {
-					Swal.showValidationMessage("Los precios deben ser números válidos");
-					return false;
-				}
-				if (!categoriaId || !proveedorId) {
-					Swal.showValidationMessage("Selecciona categoría y proveedor");
-					return false;
-				}
-
-				return {
-					sku,
-					codEan,
-					nombre: nombre,
-					marca,
-					uni_medida: uni_medida,
-					precio_venta: precio_venta,
-					precio_compra: precio_compra,
-					categoria: { id_cat: parseInt(categoriaId, 10) },
-					proveedor: { id_proveedor: parseInt(proveedorId, 10) },
-				};
-			},
-		});
-		if (!formValues) {
-			return;
-		}
-		updateProductoMutation.mutate({ id: productoId, data: formValues });
-	};
+    updateProductoMutation.mutate({
+      id: productoSeleccionado.id_producto,
+      data: payload
+    }, {
+      onSuccess: () => {
+        setOpenEditDialog(false);
+        setProductoSeleccionado(null);
+      }
+    });
+  };
 
 
   const columns = [
@@ -444,17 +364,31 @@ const ListaProductos = () => {
   ];
 
   return (
-    <TablaLista
-      title="Lista de Productos"
-      columns={columns}
-      data={processedProductos}
-      isLoading={isLoading}
-      onRefresh={() => refetchProductos()}
-      onAdd={() => navigate("/productos/nuevo")}
-      onBack={() => navigate("/dashboard-productos")}
-      getRowId={(row) => row.id_producto}
-      addButtonLabel="Ingresar Nuevo Producto"
-    />
+    <>
+      <TablaLista
+        title="Lista de Productos"
+        columns={columns}
+        data={processedProductos}
+        isLoading={isLoading}
+        onRefresh={() => refetchProductos()}
+        onAdd={() => navigate("/productos/nuevo")}
+        onBack={() => navigate("/dashboard-productos")}
+        getRowId={(row) => row.id_producto}
+        addButtonLabel="Ingresar Nuevo Producto"
+      />
+      <FormularioDialogoProducto
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        title="Editar Producto"
+        producto={productoSeleccionado}
+        areas={areas}
+        categorias={categorias}
+        proveedores={proveedores}
+        onConfirm={onSaveEdit}
+        isSaving={updateProductoMutation.isPending}
+      />
+    </>
+    
   );
 };
 

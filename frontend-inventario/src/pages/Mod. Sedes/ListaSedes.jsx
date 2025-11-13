@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -11,12 +12,16 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete"; 
 import TablaLista from "../../components/TablaLista";
+import FormularioDialogo from "../../components/FomularioDialogo";
+import { sedeSchema } from "../../Utils/sedeSchema";
 
 const MySwal = withReactContent(Swal);
 
 const ListaSedes = () => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const [openEditDialog, setOpenEditDialog] = useState(false);
+	const [sedeSeleccionada, setSedeSeleccionada] = useState(null);
 
 	const {
 		data: sedesData,
@@ -29,6 +34,11 @@ const ListaSedes = () => {
 		queryFn: getSedes,
 	});
 	const sedes = sedesData || [];
+	const sedeFields = [
+		{ name: "nombreSede", label: "Sede", type: "text" },
+		{ name: "direccion", label: "Dirección", type: "text" },
+		{ name: "anexo", label: "Anexo", type: "text" },
+	];
 	const deleteSedeMutation = useMutation({
 		mutationFn: deleteSede,
 		onSuccess: () => {
@@ -45,6 +55,7 @@ const ListaSedes = () => {
 		mutationFn: (variables) => updateSede(variables.id, variables.data),
 		onSuccess: () => {
 			queryClient.invalidateQueries(["sedes"]);
+			setOpenEditDialog(false);
 			MySwal.fire(
 				"Actualizado",
 				"La sede se actualizó correctamente",
@@ -76,46 +87,24 @@ const ListaSedes = () => {
 	};
 
 	const handleEditar = async (sede) => {
-		const { value: datosActualizados } = await MySwal.fire({
-			title: "Editar Sede",
-			html: `
-				<div class="swal-form">
-					<label>Nombre de la Sede:</label>
-					<input id="swal-nombre-sede" class="swal-input" value="${sede.nombreSede ?? ""}">
-
-					<label>Dirección:</label>
-					<input id="swal-direccion" class="swal-input" value="${sede.direccion ?? ""}">
-
-					<label>Anexo:</label>
-					<input id="swal-anexo" class="swal-input" value="${sede.anexo ?? ""}">
-				</div>
-			`,
-			focusConfirm: false,
-			showCancelButton: true,
-			confirmButtonText: "Guardar",
-			cancelButtonText: "Cancelar",
-			preConfirm: () => {
-				const nombre = document.getElementById("swal-nombre-sede").value.trim();
-				const direccion = document.getElementById("swal-direccion").value.trim();
-				const anexo = document.getElementById("swal-anexo").value.trim();
-
-				if (!nombre || !direccion || !anexo) {
-					Swal.showValidationMessage("Todos los campos son obligatorios");
-					return false;
-				}
-
-				return {
-					nombreSede: nombre,
-					direccion,
-					anexo,
-				};
-			},
+		setSedeSeleccionada({
+			idSede: sede.idSede,
+			nombreSede: sede.nombreSede,
+			direccion: sede.direccion,
+			anexo: sede.anexo,
 		});
-
-		if (!datosActualizados) {
-			return;
-		}
-		updateSedeMutation.mutate({ id: sede.idSede, data: datosActualizados });
+		setOpenEditDialog(true);
+	};
+	const onSaveEdit = (formData) => {
+		const payload = {
+			nombreSede: formData.nombreSede,
+			direccion: formData.direccion,
+			anexo: formData.anexo,
+		};
+		updateSedeMutation.mutate({
+			id: sedeSeleccionada.idSede,
+			data: payload,
+		});
 	};
 	const columns = [
 		{ 
@@ -172,17 +161,30 @@ const ListaSedes = () => {
 		},
 	];
 	return (
-		<TablaLista
-			title="Lista de Sedes"
-			columns={columns}
-			data={sedes}
-			isLoading={isLoading}
-			onRefresh={refetch}
-			onAdd={() => navigate("/sedes/nuevo")}
-			onBack={() => navigate("/dashboard-sedes")}
-			getRowId={(row) => row.idSede}
-			addButtonLabel="Ingresar Nueva Sede"
-		/>
+		<>
+			<TablaLista
+				title="Lista de Sedes"
+				columns={columns}
+				data={sedes}
+				isLoading={isLoading}
+				onRefresh={refetch}
+				onAdd={() => navigate("/sedes/nuevo")}
+				onBack={() => navigate("/dashboard-sedes")}
+				getRowId={(row) => row.idSede}
+				addButtonLabel="Ingresar Nueva Sede"
+			/>
+			<FormularioDialogo
+				open={openEditDialog}
+				onClose={() => setOpenEditDialog(false)}
+				title="Editar Sede"
+				fields={sedeFields}
+				validationSchema={sedeSchema}
+				initialValues={sedeSeleccionada}
+				onConfirm={onSaveEdit}
+				isSaving={updateSedeMutation.isPending}
+			/>
+		</>
+		
 	);
 };
 

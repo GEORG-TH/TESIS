@@ -4,18 +4,13 @@ import withReactContent from "sweetalert2-react-content";
 import LayoutDashboard from "../../components/layouts/LayoutDashboard";
 import "../../components/styles/styleRegistrar.css";
 import { useForm } from "react-hook-form";
-import { z } from 'zod';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createCategoria } from "../../api/categoriaApi";
 import { getAreas } from "../../api/areaApi";
+import { categoriaSchema } from "../../Utils/productoSchema";
 
 const MySwal = withReactContent(Swal);
-const categoriaSchema = z.object({
-  nombreCat: z.string().trim().min(4, "El nombre debe tener al menos 4 caracteres"),
-  id_area: z.string().nonempty("Debes seleccionar un área"),
-});
-
 function IngresarCategoria() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
