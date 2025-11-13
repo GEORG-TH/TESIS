@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { IngresarProductoSchema } from '../Utils/productoSchema';
+import { UpdateProductoSchema } from '../Utils/productoSchema';
 
 const FormularioDialogoProducto = ({
     open,
@@ -28,7 +28,7 @@ const FormularioDialogoProducto = ({
     isSaving
 }) => {
     const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
-        resolver: zodResolver(IngresarProductoSchema),
+        resolver: zodResolver(UpdateProductoSchema),
         defaultValues: {
             sku: '', codEan: '', nombre_producto: '', marca: '', uni_medida: '',
             precio_venta: '', precio_compra: '', id_area: '', id_cat: '', id_proveedor: ''
@@ -47,9 +47,9 @@ const FormularioDialogoProducto = ({
                 uni_medida: producto.uni_medida,
                 precio_venta: producto.precio_venta,
                 precio_compra: producto.precio_compra,
-                id_area: areaInicial,
-                id_cat: producto.categoria?.id_cat || producto.categoria?.id_categoria || '',
-                id_proveedor: producto.proveedor?.id_proveedor || ''
+                id_area: String(areaInicial),
+                id_cat: String(producto.categoria?.id_cat || producto.categoria?.id_categoria || ''),
+                id_proveedor: String(producto.proveedor?.id_proveedor || '')
             });
         }
     }, [producto, open, reset]);
@@ -81,7 +81,7 @@ const FormularioDialogoProducto = ({
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>Editar Producto</DialogTitle>
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(onSubmit, (errors) => console.log("Errores de validación:", errors))}>
                 <DialogContent dividers>
                     <Grid container spacing={2}>
                         <Grid item xs={6}>
@@ -89,7 +89,7 @@ const FormularioDialogoProducto = ({
                                 name="sku"
                                 control={control}
                                 render={({ field }) => (
-                                    <TextField {...field} label="SKU" fullWidth error={!!errors.sku} helperText={errors.sku?.message} />
+                                    <TextField {...field} label="SKU" fullWidth error={!!errors.sku} helperText={errors.sku?.message} disabled={true} />
                                 )}
                             />
                         </Grid>
@@ -104,7 +104,7 @@ const FormularioDialogoProducto = ({
                         </Grid>
                         <Grid item xs={12}><Controller name="nombre_producto" control={control} render={({ field }) => (<TextField {...field} label="Nombre" fullWidth error={!!errors.nombre_producto} helperText={errors.nombre_producto?.message} />)} /></Grid>
                         <Grid item xs={6}><Controller name="marca" control={control} render={({ field }) => (<TextField {...field} label="Marca" fullWidth error={!!errors.marca} helperText={errors.marca?.message} />)} /></Grid>
-                        <Grid item xs={6}><Controller name="uni_medida" control={control} render={({ field }) => (<TextField {...field} label="Unidad de Medida" fullWidth error={!!errors.uni_medida} helperText={errors.uni_medida?.message} />)} /></Grid>
+                        <Grid item xs={6}><Controller name="uni_medida" control={control} render={({ field }) => (<TextField {...field} label="Unidad de Medida" fullWidth error={!!errors.uni_medida} helperText={errors.uni_medida?.message} disabled={true} />)} /></Grid>
 
                         <Grid item xs={6}><Controller name="precio_venta" control={control} render={({ field }) => (<TextField {...field} type="number" label="Precio Venta" fullWidth error={!!errors.precio_venta} helperText={errors.precio_venta?.message} />)} /></Grid>
                         <Grid item xs={6}><Controller name="precio_compra" control={control} render={({ field }) => (<TextField {...field} type="number" label="Precio Compra" fullWidth error={!!errors.precio_compra} helperText={errors.precio_compra?.message} />)} /></Grid>
@@ -113,20 +113,21 @@ const FormularioDialogoProducto = ({
                                 name="id_area"
                                 control={control}
                                 render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        select
-                                        label="Área"
-                                        fullWidth
-                                        error={!!errors.id_area}
-                                        helperText={errors.id_area?.message}
-                                    >
-                                        {areas.map((area) => (
-                                            <MenuItem key={area.id_area} value={area.id_area}>
-                                                {area.nombreArea}
-                                            </MenuItem>
-                                        ))}
-                                    </TextField>
+                                    <FormControl fullWidth error={!!errors.id_area} sx={{ minWidth: { xs: '100%', sm: 100 } }}>
+                                        <InputLabel id="area-label">Área</InputLabel>
+                                        <Select
+                                            {...field}
+                                            labelId="area-label"
+                                            label="Área"
+                                        >
+                                            {areas.map((area) => (
+                                                <MenuItem key={area.id_area} value={area.id_area}>
+                                                    {area.nombreArea}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        <FormHelperText>{errors.id_area?.message}</FormHelperText>
+                                    </FormControl>
                                 )}
                             />
                         </Grid>
@@ -135,21 +136,22 @@ const FormularioDialogoProducto = ({
                                 name="id_cat"
                                 control={control}
                                 render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        select
-                                        label="Categoría"
-                                        fullWidth
-                                        disabled={!selectedAreaId}
-                                        error={!!errors.id_cat}
-                                        helperText={errors.id_cat?.message}
-                                    >
-                                        {categoriasDisponibles.map((cat) => (
-                                            <MenuItem key={cat.id_cat || cat.id_categoria} value={cat.id_cat || cat.id_categoria}>
-                                                {cat.nombreCat || cat.nombre_categoria}
-                                            </MenuItem>
-                                        ))}
-                                    </TextField>
+                                    <FormControl fullWidth error={!!errors.id_cat} sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+                                        <InputLabel id="categoria-label">Categoría</InputLabel>
+                                        <Select
+                                            {...field}
+                                            labelId="categoria-label"
+                                            label="Categoría"
+                                            disabled={!selectedAreaId}
+                                        >
+                                            {categoriasDisponibles.map((cat) => (
+                                                <MenuItem key={cat.id_cat || cat.id_categoria} value={cat.id_cat || cat.id_categoria}>
+                                                    {cat.nombreCat || cat.nombre_categoria}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        <FormHelperText>{errors.id_cat?.message}</FormHelperText>
+                                    </FormControl>
                                 )}
                             />
                         </Grid>
