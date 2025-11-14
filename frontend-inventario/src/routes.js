@@ -6,32 +6,37 @@ import Login from "./pages/Authenticación/Login";
 import ForgotPassword from "./pages/Authenticación/ForgotPassword";
 import ResetPassword from "./pages/Authenticación/ResetPassword";
 import MfaVerify from "./pages/Authenticación/MfaVerify";
-import DashboardAdmin from "./components/Dashboards/dashboardAdmin";
-import DashboardJefeInventario from "./components/Dashboards/dashboardJInventario";
-import DashboardOperadorRecepcion from "./components/Dashboards/dashboardORecepcion";
-import DashboardAuditor from "./components/Dashboards/dashboardAuditor";
-import DashboardOperadorTienda from "./components/Dashboards/dashboardOTienda";
+import DashboardAdmin from "./components/Dashboards/Roles/dashboardAdmin";
+import DashboardJefeInventario from "./components/Dashboards/Roles/dashboardJInventario";
+import DashboardOperadorRecepcion from "./components/Dashboards/Roles/dashboardORecepcion";
+import DashboardAuditor from "./components/Dashboards/Roles/dashboardAuditor";
+import DashboardOperadorTienda from "./components/Dashboards/Roles/dashboardOTienda";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PerfilUsuario from "./pages/PerfilUsuario";
 import ListaUsuarios from "./pages/Mod. Usuario/ListaUsuarios";
 import CrearUsuario from "./pages/Mod. Usuario/RegistrarUsuario";
 import LoadingScreen from "./components/LoadingScreen_login";
-import DashboardProductos from "./components/Dashboards/dashboardProductos";
+import DashboardProductos from "./components/Dashboards/Modulos/dashboardProductos";
 import ListaAreas from "./pages/Mod. Producto/ListaAreas";
 import ListaProductos from "./pages/Mod. Producto/ListaProductos";
 import IngresarProducto from "./pages/Mod. Producto/IngresarProducto";
-import DashboardUsuarios from "./components/Dashboards/dashboardUsuarios";
+import DashboardUsuarios from "./components/Dashboards/Modulos/dashboardUsuarios";
 import IngresarArea from "./pages/Mod. Producto/IngresarArea";
 import ListaRoles from "./pages/Mod. Usuario/ListaRoles";
 import IngresarRol from "./pages/Mod. Usuario/IngresarRol";
 import ListaCategorias from "./pages/Mod. Producto/ListaCategorias";
 import IngresarCategoria from "./pages/Mod. Producto/IngresarCategoria";
-import DashboardProveedores from "./components/Dashboards/dashboardProveedores";
+import DashboardProveedores from "./components/Dashboards/Modulos/dashboardProveedores";
 import ListaProveedores from "./pages/Mod. Proveedor/ListaProveedores";
 import IngresarProveedor from "./pages/Mod. Proveedor/IngresarProveedor";
-import DashboardSedes from "./components/Dashboards/dashboardSedes";
+import DashboardSedes from "./components/Dashboards/Modulos/dashboardSedes";
 import ListaSedes from "./pages/Mod. Sedes/ListaSedes";
 import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
+import DashboardInventario from "./components/Dashboards/Modulos/dashboardInventario";
+
+import DashboardConteoI from "./components/Dashboards/Modulos/dashboardConteoI";
+
+import DashboardReportes from "./components/Dashboards/Modulos/dashboardReportes";
 import Settings from "./pages/Mod. Configuracion/Settings";
 
 // --- Roles ---
@@ -56,6 +61,12 @@ const ADMIN_JEFE = [ROLES.ADMIN, ROLES.JEFE_INV];
 const ADMIN_OP_RECEPCION = [ROLES.ADMIN, ROLES.OP_RECEPCION];
 const ADMIN_OP_RECEPCION_TIENDA = [
   ROLES.ADMIN,
+  ROLES.OP_RECEPCION,
+  ROLES.OP_TIENDA,
+];
+const ADMIN_JEFE_INV_OP_RECEPCION_TIENDA = [
+  ROLES.ADMIN,
+  ROLES.JEFE_INV,
   ROLES.OP_RECEPCION,
   ROLES.OP_TIENDA,
 ];
@@ -218,6 +229,36 @@ const RutasSedes = [
   RutaProtegida("registrarSedes", "/sedes/nuevo", ADMIN_JEFE, RegistrarSede),
 ];
 
+// Rutas de Inventario
+const RutasInventario = [
+  RutaProtegida(
+    "dashboardInventario",
+    "/dashboard-inventario",
+    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
+    DashboardInventario
+  ),
+];
+
+// Rutas de Conteo de Inventario
+const RutasConteoInventario = [
+  RutaProtegida(
+    "dashboardConteoInventario",
+    "/dashboard-conteoinventario",
+    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
+    DashboardConteoI
+  ),
+];
+
+// Rutas de Reportes
+const RutasReportes = [
+  RutaProtegida(
+    "dashboardReportes",
+    "/dashboard-reportes",
+    ALL_ROLES,
+    DashboardReportes
+  ),
+];
+
 // --- Exportación ---
 const AppRoutes = [
   ...RutasAutenticacion,
@@ -227,6 +268,9 @@ const AppRoutes = [
   ...RutasProductos,
   ...RutasProveedores,
   ...RutasSedes,
+  ...RutasInventario,
+  ...RutasConteoInventario,
+  ...RutasReportes,
 ];
 
 export default AppRoutes;
