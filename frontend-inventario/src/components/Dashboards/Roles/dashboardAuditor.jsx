@@ -1,4 +1,4 @@
-import LayoutDashboard from "../layouts/LayoutDashboard";
+import LayoutDashboard from "../../layouts/LayoutDashboard";
 
 function DashboardAuditor() {
     return (

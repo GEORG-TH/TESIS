@@ -1,8 +1,9 @@
 import React from "react";
-import LayoutDashboard from "../layouts/LayoutDashboard";
-import GraficoUsuariosPorRol from "../Graficos/GraficoUsuariosPorRol"
-import FeedActividad from "../Graficos/FeedActividad";
-import "../styles/dashboardAdmin.css"
+import LayoutDashboard from "../../layouts/LayoutDashboard";
+import GraficoUsuariosPorRol from "../../Graficos/GraficoUsuariosPorRol"
+import FeedActividad from "../../Graficos/FeedActividad";
+import "../../styles/dashboardAdmin.css";
+
 
 export default function DashboardAdmin() {
   return (
