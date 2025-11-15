@@ -3,9 +3,9 @@ package com.inventario.backend_inventario.Controller;
 import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import com.inventario.backend_inventario.Security.JwtUtil;
+import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.EmailService;
 import com.inventario.backend_inventario.Service.MfaService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +30,8 @@ public class AuthController {
     private EmailService emailService;
     @Autowired
     private MfaService mfaService;
+    @Autowired
+    private HistorialActividadService historialService;
 
     public AuthController(UsuarioRepository usuarioRepo,
                           PasswordEncoder passwordEncoder,
@@ -77,7 +79,19 @@ public class AuthController {
             
         } else {
             String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().getNombreRol(),"Sesion");
-
+            try {
+                historialService.registrarActividad(
+                    usuario,
+                    "LOGIN",
+                    "El usuario: " + usuario.getNombre_u() + " [" + usuario.getRol().getNombreRol() + "] ha iniciado sesión.",
+                    "INICIO SESIÓN",   
+                    "Usuario",        
+                    (long) usuario.getId_u(),        
+                    "Inicio de sesión exitoso"            
+                );
+            } catch (Exception e) {
+                System.err.println("Error registrando auditoría de login: " + e.getMessage());
+            }
             Map<String, Object> resp = new HashMap<>();
             resp.put("success", true);
             resp.put("mfaRequired", false);
@@ -88,6 +102,7 @@ public class AuthController {
                     usuario.getNombre_u(),
                     usuario.getApellido_pat(),
                     usuario.getApellido_mat(),
+                    usuario.getTelefono(),
                     usuario.getEmail(),
                     usuario.getEstado_u(),
                     usuario.getRol().getNombreRol(),
@@ -125,6 +140,7 @@ public class AuthController {
                 usuario.getNombre_u(),
                 usuario.getApellido_pat(),
                 usuario.getApellido_mat(),
+                usuario.getTelefono(),
                 usuario.getEmail(),
                 usuario.getEstado_u(),
                 usuario.getRol().getNombreRol(),
@@ -225,6 +241,7 @@ public class AuthController {
         String nombre_u,
         String apellido_pat,
         String apellido_mat,
+        String telefono,
         String email,
         Integer estado_u,
         String rol,

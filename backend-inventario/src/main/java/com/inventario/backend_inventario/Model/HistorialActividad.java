@@ -17,8 +17,23 @@ public class HistorialActividad implements Serializable {
     @Column(name = "tipo_accion", nullable = false, length = 50)
     private String tipoAccion;
 
+    @Column(name = "modulo", length = 50)
+    private String modulo; 
+
+    @Column(name = "entidad_afectada", length = 50)
+    private String entidadAfectada;
+
+    @Column(name = "id_entidad")
+    private Long idEntidad;
+
     @Column(nullable = false, length = 500)
     private String descripcion;
+    
+    @Column(name = "ip_direccion", length = 45)
+    private String ipDireccion;
+
+    @Column(name = "detalles_cambios", columnDefinition = "TEXT")
+    private String detallesCambios;
 
     @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora;

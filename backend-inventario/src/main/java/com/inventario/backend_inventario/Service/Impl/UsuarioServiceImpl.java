@@ -58,7 +58,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             String descripcion = "Creó el usuario '" + usuarioGuardado.getNombre_u() + "' (ID: " + usuarioGuardado.getId_u() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion, "USUARIO", "Usuario", usuarioGuardado.getId_u().longValue(), "Usuario creado con nombre: " + usuarioGuardado.getNombre_u());
             });
 
         } catch (Exception e) {
@@ -76,6 +76,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             uDB.setNombre_u(usuarioUpdateDto.getNombre_u());
             uDB.setApellido_pat(usuarioUpdateDto.getApellido_pat());
             uDB.setApellido_mat(usuarioUpdateDto.getApellido_mat());
+            uDB.setTelefono(usuarioUpdateDto.getTelefono());
             uDB.setEmail(usuarioUpdateDto.getEmail());
 
             Rol rol = rolRepository.findById(usuarioUpdateDto.getRol().getId_rol())
@@ -90,7 +91,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 String descripcion = "Actualizó el usuario '" + usuarioGuardado.getNombre_u() + "' (ID: " + usuarioGuardado.getId_u() + ").";
 
                 usuarioActual.ifPresent(u -> {
-                    historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+                    historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion, "USUARIO", "Usuario", usuarioGuardado.getId_u().longValue(), "Nuevo nombre de usuario: " + usuarioGuardado.getNombre_u());
                 });
 
             } catch (Exception e) {
@@ -112,7 +113,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             String descripcion = "Eliminó el usuario '" + usuarioGuardado.getNombre_u() + "' (ID: " + usuarioGuardado.getId_u() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion, "USUARIO", "Usuario", usuarioGuardado.getId_u().longValue(), "Usuario eliminado con nombre: " + usuarioGuardado.getNombre_u());
             });
 
         } catch (Exception e) {
@@ -131,7 +132,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             String descripcion = "Desactivó al usuario '" + usuarioGuardado.getNombre_u() + "' (ID: " + usuarioGuardado.getId_u() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "DESACTIVACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "DESACTIVACIÓN", descripcion, "USUARIO", "Usuario", usuarioGuardado.getId_u().longValue(), "Usuario desactivado con nombre: " + usuarioGuardado.getNombre_u());
             });
 
         } catch (Exception e) {
@@ -153,7 +154,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             String descripcion = "Activó al usuario '" + usuarioGuardado.getNombre_u() + "' (ID: " + usuarioGuardado.getId_u() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ACTIVACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ACTIVACIÓN", descripcion, "USUARIO", "Usuario", usuarioGuardado.getId_u().longValue(), "Usuario activado con nombre: " + usuarioGuardado.getNombre_u());
             });
 
         } catch (Exception e) {

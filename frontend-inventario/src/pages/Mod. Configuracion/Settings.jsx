@@ -1,6 +1,6 @@
 import React from "react";
 import { useGlobalStore } from "../../store/useGlobalStore";
-import LayoutDashboard from "../../components/layouts/LayoutDashboard";
+import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
 import {
     Container,
     Typography,

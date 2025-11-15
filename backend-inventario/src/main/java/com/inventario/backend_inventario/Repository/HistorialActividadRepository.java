@@ -1,8 +1,11 @@
 package com.inventario.backend_inventario.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.inventario.backend_inventario.Model.HistorialActividad;
@@ -10,4 +13,17 @@ import com.inventario.backend_inventario.Model.HistorialActividad;
 @Repository
 public interface HistorialActividadRepository extends JpaRepository<HistorialActividad, Long> {
     List<HistorialActividad> findTop10ByOrderByFechaHoraDesc();
+
+    @Query("SELECT h FROM HistorialActividad h WHERE " +
+           "(:usuarioId IS NULL OR h.usuario.id_u = :usuarioId) AND " +
+           "(:modulo IS NULL OR h.modulo = :modulo) AND " +
+           "(:fechaInicio IS NULL OR h.fechaHora >= :fechaInicio) AND " +
+           "(:fechaFin IS NULL OR h.fechaHora <= :fechaFin) " +
+           "ORDER BY h.fechaHora DESC")
+    List<HistorialActividad> filtrarActividades(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("modulo") String modulo,
+            @Param("fechaInicio") LocalDateTime fechaInicio,
+            @Param("fechaFin") LocalDateTime fechaFin
+    );
 }

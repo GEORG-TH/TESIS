@@ -58,7 +58,7 @@ public class CategoriaServiceImpl implements CategoriaService {
             String descripcion = "Creó la categoría '" + categoriaGuardada.getNombreCat() + "' (ID: " + categoriaGuardada.getId_cat() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion, "PRODUCTO", "Categoría", Long.valueOf(categoriaGuardada.getId_cat()), "Categoría creada con nombre: " + categoriaGuardada.getNombreCat());
             });
 
         } catch (Exception e) {
@@ -82,7 +82,7 @@ public class CategoriaServiceImpl implements CategoriaService {
             String descripcion = "Actualizó la categoría '" + categoriaGuardada.getNombreCat() + "' (ID: " + categoriaGuardada.getId_cat() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion , "PRODUCTO", "Categoría", Long.valueOf(categoriaGuardada.getId_cat()), "Categoría actualizada con nombre: " + categoriaGuardada.getNombreCat());
             });
 
         } catch (Exception e) {
@@ -106,7 +106,7 @@ public class CategoriaServiceImpl implements CategoriaService {
             String descripcion = "Eliminó la categoría '" + categoria.getNombreCat() + "' (ID: " + categoria.getId_cat() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion , "PRODUCTO", "Categoría", Long.valueOf(categoria.getId_cat()), "Categoría eliminada con nombre: " + categoria.getNombreCat());
             });
 
         } catch (Exception e) {

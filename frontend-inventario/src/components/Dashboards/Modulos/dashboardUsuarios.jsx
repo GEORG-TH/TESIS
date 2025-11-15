@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import LayoutDashboard from "../../layouts/LayoutDashboard";
+import LayoutDashboard from "../../Layouts/LayoutDashboard";
 import "../../styles/dashboardProductos.css";
 
 const DashboardUsuarios = () => {

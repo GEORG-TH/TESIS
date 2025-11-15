@@ -54,6 +54,7 @@ function ListaUsuarios() {
     { name: 'nombre_u', label: 'Nombre', type: 'text' },
     { name: 'apellido_pat', label: 'Apellido Paterno', type: 'text' },
     { name: 'apellido_mat', label: 'Apellido Materno', type: 'text' },
+    { name: 'telefono', label: 'Teléfono', type: 'text' },
     { name: 'email', label: 'Email', type: 'email' },
     {
       name: 'id_rol',
@@ -194,6 +195,7 @@ function ListaUsuarios() {
       nombre_u: usuario.nombre_u,
       apellido_pat: usuario.apellido_pat,
       apellido_mat: usuario.apellido_mat,
+      telefono: usuario.telefono,
       email: usuario.email,
       id_rol: usuario.rol?.id_rol ? String(usuario.rol.id_rol) : ''
     });
@@ -204,6 +206,7 @@ function ListaUsuarios() {
       nombre_u: formData.nombre_u,
       apellido_pat: formData.apellido_pat,
       apellido_mat: formData.apellido_mat,
+      telefono: formData.telefono,
       email: formData.email,
       rol: { id_rol: parseInt(formData.id_rol) }
     };
@@ -227,6 +230,12 @@ function ListaUsuarios() {
     {
       field: "nombreCompleto",
       headerName: "Nombre",
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: "telefono",
+      headerName: "Teléfono",
       flex: 1,
       minWidth: 150,
     },

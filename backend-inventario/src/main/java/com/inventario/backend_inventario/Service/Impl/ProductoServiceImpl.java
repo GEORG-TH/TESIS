@@ -72,7 +72,7 @@ public class ProductoServiceImpl implements ProductoService {
             String descripcion = "Creó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
             
             usuarioActual.ifPresent(usuario -> {
-                historialActividadService.registrarActividad(usuario, "CREACIÓN", descripcion);
+                historialActividadService.registrarActividad(usuario, "CREACIÓN", descripcion, "PRODUCTO", "Producto", Long.valueOf(productoGuardado.getId_producto()), "Producto creado con nombre: " + productoGuardado.getNombre());
             });
 
         } catch (Exception e) {
@@ -104,7 +104,7 @@ public class ProductoServiceImpl implements ProductoService {
             String descripcion = "Actualizó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
             
             usuarioActual.ifPresent(usuario -> {
-                historialActividadService.registrarActividad(usuario, "ACTUALIZACIÓN", descripcion);
+                historialActividadService.registrarActividad(usuario, "ACTUALIZACIÓN", descripcion, "PRODUCTO", "Producto", Long.valueOf(productoGuardado.getId_producto()), "Producto actualizado con nombre: " + productoGuardado.getNombre());
             });
 
         } catch (Exception e) {
@@ -126,7 +126,7 @@ public class ProductoServiceImpl implements ProductoService {
             String descripcion = "Eliminó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
             
             usuarioActual.ifPresent(usuario -> {
-                historialActividadService.registrarActividad(usuario, "ELIMINACIÓN", descripcion);
+                historialActividadService.registrarActividad(usuario, "ELIMINACIÓN", descripcion, "PRODUCTO", "Producto", Long.valueOf(productoGuardado.getId_producto()), "Producto eliminado con nombre: " + productoGuardado.getNombre());
             });
 
         } catch (Exception e) {

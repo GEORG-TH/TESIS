@@ -47,7 +47,7 @@ public class AreaServiceImpl implements AreaService {
             String descripcion = "Creó el área '" + areaGuardada.getNombreArea() + "' (ID: " + areaGuardada.getId_area() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion, "PRODUCTO", "Área", Long.valueOf(areaGuardada.getId_area()), "Area creada con nombre: " + areaGuardada.getNombreArea());
             });
 
         } catch (Exception e) {
@@ -69,7 +69,7 @@ public class AreaServiceImpl implements AreaService {
             String descripcion = "Actualizó el área '" + areaGuardada.getNombreArea() + "' (ID: " + areaGuardada.getId_area() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion, "PRODUCTO", "Área", Long.valueOf(areaGuardada.getId_area()), "Area actualizada con nombre: " + areaGuardada.getNombreArea());
             });
 
         } catch (Exception e) {
@@ -94,7 +94,7 @@ public class AreaServiceImpl implements AreaService {
             String descripcion = "Eliminó el área '" + area.getNombreArea() + "' (ID: " + area.getId_area() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion, "PRODUCTO", "Área", Long.valueOf(area.getId_area()), "Area eliminada con nombre: " + area.getNombreArea());
             });
 
         } catch (Exception e) {

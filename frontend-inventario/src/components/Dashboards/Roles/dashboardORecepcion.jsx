@@ -1,4 +1,4 @@
-import LayoutDashboard from "../../layouts/LayoutDashboard";
+import LayoutDashboard from "../../Layouts/LayoutDashboard";
 
 function DashboardORecepcion() {
     return (

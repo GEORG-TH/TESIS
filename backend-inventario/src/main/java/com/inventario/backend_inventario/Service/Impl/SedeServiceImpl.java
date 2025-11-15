@@ -45,7 +45,7 @@ public class SedeServiceImpl implements SedeService {
             String descripcion = "Creó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion, "SEDES", "Sede", sedeGuardada.getIdSede().longValue(), "Sede creada con nombre: " + sedeGuardada.getNombreSede());
             });
 
         } catch (Exception e) {
@@ -70,7 +70,7 @@ public class SedeServiceImpl implements SedeService {
             String descripcion = "Actualizó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion, "SEDES", "Sede", sedeGuardada.getIdSede().longValue(), "Nuevo nombre de sede: " + sedeGuardada.getNombreSede());
             });
 
         } catch (Exception e) {
@@ -93,7 +93,7 @@ public class SedeServiceImpl implements SedeService {
             String descripcion = "Eliminó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion, "SEDES", "Sede", sedeGuardada.getIdSede().longValue(), "Sede eliminada con nombre: " + sedeGuardada.getNombreSede());
             });
 
         } catch (Exception e) {
