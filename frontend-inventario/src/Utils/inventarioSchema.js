@@ -8,7 +8,7 @@ export const recepcionSchema = z.object({
     .number({ invalid_type_error: "Debes seleccionar una sede" })
     .min(1, "Debes seleccionar una sede"),
 
-  productoId: z.coerce
+  id_producto: z.coerce
     .number({ invalid_type_error: "Debes seleccionar un producto" })
     .min(1, "Debes seleccionar un producto"),
 
