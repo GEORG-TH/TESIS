@@ -18,7 +18,7 @@ public class Inventario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_inv_actual") // El nombre de tu columna PK
+    @Column(name = "id_ivn") // El nombre de tu columna PK
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

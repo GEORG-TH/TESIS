@@ -64,7 +64,7 @@ function RecepcionMercaderia() {
     resolver: zodResolver(recepcionSchema),
     defaultValues: {
       // 🛑 CORRECCIÓN: Inicializar con 0 en lugar de ""
-      productoId: 0,
+      id_producto: 0,
       sedeIdOrigen: 0,
       cantidad: 0, // CAMBIO: También para Cantidad, ya que espera número
       descripcion: "",
@@ -98,8 +98,8 @@ function RecepcionMercaderia() {
     // 1. Limpiamos y aseguramos el payload final
     const payload = {
       // Aseguramos que los IDs sean números (aunque Zod lo hizo, es más seguro)
-      productoId: Number(data.productoId),
-      sedeIdOrigen: Number(data.sedeIdOrigen),
+      productoId: parseInt(data.id_producto),
+      sedeIdOrigen: parseInt(data.sedeIdOrigen),
 
       // La cantidad ya es número gracias al pipe de Zod
       cantidad: data.cantidad,
@@ -174,11 +174,11 @@ function RecepcionMercaderia() {
           <FormControl
             fullWidth
             margin="normal"
-            error={!!errors.productoId}
+            error={!!errors.id_producto}
           >
             <InputLabel id="producto-label">Producto *</InputLabel>
             <Controller
-              name="productoId"
+              name="id_producto"
               control={control}
               render={({ field }) => (
                 <Select labelId="producto-label" label="Producto *" {...field}>
@@ -187,8 +187,8 @@ function RecepcionMercaderia() {
                   </MenuItem>
                   {productos.map((prod) => (
                     <MenuItem
-                      key={prod.idProducto}
-                      value={String(prod.idProducto)} // 🛑 CORRECCIÓN: Forzar el ID a ser un string
+                      key={prod.id_producto}
+                      value={String(prod.id_producto)} // 🛑 CORRECCIÓN: Forzar el ID a ser un string
                     >
                       {prod.sku} - {prod.nombre}
                     </MenuItem>
@@ -196,7 +196,7 @@ function RecepcionMercaderia() {
                 </Select>
               )}
             />
-            <FormHelperText>{errors.productoId?.message}</FormHelperText>
+            <FormHelperText>{errors.id_producto?.message}</FormHelperText>
           </FormControl>
 
 
