@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import LayoutDashboard from "../../layouts/LayoutDashboard";
+import LayoutDashboard from "../../Layouts/LayoutDashboard";
 import "../../styles/dashboardProductos.css";
 
 const DashboardReportes = () => {
@@ -51,7 +51,7 @@ const DashboardReportes = () => {
             id: "reporte-auditoria-usuarios",
             titulo: "Reporte de Auditoría de Usuarios",
             descripcion: "Verifica las acciones realizadas por los usuarios en el sistema.",
-            ruta: "/reporte-auditoria-usuarios",
+            ruta: "/auditoria-actividad-usuario",
         },
     ];
 

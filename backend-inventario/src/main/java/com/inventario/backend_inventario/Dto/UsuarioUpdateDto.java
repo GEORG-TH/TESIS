@@ -13,6 +13,7 @@ public class UsuarioUpdateDto {
     private String nombre_u;
     private String apellido_pat;
     private String apellido_mat;
+    private String telefono;
     private String email;
     private Rol rol;
 }

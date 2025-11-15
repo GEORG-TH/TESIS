@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { createUsuario } from "../../api/usuarioApi";
-import LayoutDashboard from "../../components/layouts/LayoutDashboard";
+import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
 import "../../components/styles/styleRegistrar.css";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +37,7 @@ function RegistrarUsuario() {
       nombre_u: "",
       apellido_pat: "",
       apellido_mat: "",
+      telefono: "",
       email: "",
       pass: "",
       id_rol: "",
@@ -74,6 +75,7 @@ function RegistrarUsuario() {
 			nombre_u: data.nombre_u,
 			apellido_pat: data.apellido_pat,
 			apellido_mat: data.apellido_mat,
+      telefono: data.telefono,
 			email: data.email,
 			pass: data.pass,
 			estado_u: 1,
@@ -114,6 +116,12 @@ function RegistrarUsuario() {
           <div className="form-group">
             <label>Apellido Materno:</label>
             <input type="text" {...register("apellido_mat")} />
+          </div>
+
+          <div className="form-group">
+            <label>Teléfono:</label>
+            <input type="text" {...register("telefono")} />
+            {errors.telefono && <span className="error-message">{errors.telefono.message}</span>}
           </div>
 
           <div className="form-group">

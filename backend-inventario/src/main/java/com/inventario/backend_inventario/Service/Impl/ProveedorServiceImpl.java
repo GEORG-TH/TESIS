@@ -53,7 +53,7 @@ public class ProveedorServiceImpl implements ProveedorService{
             String descripcion = "Creó el proveedor '" + proveedorGuardado.getNombre_proveedor() + "' (ID: " + proveedorGuardado.getId_proveedor() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion, "PROVEEDOR", "Proveedor", proveedorGuardado.getId_proveedor().longValue(), "Proveedor creado con nombre: " + proveedorGuardado.getNombre_proveedor());
             });
 
         } catch (Exception e) {
@@ -92,7 +92,7 @@ public class ProveedorServiceImpl implements ProveedorService{
             String descripcion = "Actualizó el proveedor '" + proveedorGuardado.getNombre_proveedor() + "' (ID: " + proveedorGuardado.getId_proveedor() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion, "PROVEEDOR", "Proveedor", proveedorGuardado.getId_proveedor().longValue(), "Proveedor actualizado con nombre: " + proveedorGuardado.getNombre_proveedor());
             });
 
         } catch (Exception e) {
@@ -118,7 +118,7 @@ public class ProveedorServiceImpl implements ProveedorService{
             String descripcion = "Eliminó el proveedor '" + proveedorGuardado.getNombre_proveedor() + "' (ID: " + proveedorGuardado.getId_proveedor() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion, "PROVEEDOR", "Proveedor", proveedorGuardado.getId_proveedor().longValue(), "Proveedor eliminado con nombre: " + proveedorGuardado.getNombre_proveedor());
             });
 
         } catch (Exception e) {

@@ -1,5 +1,5 @@
 import React from "react";
-import LayoutDashboard from "../../layouts/LayoutDashboard";
+import LayoutDashboard from "../../Layouts/LayoutDashboard";
 
 function DashboardJInventario() {
   return (

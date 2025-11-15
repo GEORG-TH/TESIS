@@ -1,5 +1,5 @@
 import React from "react";
-import LayoutDashboard from "../components/layouts/LayoutDashboard";
+import LayoutDashboard from "../components/Layouts/LayoutDashboard";
 import MfaSetup from "./MfaSetup";
 import { useGlobalStore } from "../store/useGlobalStore";
 import {

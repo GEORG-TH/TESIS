@@ -2,7 +2,7 @@ import React from "react";
 import { Route } from "react-router-dom";
 
 // --- Componentes ---
-import RecepcionMercaderia from "./pages/Mod. Inventario/RecepcionMercaderia";
+
 
 
 import Login from "./pages/Authenticación/Login";
@@ -36,10 +36,13 @@ import DashboardSedes from "./components/Dashboards/Modulos/dashboardSedes";
 import ListaSedes from "./pages/Mod. Sedes/ListaSedes";
 import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
 import DashboardInventario from "./components/Dashboards/Modulos/dashboardInventario";
+import RecepcionMercaderia from "./pages/Mod. Inventario/RecepcionMercaderia";
 
 import DashboardConteoI from "./components/Dashboards/Modulos/dashboardConteoI";
 
 import DashboardReportes from "./components/Dashboards/Modulos/dashboardReportes";
+import AuditoriaActividadUsuario from "./pages/Mod. Reportes/AuditoriaActividadUsuario";
+
 import Settings from "./pages/Mod. Configuracion/Settings";
 
 
@@ -263,6 +266,12 @@ const RutasReportes = [
     ALL_ROLES,
     DashboardReportes
   ),
+  RutaProtegida(
+    "auditoriaActividadUsuario",
+    "/auditoria-actividad-usuario",
+    ALL_ROLES,
+    AuditoriaActividadUsuario
+  ),
 ];
 
 const RutasInventario = [
@@ -272,23 +281,13 @@ const RutasInventario = [
     [ROLES.ADMIN, ROLES.JEFE_INV, ROLES.OP_RECEPCION, ROLES.OP_TIENDA],
     DashboardInventario
   ),
-
-  
   RutaProtegida(
     "recepcion-merceria", 
     "/inventario/recepcion-merceria",
     ROLES_RECEPCION, 
     RecepcionMercaderia
   ),
-
- 
-
-
 ];
-
-
-
-
 
 const AppRoutes = [
   ...RutasAutenticacion,

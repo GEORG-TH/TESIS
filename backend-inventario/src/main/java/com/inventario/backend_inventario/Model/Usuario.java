@@ -39,6 +39,11 @@ public class Usuario implements UserDetails {
     @Column(name = "apellido_mat")
     private String apellido_mat;
 
+    @Column(name = "telefono", nullable = false)
+    @NotBlank(message = "El teléfono es obligatorio")
+    @Pattern(regexp = "\\d{9}", message = "El teléfono debe tener exactamente 9 dígitos numéricos")
+    private String telefono;
+
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email no tiene un formato válido")
     @Column(name = "email", nullable = false, unique = true)

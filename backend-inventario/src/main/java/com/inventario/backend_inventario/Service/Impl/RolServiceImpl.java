@@ -43,7 +43,7 @@ public class RolServiceImpl implements RolService {
             String descripcion = "Creó el rol '" + rolGuardado.getNombreRol() + "' (ID: " + rolGuardado.getId_rol() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion, "USUARIOS", "Rol", rolGuardado.getId_rol().longValue(), "Rol creado con nombre: " + rolGuardado.getNombreRol());
             });
 
         } catch (Exception e) {
@@ -65,7 +65,7 @@ public class RolServiceImpl implements RolService {
             String descripcion = "Actualizó el rol '" + rolGuardado.getNombreRol() + "' (ID: " + rolGuardado.getId_rol() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion, "USUARIOS", "Rol", rolGuardado.getId_rol().longValue(), "Nuevo nombre de rol: " + rolGuardado.getNombreRol());
             });
 
         } catch (Exception e) {
@@ -85,7 +85,7 @@ public class RolServiceImpl implements RolService {
             String descripcion = "Eliminó el rol '" + rolGuardado.getNombreRol() + "' (ID: " + rolGuardado.getId_rol() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion);
+                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion, "USUARIOS", "Rol", rolGuardado.getId_rol().longValue(), "Rol eliminado con nombre: " + rolGuardado.getNombreRol());
             });
 
         } catch (Exception e) {

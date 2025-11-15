@@ -73,7 +73,7 @@ public class InventarioServiceImpl implements InventarioService {
         String descripcionAuditoria = String.format("Registró recepción de %d unidad(es) del producto '%s' (SKU: %s) en la sede '%s'. Stock: %d -> %d",
                 cantidadRecibida, producto.getNombre(), producto.getSku(), sede.getNombreSede(), stockAnterior, stockNuevo);
 
-        historialActividadService.registrarActividad(usuario, "RECEPCIÓN", descripcionAuditoria);
+        historialActividadService.registrarActividad(usuario, "RECEPCIÓN", descripcionAuditoria,"INVENTARIO", "MovimientoInventario", movimiento.getId(), observaciones);
     }
 
     /**

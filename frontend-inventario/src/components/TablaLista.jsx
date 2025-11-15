@@ -6,7 +6,7 @@ import { esES } from "@mui/x-data-grid/locales";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import LayoutDashboard from "../components/layouts/LayoutDashboard";
+import LayoutDashboard from "./Layouts/LayoutDashboard";
 
 const TablaLista = ({
     title,
