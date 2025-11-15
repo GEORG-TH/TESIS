@@ -29,7 +29,7 @@ const DashboardInventario = () => {
             id: "recepcion-mercaderia",
             titulo: "Recepción de Mercadería",
             descripcion: "Registra la recepción de mercadería en el inventario",
-            ruta: "/recepcion-mercaderia",
+            ruta: "/inventario/recepcion-merceria",
         },
         {
             id: "devolucion-mercaderia",

@@ -2,6 +2,9 @@ import React from "react";
 import { Route } from "react-router-dom";
 
 // --- Componentes ---
+import RecepcionMercaderia from "./pages/Mod. Inventario/RecepcionMercaderia";
+
+
 import Login from "./pages/Authenticación/Login";
 import ForgotPassword from "./pages/Authenticación/ForgotPassword";
 import ResetPassword from "./pages/Authenticación/ResetPassword";
@@ -39,6 +42,9 @@ import DashboardConteoI from "./components/Dashboards/Modulos/dashboardConteoI";
 import DashboardReportes from "./components/Dashboards/Modulos/dashboardReportes";
 import Settings from "./pages/Mod. Configuracion/Settings";
 
+
+
+
 // --- Roles ---
 const ROLES = {
   ADMIN: "Administrador",
@@ -64,6 +70,13 @@ const ADMIN_OP_RECEPCION_TIENDA = [
   ROLES.OP_RECEPCION,
   ROLES.OP_TIENDA,
 ];
+
+const ROLES_RECEPCION = [
+  ROLES.ADMIN,
+  ROLES.JEFE_INV,
+  ROLES.OP_RECEPCION,
+];
+
 const ADMIN_JEFE_INV_OP_RECEPCION_TIENDA = [
   ROLES.ADMIN,
   ROLES.JEFE_INV,
@@ -98,6 +111,8 @@ const RutasAutenticacion = [
   />,
   <Route key="mfaVerify" path="/verify-2fa" element={<MfaVerify />} />,
 ];
+
+
 
 // Dashboards principales por rol
 const RutasDashboard = [
@@ -229,15 +244,6 @@ const RutasSedes = [
   RutaProtegida("registrarSedes", "/sedes/nuevo", ADMIN_JEFE, RegistrarSede),
 ];
 
-// Rutas de Inventario
-const RutasInventario = [
-  RutaProtegida(
-    "dashboardInventario",
-    "/dashboard-inventario",
-    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
-    DashboardInventario
-  ),
-];
 
 // Rutas de Conteo de Inventario
 const RutasConteoInventario = [
@@ -259,7 +265,31 @@ const RutasReportes = [
   ),
 ];
 
-// --- Exportación ---
+const RutasInventario = [
+  RutaProtegida(
+    "dashboard-inventario",
+    "/dashboard-inventario",
+    [ROLES.ADMIN, ROLES.JEFE_INV, ROLES.OP_RECEPCION, ROLES.OP_TIENDA],
+    DashboardInventario
+  ),
+
+  
+  RutaProtegida(
+    "recepcion-merceria", 
+    "/inventario/recepcion-merceria",
+    ROLES_RECEPCION, 
+    RecepcionMercaderia
+  ),
+
+ 
+
+
+];
+
+
+
+
+
 const AppRoutes = [
   ...RutasAutenticacion,
   ...RutasDashboard,
@@ -274,3 +304,5 @@ const AppRoutes = [
 ];
 
 export default AppRoutes;
+
+
