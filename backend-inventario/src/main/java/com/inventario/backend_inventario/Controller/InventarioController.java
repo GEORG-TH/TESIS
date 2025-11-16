@@ -2,12 +2,15 @@
 package com.inventario.backend_inventario.Controller;
 
 import com.inventario.backend_inventario.Dto.MovimientoDto;
+import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
 import com.inventario.backend_inventario.Service.InventarioService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -33,6 +36,21 @@ public class InventarioController {
         } catch (Exception e) {
             // Error genérico
             return ResponseEntity.status(500).body(Map.of("message", "Error interno al registrar la recepción", "error", e.getMessage()));
+        }
+    }
+
+
+
+
+    @GetMapping("/movimientos")
+    public ResponseEntity<List<MovimientoInventarioDto>> listarMovimientos() {
+        try {
+            // El servicio hará la magia de convertir las Entidades en DTOs
+            List<MovimientoInventarioDto> movimientos = inventarioService.listarMovimientos();
+            return ResponseEntity.ok(movimientos);
+        } catch (Exception e) {
+            // Puedes usar tu GlobalExceptionHandler, pero esto es un catch simple
+            return ResponseEntity.status(500).body(null);
         }
     }
 
