@@ -11,13 +11,14 @@ import {
 } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import { useTheme } from '@mui/material';
 import TablaLista from '../../components/TablaLista';
 import { filtrarActividades } from '../../api/historialActividadApi';
 import { getUsuarios } from '../../api/usuarioApi'; // Asegúrate que esta importación sea correcta
 
 const AuditoriaActividadUsuario = () => {
     const navigate = useNavigate();
-
+    const theme = useTheme();
     // Estado del formulario (Inputs)
     const [filtros, setFiltros] = useState({
         fechaInicio: '',
@@ -115,7 +116,7 @@ const AuditoriaActividadUsuario = () => {
                     return <Chip label={params.value} sx={{ bgcolor: 'orange', color: 'black', fontWeight: 'bold' }} />;
                 }
 
-                return <Chip label={params.value} color={color} size="small" sx={{ fontWeight: 'bold',  }} />;
+                return <Chip label={params.value} color={color} size="small" sx={{ fontWeight: 'bold', }} />;
             }
         },
         { field: 'modulo', headerName: 'Módulo', width: 130 },
@@ -125,7 +126,15 @@ const AuditoriaActividadUsuario = () => {
     ], []);
 
     return (
-        <>
+        <TablaLista
+            title="Reporte de Auditoría"
+            columns={columns}
+            data={actividades}
+            isLoading={isLoading}
+            onRefresh={refetch}
+            getRowId={(row) => row.id}
+            onBack={() => navigate('/dashboard-reportes')}
+        >
             <Box sx={{ p: 2, m: { xs: 1, sm: 2, md: 3 }, mb: 0, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={6} md={2}>
@@ -138,9 +147,15 @@ const AuditoriaActividadUsuario = () => {
                             fullWidth
                             size="small"
                             InputLabelProps={{ shrink: true }}
+                            sx={{
+                                '& input::-webkit-calendar-picker-indicator': {
+                                    filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none',
+                                    cursor: 'pointer'
+                                }
+                            }}
                         />
                     </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
+                    <Grid item xs={12} sm={6} md={3}>
                         <TextField
                             label="Hasta"
                             type="datetime-local"
@@ -150,6 +165,12 @@ const AuditoriaActividadUsuario = () => {
                             fullWidth
                             size="small"
                             InputLabelProps={{ shrink: true }}
+                            sx={{
+                                '& input::-webkit-calendar-picker-indicator': {
+                                    filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none',
+                                    cursor: 'pointer'
+                                }
+                            }}
                         />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
@@ -161,6 +182,7 @@ const AuditoriaActividadUsuario = () => {
                             onChange={handleInputChange}
                             fullWidth
                             size="small"
+                            sx={{ minWidth: { xs: '100%', sm: 260, md: 280 } }}
                         >
                             <MenuItem value=""><em>Todos</em></MenuItem>
                             {listaUsuarios.map((user) => (
@@ -179,12 +201,13 @@ const AuditoriaActividadUsuario = () => {
                             onChange={handleInputChange}
                             fullWidth
                             size="small"
+                            sx={{ minWidth: { xs: '100%', sm: 220, md: 240 } }}
                         >
                             <MenuItem value=""><em>Todos</em></MenuItem>
-                            <MenuItem value="Inventario">Inventario</MenuItem>
-                            <MenuItem value="Seguridad">Seguridad</MenuItem>
-                            <MenuItem value="Reportes">Reportes</MenuItem>
-                            <MenuItem value="Ventas">Ventas</MenuItem>
+                            <MenuItem value="Inventario">INVENTARIO</MenuItem>
+                            <MenuItem value="Inicio Sesión">INICIO SESIÓN</MenuItem>
+                            <MenuItem value="Usuario">USUARIO</MenuItem>
+                            <MenuItem value="Producto">PRODUCTO</MenuItem>
                         </TextField>
                     </Grid>
                     <Grid item xs={12} md={2} sx={{ display: 'flex', gap: 1 }}>
@@ -203,16 +226,7 @@ const AuditoriaActividadUsuario = () => {
                     </Grid>
                 </Grid>
             </Box>
-            <TablaLista
-                title="Reporte de Auditoría"
-                columns={columns}
-                data={actividades}
-                isLoading={isLoading}
-                onRefresh={refetch} // TanStack Query nos da esta función directa
-                getRowId={(row) => row.id}
-                onBack={() => navigate('/dashboard-reportes')}
-            />
-        </>
+        </TablaLista>
     );
 };
 
