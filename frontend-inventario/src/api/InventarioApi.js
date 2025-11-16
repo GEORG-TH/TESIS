@@ -4,3 +4,8 @@ export const registrarRecepcion = (data) => {
   
   return axiosInstance.post("/inventario/recepcion", data);
 };
+
+
+export const listarMovimientos = () => {
+  return axiosInstance.get("/inventario/movimientos");
+};
