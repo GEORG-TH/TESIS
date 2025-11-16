@@ -3,16 +3,21 @@
 package com.inventario.backend_inventario.Service.Impl;
 
 import com.inventario.backend_inventario.Dto.MovimientoDto;
+import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
 import com.inventario.backend_inventario.Model.*; // Importa todos tus modelos
 import com.inventario.backend_inventario.Repository.*; // Importa todos tus repos
 import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.InventarioService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InventarioServiceImpl implements InventarioService {
@@ -83,5 +88,53 @@ public class InventarioServiceImpl implements InventarioService {
         String email = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
+    }
+
+
+
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MovimientoInventarioDto> listarMovimientos() {
+        // 1. Obtener todos los movimientos (los ordenamos por ID o fecha, que es lo mismo)
+        List<MovimientoInventario> movimientos = movimientoInventarioRepository.findAllWithDetails();
+
+        // 2. Mapear cada entidad a tu DTO de 9 columnas
+        return movimientos.stream().map(mov -> {
+            MovimientoInventarioDto dto = new MovimientoInventarioDto();
+
+            // Columna 1: ID de movimiento
+            dto.setIdMovimiento(mov.getId());
+
+            // Columna 2: Nombre Producto
+            dto.setNombreProducto(mov.getProducto().getNombre());
+            dto.setSkuProducto(mov.getProducto().getSku()); // Usamos el SKU
+
+            // Columna 3: Nombre Sede
+            dto.setNombreSede(mov.getSede().getNombreSede());
+
+            // Columna 4 & 5: Nombre y Rol del Usuario
+            Usuario usuario = mov.getUsuario();
+            dto.setNombreCompletoUsuario(
+                    usuario.getNombre_u() + " " + usuario.getApellido_pat() + (usuario.getApellido_mat() != null ? " " + usuario.getApellido_mat() : "")
+            );
+            dto.setNombreRolUsuario(usuario.getRol().getNombreRol());
+
+            // Columna 6: Tipo de Movimiento
+            dto.setTipoMovimiento(mov.getTipoMovimiento().getTipo());
+
+            // Columna 7: Fecha
+            dto.setFecha(mov.getFechaHora());
+
+            // Columna 8: Cantidad
+            dto.setCantidad(mov.getCantidad());
+
+            // Columna 9: Observaciones
+            dto.setObservaciones(mov.getObservaciones());
+
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

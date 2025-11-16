@@ -3,8 +3,9 @@ import { Route } from "react-router-dom";
 
 // --- Componentes ---
 
+import RecepcionMercaderia from "./pages/Mod. Inventario/RecepcionMercaderia";
 
-
+import AuditoriaActividadUsuario from "./pages/Mod. Reportes/AuditoriaActividadUsuario";
 import Login from "./pages/Authenticación/Login";
 import ForgotPassword from "./pages/Authenticación/ForgotPassword";
 import ResetPassword from "./pages/Authenticación/ResetPassword";
@@ -36,16 +37,16 @@ import DashboardSedes from "./components/Dashboards/Modulos/dashboardSedes";
 import ListaSedes from "./pages/Mod. Sedes/ListaSedes";
 import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
 import DashboardInventario from "./components/Dashboards/Modulos/dashboardInventario";
-import RecepcionMercaderia from "./pages/Mod. Inventario/RecepcionMercaderia";
+
 
 import DashboardConteoI from "./components/Dashboards/Modulos/dashboardConteoI";
 
 import DashboardReportes from "./components/Dashboards/Modulos/dashboardReportes";
-import AuditoriaActividadUsuario from "./pages/Mod. Reportes/AuditoriaActividadUsuario";
+
 
 import Settings from "./pages/Mod. Configuracion/Settings";
 
-
+import ListaMovimientos from "./pages/Mod. Inventario/ListaMovimientos";
 
 
 // --- Roles ---
@@ -282,10 +283,16 @@ const RutasInventario = [
     DashboardInventario
   ),
   RutaProtegida(
-    "recepcion-merceria", 
+    "recepcion-merceria",
     "/inventario/recepcion-merceria",
-    ROLES_RECEPCION, 
+    ROLES_RECEPCION,
     RecepcionMercaderia
+  ),
+  RutaProtegida(
+    "lista-movimientos",
+    "/inventario/kardex", // La ruta que verá el usuario
+    ALL_ROLES, // Todos pueden ver el Kardex
+    ListaMovimientos
   ),
 ];
 
