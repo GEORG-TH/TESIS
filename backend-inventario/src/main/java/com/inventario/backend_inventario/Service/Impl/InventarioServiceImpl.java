@@ -2,6 +2,7 @@
 
 package com.inventario.backend_inventario.Service.Impl;
 
+import com.inventario.backend_inventario.Dto.InventarioActualDto;
 import com.inventario.backend_inventario.Dto.MovimientoDto;
 import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
 import com.inventario.backend_inventario.Model.*; // Importa todos tus modelos
@@ -133,6 +134,40 @@ public class InventarioServiceImpl implements InventarioService {
             // Columna 9: Observaciones
             dto.setObservaciones(mov.getObservaciones());
 
+
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+
+
+
+    @Override
+    @Transactional(readOnly = true) // Es solo lectura
+    public List<InventarioActualDto> listarInventarioActual() {
+
+        // 1. Llama al nuevo método del repositorio que evita errores LAZY
+        List<Inventario> inventarioLista = inventarioRepository.findAllWithProductoAndSede();
+
+        // 2. Mapea la Entidad al DTO (con los nombres que pediste)
+        return inventarioLista.stream().map(inv -> {
+            InventarioActualDto dto = new InventarioActualDto();
+
+            // Columna 1: ID
+            dto.setIdInventario(inv.getId());
+
+            // Columna 2: SKU y Nombre Producto
+            dto.setSkuProducto(inv.getProducto().getSku());
+            dto.setNombreProducto(inv.getProducto().getNombre());
+
+            // Columna 3: Nombre Sede
+            dto.setNombreSede(inv.getSede().getNombreSede());
+
+            // Columna 4: Stock
+            dto.setStockActual(inv.getStockActual());
+
+            // Columna 5: Última Actualización
+            dto.setUltimaActualizacion(inv.getUltimaActualizacion());
 
             return dto;
         }).collect(Collectors.toList());

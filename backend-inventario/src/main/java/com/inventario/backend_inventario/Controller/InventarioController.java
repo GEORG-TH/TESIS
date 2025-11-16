@@ -1,6 +1,7 @@
 
 package com.inventario.backend_inventario.Controller;
 
+import com.inventario.backend_inventario.Dto.InventarioActualDto;
 import com.inventario.backend_inventario.Dto.MovimientoDto;
 import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
 import com.inventario.backend_inventario.Service.InventarioService;
@@ -54,5 +55,16 @@ public class InventarioController {
         }
     }
 
+
+    @GetMapping("/stock")
+    public ResponseEntity<List<InventarioActualDto>> listarInventarioActual() {
+        // (El try/catch es opcional si ya tienes un GlobalExceptionHandler)
+        try {
+            List<InventarioActualDto> inventario = inventarioService.listarInventarioActual();
+            return ResponseEntity.ok(inventario);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
 
 }

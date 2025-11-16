@@ -9,3 +9,7 @@ export const registrarRecepcion = (data) => {
 export const listarMovimientos = () => {
   return axiosInstance.get("/inventario/movimientos");
 };
+
+export const getInventarioActual = () => {
+  return axiosInstance.get("/inventario/stock");
+};
