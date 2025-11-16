@@ -17,10 +17,12 @@ const TablaLista = ({
     onAdd,
     onBack,
     getRowId,
-    addButtonLabel = "Ingresar Nuevo"
+    addButtonLabel = "Ingresar Nuevo",
+    children
 }) => {
     return (
         <LayoutDashboard>
+            {children}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
