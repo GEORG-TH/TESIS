@@ -23,6 +23,10 @@ export const usuarioEditSchema = z.object({
   nombre_u: z.string().trim().min(4, "El nombre es obligatorio"),
   apellido_pat: z.string().optional(),
   apellido_mat: z.string().optional(),
+  telefono: z
+    .string()
+    .trim()
+    .min(9, "El teléfono debe tener 9 dígitos"),
   email: z.string().trim().email("Debe ser un email válido"),
   id_rol: z.string().nonempty("Debes seleccionar un rol"),
 });
