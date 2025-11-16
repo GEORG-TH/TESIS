@@ -51,7 +51,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarUsuario(@PathVariable Integer id, @RequestBody UsuarioUpdateDto usuario) {
+    public ResponseEntity<?> actualizarUsuario(@PathVariable Integer id, @Valid @RequestBody UsuarioUpdateDto usuario) {
         try {
             Usuario actualizado = usuarioService.actualizarUsuario(id, usuario);
             return ResponseEntity.ok(actualizado);
@@ -59,6 +59,7 @@ public class UsuarioController {
             if (e.getMessage().contains("no encontrado")) {
                 return ResponseEntity.notFound().build();
             }
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         }
     }
