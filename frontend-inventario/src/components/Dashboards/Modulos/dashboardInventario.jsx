@@ -13,12 +13,7 @@ const DashboardInventario = () => {
         },
     ];
     const OpcionMovimientosInventario = [
-        {
-            id: "kardex",
-            titulo: "KARDEX",
-            descripcion: "Verifica el historial de movimientos de productos en el inventario",
-            ruta: "/...",
-        },
+
         {
             id: "transferencia-sedes",
             titulo: "Pedido de Transferencia entre Sedes",
@@ -48,6 +43,12 @@ const DashboardInventario = () => {
             titulo: "Importar Ventas",
             descripcion: "Importa los datos en formato CSV de ventas para actualizar el inventario",
             ruta: "/importar-ventas",
+        },
+        {
+            id: "kardex",
+            titulo: "KARDEX",
+            descripcion: "Verifica el historial de movimientos...",
+            ruta: "/inventario/kardex", // <-- Asegúrate de que coincida
         },
     ];
 
