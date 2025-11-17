@@ -2,6 +2,7 @@
 
 package com.inventario.backend_inventario.Service;
 
+import com.inventario.backend_inventario.Dto.InventarioActualDto;
 import com.inventario.backend_inventario.Dto.MovimientoDto; // El DTO que creamos antes
 import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
 
@@ -13,4 +14,6 @@ public interface InventarioService {
     void registrarRecepcion(MovimientoDto movimientoDto);
 
     List<MovimientoInventarioDto> listarMovimientos();
+
+    List<InventarioActualDto> listarInventarioActual();
 }
