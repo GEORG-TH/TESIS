@@ -63,6 +63,7 @@ function ListaUsuarios() {
       options: roles.map(rol => ({ label: rol.nombreRol, value: String(rol.id_rol) }))
     }
   ], [roles]);
+  //Siempre dando risa
   const processedUsuarios = useMemo(() => {
     if (!usuariosData) {
       return [];
