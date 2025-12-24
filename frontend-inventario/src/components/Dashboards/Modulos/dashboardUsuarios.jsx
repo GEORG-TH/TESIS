@@ -24,7 +24,7 @@ const DashboardUsuarios = () => {
             id: "historial-accesos",
             titulo: "Historial de Accesos",
             descripcion: "Verifica cuando fue el último acceso de los usuarios.",
-            ruta: "/...",
+            ruta: "/historial-accesos",
         },
         {
             id: "usuarios-conectados",

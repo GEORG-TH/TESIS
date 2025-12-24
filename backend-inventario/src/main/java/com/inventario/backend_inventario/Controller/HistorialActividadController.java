@@ -13,6 +13,7 @@ import com.inventario.backend_inventario.Dto.HistorialActividadDto;
 import com.inventario.backend_inventario.Model.HistorialActividad;
 import com.inventario.backend_inventario.Repository.HistorialActividadRepository;
 import com.inventario.backend_inventario.Service.HistorialActividadService;
+import com.inventario.backend_inventario.Dto.UltimoAccesoUser;
 
 @RestController
 @RequestMapping("/api/historial")
@@ -57,5 +58,9 @@ public class HistorialActividadController {
         
         List<HistorialActividadDto> actividadesDto = historialActividadService.getRecentActivitiesDto();
         return ResponseEntity.ok(actividadesDto);
+    }
+    @GetMapping("/accesos")
+    public ResponseEntity<List<UltimoAccesoUser>> obtenerUltimosAccesos() {
+        return ResponseEntity.ok(historialRepo.findUltimosAccesos());
     }
 }
