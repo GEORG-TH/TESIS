@@ -31,6 +31,7 @@ import IngresarArea from "./pages/Mod. Producto/IngresarArea";
 import ListaRoles from "./pages/Mod. Usuario/ListaRoles";
 import IngresarRol from "./pages/Mod. Usuario/IngresarRol";
 import HistorialAccesos from "./pages/Mod. Usuario/HistorialAccesos";
+import UsuariosConectados from "./pages/Mod. Usuario/UsuariosConectados";
 import ListaCategorias from "./pages/Mod. Producto/ListaCategorias";
 import IngresarCategoria from "./pages/Mod. Producto/IngresarCategoria";
 import DashboardProveedores from "./components/Dashboards/Modulos/dashboardProveedores";
@@ -175,6 +176,7 @@ const RutasUsuario = [
   RutaProtegida("listaRoles", "/roles", ADMIN_ONLY, ListaRoles),
   RutaProtegida("ingresarRol", "/roles/nuevo", ADMIN_ONLY, IngresarRol),
   RutaProtegida("historialAccesos", "/historial-accesos", ADMIN_ONLY, HistorialAccesos),
+  RutaProtegida("usuariosConectados", "/usuarios-conectados", ADMIN_ONLY, UsuariosConectados),
 ];
 
 // Gestión de Productos (Admin & Jefe Inv.)

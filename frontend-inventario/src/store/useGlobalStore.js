@@ -6,6 +6,7 @@ export const useGlobalStore = create(
     (set) => ({
       token: null,
       user: null,
+      usuariosConectados: [],
 
       lightThemeColor: "#ffffffff",
       setLightThemeColor: (color) => set({ lightThemeColor: color }),
@@ -19,12 +20,11 @@ export const useGlobalStore = create(
       logout: () => set({ token: null, user: null }),
       setUser: (updater) =>
         set((state) => ({
-          user:
-            typeof updater === "function"
-              ? updater(state.user)
-              : updater,
+          user: typeof updater === "function" ? updater(state.user) : updater,
         })),
 
+      setUsuariosConectados: (usuarios) => set({ usuariosConectados: usuarios }),
+      
       setTheme: (theme) => set({ theme }),
       setFontSize: (fontSize) => set({ fontSize }),
       setDensity: (density) => set({ density }),
