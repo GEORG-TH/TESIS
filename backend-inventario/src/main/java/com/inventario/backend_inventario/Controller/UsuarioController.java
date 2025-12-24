@@ -3,6 +3,7 @@ package com.inventario.backend_inventario.Controller;
 import com.inventario.backend_inventario.Dto.UsuarioUpdateDto;
 import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Service.UsuarioService;
+import com.inventario.backend_inventario.Service.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -21,6 +23,8 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+    @Autowired
+    private WebSocketService webSocketService;
 
     @GetMapping
     public ResponseEntity<List<Usuario>> listarUsuarios() {
@@ -32,6 +36,10 @@ public class UsuarioController {
         return usuarioService.obtenerUsuarioPorId(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+    @GetMapping("/conectados")
+    public ResponseEntity<Set<String>> getUsuariosConectados() {
+        return ResponseEntity.ok(webSocketService.getActiveUsers());
     }
 
     @PostMapping

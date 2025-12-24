@@ -53,7 +53,6 @@ const HistorialAccesos = () => {
                                 <Table>
                                     <TableHead 
                                         sx={{
-                                            // Lógica condicional: Si es dark usa un gris oscuro (#37474f), si es light usa el gris claro original
                                             backgroundColor: (theme) =>
                                                 theme.palette.mode === 'dark' ? '#343535ff' : '#f5f5f5',
                                             '& .MuiTableCell-root': {

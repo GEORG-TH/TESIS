@@ -30,7 +30,7 @@ const DashboardUsuarios = () => {
             id: "usuarios-conectados",
             titulo: "Usuarios Conectados",
             descripcion: "Administra que usuarios están usando el sistema en tiempo real.",
-            ruta: "/...",
+            ruta: "/usuarios-conectados",
         }
     ];
 
