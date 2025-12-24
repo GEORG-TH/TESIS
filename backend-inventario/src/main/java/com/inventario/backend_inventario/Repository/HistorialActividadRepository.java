@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.inventario.backend_inventario.Model.HistorialActividad;
+import com.inventario.backend_inventario.Dto.UltimoAccesoUser;
 
 @Repository
 public interface HistorialActividadRepository extends JpaRepository<HistorialActividad, Long> {
@@ -26,4 +27,13 @@ public interface HistorialActividadRepository extends JpaRepository<HistorialAct
             @Param("fechaInicio") LocalDateTime fechaInicio,
             @Param("fechaFin") LocalDateTime fechaFin
     );
+    @Query("SELECT " +
+           "CONCAT(h.usuario.nombre_u, ' ', h.usuario.apellido_pat) AS nombreCompleto, " +
+           "h.usuario.rol.nombreRol AS rol, " +
+           "MAX(h.fechaHora) AS ultimaFecha " +
+           "FROM HistorialActividad h " +
+           "WHERE h.tipoAccion = 'LOGIN' " +
+           "GROUP BY h.usuario.nombre_u, h.usuario.apellido_pat, h.usuario.rol.nombreRol " +
+           "ORDER BY ultimaFecha DESC")
+    List<UltimoAccesoUser> findUltimosAccesos();
 }
