@@ -1,8 +1,12 @@
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080/api",
-  timeout: 10000,
+  baseURL: `${BASE_URL}/api`,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 axiosInstance.interceptors.request.use(
@@ -15,7 +19,7 @@ axiosInstance.interceptors.request.use(
         const parsedStorage = JSON.parse(storage);
         if (parsedStorage.state && parsedStorage.state.token) {
           token = parsedStorage.state.token;
-        }
+        }a
       } catch (e) {
         console.error("Error al parsear el storage de Zustand", e);
       }

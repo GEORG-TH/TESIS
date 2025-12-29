@@ -23,7 +23,8 @@ function App() {
     let stompClient = null;
 
     if (token) {
-      const socket = new SockJS("http://localhost:8080/ws");
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
+      const socket = new SockJS(`${backendUrl}/ws`);
       stompClient = Stomp.over(socket);
       stompClient.debug = null;
 
