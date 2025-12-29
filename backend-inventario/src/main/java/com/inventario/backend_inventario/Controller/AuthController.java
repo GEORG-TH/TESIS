@@ -51,7 +51,7 @@ public class AuthController {
 
         Usuario usuario = usuarioOpt.get();
 
-        if (usuario.getEstado_u() != null && usuario.getEstado_u() == 0) {
+        if (usuario.getEstado_u() != null && usuario.getEstado_u() == false) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("success", false, "message", "Cuenta desactivada"));
         }
@@ -243,7 +243,7 @@ public class AuthController {
         String apellido_mat,
         String telefono,
         String email,
-        Integer estado_u,
+        boolean estado_u,
         String rol,
         boolean mfaEnabled
     ) {}
