@@ -22,7 +22,7 @@ import { getSedes } from "../../api/sedeApi";
 import { registrarRecepcion } from "../../api/InventarioApi";
 
 
-import { recepcionSchema } from "../../utils/inventarioSchema";
+import { recepcionSchema } from "../../Utils/inventarioSchema";
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
 import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
