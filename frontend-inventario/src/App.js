@@ -23,7 +23,7 @@ function App() {
     let stompClient = null;
 
     if (token) {
-      const backendUrl = "https://swci-backend.onrender.com";
+      const backendUrl = "https://swci-backend.onrender.com" || "http://localhost:8080";
       const socket = new SockJS(`${backendUrl}/ws`);
       stompClient = Stomp.over(socket);
       stompClient.debug = null;
