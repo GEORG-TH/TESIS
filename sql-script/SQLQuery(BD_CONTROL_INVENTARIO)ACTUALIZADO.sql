@@ -85,21 +85,25 @@ CREATE TABLE DETALLE_CONTEO_INVENTARIO (
     diferencia AS (stock_nuevo - stock_anterior) PERSISTED
 );
 CREATE TABLE TIPO_MOVIMIENTO (
-    id_tipo_mov VARCHAR(20) PRIMARY KEY,
-    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('ENTRADA', 'SALIDA', 'AJUSTE CONTEO')),
-    descripcion VARCHAR(100) NOT NULL    
+    id_tipo_mov BIGINT IDENTITY(1,1) PRIMARY KEY,
+    tipo VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(255)
 );
 CREATE TABLE MOVIMIENTO_INVENTARIO (
-    id_movimiento BIGINT PRIMARY KEY IDENTITY(1,1),
-    id_sede INT NOT NULL,
+    id_movimiento BIGINT IDENTITY(1,1) PRIMARY KEY,
     id_producto BIGINT NOT NULL,
-    fecha DATETIME DEFAULT GETDATE(),
-    id_tipo_mov VARCHAR(20) NOT NULL,
+    id_sede INT NOT NULL,
+    id_usuario INT NOT NULL,
+    id_tipo_mov BIGINT NOT NULL,
+    fecha DATETIME NOT NULL,
     cantidad INT NOT NULL,
-    referencia VARCHAR(100),
     observaciones VARCHAR(255),
-    id_usuario INT NOT NULL
+    FOREIGN KEY (id_producto) REFERENCES PRODUCTO(id_producto),
+    FOREIGN KEY (id_sede) REFERENCES SEDE(id_sede),
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_u),
+    FOREIGN KEY (id_tipo_mov) REFERENCES TIPO_MOVIMIENTO(id_tipo_mov)
 );
+
 /*RELACIONES DE TABLAS*/
 ALTER TABLE USUARIO
 ADD CONSTRAINT FK_Usuario_Rol FOREIGN KEY (id_rol)
@@ -107,10 +111,6 @@ REFERENCES ROL(id_rol);
 
 ALTER TABLE INVENTARIO_ACTUAL
 ADD CONSTRAINT FK_Inventario_Sede
-FOREIGN KEY (id_sede) REFERENCES SEDE(id_sede);
-
-ALTER TABLE MOVIMIENTO_INVENTARIO
-ADD CONSTRAINT FK_Movimiento_Sede
 FOREIGN KEY (id_sede) REFERENCES SEDE(id_sede);
 
 ALTER TABLE CONTEO_INVENTARIO
@@ -145,18 +145,6 @@ ALTER TABLE DETALLE_CONTEO_INVENTARIO
 ADD CONSTRAINT FK_DetalleConteoInventario_Producto FOREIGN KEY (id_producto)
 REFERENCES PRODUCTO(id_producto);
 
-ALTER TABLE MOVIMIENTO_INVENTARIO
-ADD CONSTRAINT FK_MovimientoInventario_Producto FOREIGN KEY (id_producto)
-REFERENCES PRODUCTO(id_producto);
-
-ALTER TABLE MOVIMIENTO_INVENTARIO
-ADD CONSTRAINT FK_MovimientoInventario_TipoMovimiento FOREIGN KEY (id_tipo_mov)
-REFERENCES TIPO_MOVIMIENTO(id_tipo_mov);
-
-ALTER TABLE MOVIMIENTO_INVENTARIO
-ADD CONSTRAINT FK_MovimientoInventario_Usuario FOREIGN KEY (id_usuario)
-REFERENCES USUARIO(id_u);
-
 /*Indices*/
 
 CREATE INDEX idx_producto_nombre ON PRODUCTO(nombre);
@@ -182,4 +170,78 @@ ALTER TABLE HISTORIAL_ACTIVIDAD
 ADD CONSTRAINT FK_HistorialActividad_Usuario FOREIGN KEY (id_usuario)
 REFERENCES USUARIO(id_u);
 
-SELECT * FROM HISTORIAL_ACTIVIDAD;
+ALTER TABLE HISTORIAL_ACTIVIDAD 
+ADD modulo VARCHAR(50) NULL;
+
+ALTER TABLE HISTORIAL_ACTIVIDAD 
+ADD entidad_afectada VARCHAR(50) NULL;
+
+ALTER TABLE HISTORIAL_ACTIVIDAD 
+ADD id_entidad BIGINT NULL;
+
+ALTER TABLE HISTORIAL_ACTIVIDAD 
+ADD ip_direccion VARCHAR(45) NULL;
+
+ALTER TABLE HISTORIAL_ACTIVIDAD 
+ADD detalles_cambios VARCHAR(MAX) NULL;
+
+/*INSERTAR DATOS*/
+INSERT INTO ROL (nombre_rol)
+VALUES 
+('Administrador'),
+('Jefe de Inventario'),
+('Operador de Recepción de Mercadería'),
+('Auditor de Inventarios'),
+('Operador de Tienda');
+INSERT INTO USUARIO (dni, nombre_u, apellido_pat, apellido_mat, telefono, email, pass, estado_u, mfa_enabled, id_rol)
+VALUES
+('74167113', 'Victor', 'Sánchez', 'Laureano', '904013164', 'admin@gmail.com', 'admin123', 1, 0, 1), -- Administrador
+('74859632', 'Laura', 'Gonzales', 'Rivas', '159357456','jefe@gmail.com', 'jefe123', 1, 0, 2),     -- Jefe de Inventario
+('71456987', 'Carlos', 'Perez', 'Huamán', '521463789','recepcion@gmail.com', 'recep123', 1, 0, 3), -- Operador de Recepción
+('75236489', 'Lucia', 'Torres', 'Ramirez', '925412365','auditor@gmail.com', 'audit123', 1, 0, 4), -- Auditor de Inventarios
+('79852413', 'Jose', 'Flores', 'Mendoza', '123456789','tienda@gmail.com', 'tienda123', 1, 0, 5);  -- Operador de Tienda
+
+INSERT INTO AREA (nombre_area) VALUES
+('Bazar'),                     -- Para categorías como: Juguetería, Electrodomésticos, Menaje, Librería
+('Textil'),                    -- Para categorías como: Ropa de Damas, Ropa de Caballeros, Calzado, Infantil
+('Alimentos Perecibles'),      -- Para categorías como: Frutas y Verduras, Carnes, Lácteos, Panadería
+('Alimentos no Perecibles'),   -- Para categorías como: Abarrotes, Conservas, Bebidas, Golosinas
+('Cuidado Personal y Limpieza'); -- Para categorías como: Perfumería, Farmacia, Limpieza del Hogar
+
+INSERT INTO CATEGORIA (nombre_cat, id_area) VALUES
+-- Categorías para el Área de Bazar (ID = 1)
+('Juguetería', 1),
+('Electrodomésticos', 1),
+('Librería', 1),
+('Menaje de Cocina', 1),
+
+-- Categorías para el Área de Textil (ID = 2)
+('Ropa de Damas', 2),
+('Ropa de Caballeros', 2),
+('Calzado', 2),
+
+-- Categorías para el Área de Alimentos Perecibles (ID = 3)
+('Frutas y Verduras', 3),
+('Carnes y Aves', 3),
+('Lácteos y Huevos', 3),
+('Panadería', 3),
+
+-- Categorías para el Área de Alimentos no Perecibles (ID = 4)
+('Menestras y Legumbres', 4),
+('Bebidas y Licores', 4),
+('Golosinas y Snacks', 4),
+
+-- Categorías para el Área de Cuidado Personal y Limpieza (ID = 5)
+('Perfumería y Cosméticos', 5),
+('Limpieza del Hogar', 5),
+('Aseo Personal', 5);
+
+INSERT INTO TIPO_MOVIMIENTO (tipo, descripcion) VALUES
+('Recepción', 'Entrada de mercadería por compra o recepción.'),
+('Merma', 'Salida de producto por daño o vencimiento.'),
+('Venta', 'Salida de producto por venta.'),
+('Ajuste Conteo', 'Ajuste (+ o -) generado por un conteo de inventario.'),
+('Transf-Salida', 'Salida de producto por transferencia a otra sede.'),
+('Transf-Entrada', 'Entrada de producto por transferencia desde otra sede.'),
+('Devolución', 'Entrada de producto por devolución de cliente.');
+

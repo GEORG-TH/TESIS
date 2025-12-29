@@ -139,7 +139,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             System.err.println("Error al registrar actividad: " + e.getMessage());
         }
         return userRepo.findById(id).map(usuario -> {
-            usuario.setEstado_u(0);
+            usuario.setEstado_u(false);
             return userRepo.save(usuario);
         });
     }
@@ -161,7 +161,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             System.err.println("Error al registrar actividad: " + e.getMessage());
         }
         return userRepo.findById(id).map(usuario -> {
-            usuario.setEstado_u(1);
+            usuario.setEstado_u(true);
             return userRepo.save(usuario);
         });
     }

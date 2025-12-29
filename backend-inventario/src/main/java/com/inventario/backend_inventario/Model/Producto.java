@@ -43,7 +43,7 @@ public class Producto implements Serializable {
     @PositiveOrZero(message = "El precio de compra no puede ser negativo")
     private Double precio_compra;
 
-    @Column(nullable = false, columnDefinition = "BIT DEFAULT 1")
+    @Column(nullable = false) 
     private Boolean estado = true;
 
     @ManyToOne

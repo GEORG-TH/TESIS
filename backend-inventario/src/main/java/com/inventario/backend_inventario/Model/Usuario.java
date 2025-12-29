@@ -54,7 +54,7 @@ public class Usuario implements UserDetails {
     private String pass;
 
     @Column(name = "estado_u")
-    private Integer estado_u;
+    private Boolean estado_u;
 
     @Column(name = "mfa_enabled", nullable = false)
     private boolean mfaEnabled = false;
@@ -101,6 +101,6 @@ public class Usuario implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return this.estado_u != null && this.estado_u == 1;
+        return Boolean.TRUE.equals(this.estado_u);
     }
 }

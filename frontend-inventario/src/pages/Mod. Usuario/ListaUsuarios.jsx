@@ -63,16 +63,16 @@ function ListaUsuarios() {
       options: roles.map(rol => ({ label: rol.nombreRol, value: String(rol.id_rol) }))
     }
   ], [roles]);
-  //Siempre dando risa
   const processedUsuarios = useMemo(() => {
     if (!usuariosData) {
       return [];
     }
-    return usuariosData.map((u) => ({
+    const dataOrdenada = [...usuariosData].sort((a, b) => a.id_u - b.id_u);
+
+    return dataOrdenada.map((u) => ({
       ...u,
-      nombreCompleto: `${u.nombre_u || ""} ${u.apellido_pat || ""} ${
-        u.apellido_mat || ""
-      }`.trim(),
+      nombreCompleto: `${u.nombre_u || ""} ${u.apellido_pat || ""} ${u.apellido_mat || ""
+        }`.trim(),
       rolNombre: u.rol?.nombreRol || "N/A",
     }));
   }, [usuariosData]);
@@ -258,7 +258,7 @@ function ListaUsuarios() {
       renderCell: (params) => (
         <Chip
           label={getEstadoTexto(params.value)}
-          color={params.value === 1 ? "success" : "default"}
+          color={params.value === true ? "success" : "default"}
           size="small"
         />
       ),
@@ -281,7 +281,7 @@ function ListaUsuarios() {
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-          {params.row.estado_u === 1 ? (
+          {params.row.estado_u === true ? (
             <Tooltip title="Desactivar">
                 <span>
                   <IconButton
@@ -320,7 +320,7 @@ function ListaUsuarios() {
     },
   ];
 
-  const getEstadoTexto = (estado) => (estado === 1 ? "Activo" : "Inactivo");
+  const getEstadoTexto = (estado) => (estado === true ? "Activo" : "Inactivo");
 
   return (
     <>
