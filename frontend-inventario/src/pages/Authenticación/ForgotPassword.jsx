@@ -13,20 +13,23 @@ const ForgotPassword = () => {
         setLoading(true);
         try {
             const response = await forgotPassword(email);
-            await Swal.fire({
-                icon: 'success',
-                title: 'Solicitud enviada',
-                text: response.data.message,
-                timer: 3000,
-                timerProgressBar: true
-            });
-            setEmail('');
+
+            if (response.status === 200 || response.status === 201) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Solicitud enviada',
+                    text: 'Si el correo que ingresaste existe, recibirás un enlace de recuperación.', 
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                setEmail('');
+            }
         } catch (error) {
             console.error('Error al enviar solicitud:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: error.response?.data?.message || 'No se pudo enviar la solicitud. Inténtalo de nuevo.'
+                text: 'Hubo un problema de conexión. Inténtalo más tarde.'
             });
         } finally {
             setLoading(false);

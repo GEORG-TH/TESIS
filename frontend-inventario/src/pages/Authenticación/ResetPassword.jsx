@@ -15,7 +15,7 @@ const ResetPassword = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!token) {
             Swal.fire('Error', 'No se encontró un token de restablecimiento.', 'error');
             return;
@@ -28,19 +28,22 @@ const ResetPassword = () => {
         setLoading(true);
         try {
             const response = await resetPassword(token, password);
+            if (response.status === 200) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Contraseña Actualizada!',
+                    text: 'Ya puedes iniciar sesión con tu nueva clave.',
+                    confirmButtonText: 'Ir al Login'
+                });
 
-            await Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: response.data.message,
-            });
-            setPassword('');
-            setConfirmPassword('');
-            navigate('/');
+                setPassword('');
+                setConfirmPassword('');
+                navigate('/');
+            }
 
         } catch (error) {
             console.error('Error al restablecer contraseña:', error);
-            const errorMsg = error.response?.data?.message || 'Token inválido o expirado.';
+            const errorMsg = error.response?.data?.message || 'El enlace ha expirado o es inválido.';
             Swal.fire('Error', errorMsg, 'error');
         } finally {
             setLoading(false);
