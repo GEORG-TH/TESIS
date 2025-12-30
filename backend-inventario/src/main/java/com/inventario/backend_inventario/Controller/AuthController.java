@@ -20,7 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final UsuarioRepository usuarioRepo;
@@ -157,7 +157,7 @@ public class AuthController {
             Usuario usuario = usuarioOpt.get();
 
             String resetToken = jwtUtil.generateToken(usuario.getEmail(), "", "Temporal");
-            String resetLink = "http://localhost:3000/reset-password?token=" + resetToken; 
+            String resetLink = "https://swci-frontend.vercel.app/reset-password?token=" + resetToken; 
 
             try {
                 emailService.sendPasswordResetEmail(usuario.getEmail(), resetLink);

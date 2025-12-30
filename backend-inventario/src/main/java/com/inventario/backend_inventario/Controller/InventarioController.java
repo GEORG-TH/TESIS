@@ -16,7 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/inventario")
-@CrossOrigin(origins = "http://localhost:3000") // Tu frontend
+@CrossOrigin(origins = "*") // Tu frontend
 public class InventarioController {
 
     @Autowired

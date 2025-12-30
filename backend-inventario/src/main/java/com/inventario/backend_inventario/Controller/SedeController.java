@@ -11,7 +11,7 @@ import com.inventario.backend_inventario.Service.SedeService;
 
 @RestController
 @RequestMapping("/api/sedes")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class SedeController {
     @Autowired
     private SedeService sedeService;
