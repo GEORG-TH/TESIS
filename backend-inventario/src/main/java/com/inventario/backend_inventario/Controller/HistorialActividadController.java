@@ -17,7 +17,7 @@ import com.inventario.backend_inventario.Dto.UltimoAccesoUser;
 
 @RestController
 @RequestMapping("/api/historial")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class HistorialActividadController {
     @Autowired
     private HistorialActividadService historialActividadService;

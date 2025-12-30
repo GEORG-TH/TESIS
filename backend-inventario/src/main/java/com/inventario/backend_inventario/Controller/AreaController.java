@@ -13,7 +13,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/areas")
-@CrossOrigin(origins = "http://localhost:3000") 
+@CrossOrigin(origins = "*") 
 public class AreaController {
     @Autowired
     private AreaService areaService;
