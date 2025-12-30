@@ -161,7 +161,7 @@ public class AuthController {
             Usuario usuario = usuarioOpt.get();
 
             String resetToken = jwtUtil.generateToken(usuario.getEmail(), "", "Temporal");
-            String resetLink = "https://swci-frontend.vercel.app/reset-password?token=" + resetToken;
+            String resetLink = "https://swci.vercel.app/reset-password?token=" + resetToken;
 
             try {
                 emailService.sendPasswordResetEmail(usuario.getEmail(), resetLink);
