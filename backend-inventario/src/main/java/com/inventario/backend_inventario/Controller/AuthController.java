@@ -34,8 +34,8 @@ public class AuthController {
     private HistorialActividadService historialService;
 
     public AuthController(UsuarioRepository usuarioRepo,
-                          PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil) {
+            PasswordEncoder passwordEncoder,
+            JwtUtil jwtUtil) {
         this.usuarioRepo = usuarioRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -60,35 +60,37 @@ public class AuthController {
         if (usuario.getPass() != null) {
             try {
                 passOk = passwordEncoder.matches(datos.getPass(), usuario.getPass());
-            } catch (Exception ignored) {}
-            if (!passOk) passOk = datos.getPass().equals(usuario.getPass());
+            } catch (Exception ignored) {
+            }
+            if (!passOk)
+                passOk = datos.getPass().equals(usuario.getPass());
         }
 
         if (!passOk) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("success", false, "message", "Credenciales inválidas"));
         }
-        
-        if (usuario.isMfaEnabled()) { 
+
+        if (usuario.isMfaEnabled()) {
             Map<String, Object> resp = new HashMap<>();
-            resp.put("success", true); 
+            resp.put("success", true);
             resp.put("mfaRequired", true);
             resp.put("email", usuario.getEmail());
-            
+
             return ResponseEntity.ok(resp);
-            
+
         } else {
-            String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().getNombreRol(),"Sesion");
+            String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().getNombreRol(), "Sesion");
             try {
                 historialService.registrarActividad(
-                    usuario,
-                    "LOGIN",
-                    "El usuario: " + usuario.getNombre_u() + " [" + usuario.getRol().getNombreRol() + "] ha iniciado sesión.",
-                    "INICIO SESIÓN",   
-                    "Usuario",        
-                    (long) usuario.getId_u(),        
-                    "Inicio de sesión exitoso"            
-                );
+                        usuario,
+                        "LOGIN",
+                        "El usuario: " + usuario.getNombre_u() + " [" + usuario.getRol().getNombreRol()
+                                + "] ha iniciado sesión.",
+                        "INICIO SESIÓN",
+                        "Usuario",
+                        (long) usuario.getId_u(),
+                        "Inicio de sesión exitoso");
             } catch (Exception e) {
                 System.err.println("Error registrando auditoría de login: " + e.getMessage());
             }
@@ -106,8 +108,7 @@ public class AuthController {
                     usuario.getEmail(),
                     usuario.getEstado_u(),
                     usuario.getRol().getNombreRol(),
-                    usuario.isMfaEnabled()
-            ));
+                    usuario.isMfaEnabled()));
             return ResponseEntity.ok(resp);
         }
     }
@@ -123,13 +124,13 @@ public class AuthController {
                     .body(Map.of("success", false, "message", "Usuario no encontrado"));
         }
         Usuario usuario = usuarioOpt.get();
-        
+
         if (usuario.getMfaSecret() == null || !mfaService.verifyCode(usuario.getMfaSecret(), code)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("success", false, "message", "Código 2FA inválido"));
         }
 
-        String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().getNombreRol(),"Sesion");
+        String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().getNombreRol(), "Sesion");
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", true);
@@ -144,28 +145,37 @@ public class AuthController {
                 usuario.getEmail(),
                 usuario.getEstado_u(),
                 usuario.getRol().getNombreRol(),
-                usuario.isMfaEnabled()
-        ));
+                usuario.isMfaEnabled()));
         return ResponseEntity.ok(resp);
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        // CHISMOSO 1: Ver qué correo llegó
+        System.out.println("DEBUG: Intentando recuperar pass para: " + request.getEmail());
+
         Optional<Usuario> usuarioOpt = usuarioRepo.findByEmail(request.getEmail());
 
         if (usuarioOpt.isPresent()) {
+            System.out.println("DEBUG: ¡Usuario ENCONTRADO! Generando token...");
             Usuario usuario = usuarioOpt.get();
 
             String resetToken = jwtUtil.generateToken(usuario.getEmail(), "", "Temporal");
-            String resetLink = "https://swci-frontend.vercel.app/reset-password?token=" + resetToken; 
+            String resetLink = "https://swci-frontend.vercel.app/reset-password?token=" + resetToken;
 
             try {
                 emailService.sendPasswordResetEmail(usuario.getEmail(), resetLink);
+                System.out.println("DEBUG: Correo enviado al servicio de email.");
             } catch (Exception e) {
-                System.err.println("Error al enviar email: " + e.getMessage());
+                System.err.println("DEBUG ERROR: Falló el envío de email: " + e.getMessage());
             }
-        }   
-        return ResponseEntity.ok("Si existe una cuenta asociada a este correo, se ha enviado un enlace de restablecimiento.");
+        } else {
+            // CHISMOSO 2: Avisar si no se encontró
+            System.out.println("DEBUG: Usuario NO encontrado en la base de datos.");
+        }
+
+        return ResponseEntity
+                .ok("Si existe una cuenta asociada a este correo, se ha enviado un enlace de restablecimiento.");
     }
 
     @PostMapping("/reset-password")
@@ -211,7 +221,7 @@ public class AuthController {
     @PostMapping("/mfa/verify")
     public ResponseEntity<?> verifyMfa(@RequestBody Map<String, String> payload, Authentication authentication) {
         String code = payload.get("code");
-        
+
         Usuario usuario = usuarioRepo.findByEmail(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
@@ -223,28 +233,29 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Código inválido"));
         }
     }
+
     @PostMapping("/mfa/disable")
     public ResponseEntity<?> disableMfa(Authentication authentication) {
         Usuario usuario = usuarioRepo.findByEmail(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-        
+
         usuario.setMfaEnabled(false);
-        usuario.setMfaSecret(null); 
+        usuario.setMfaSecret(null);
         usuarioRepo.save(usuario);
-        
+
         return ResponseEntity.ok(Map.of("message", "2FA deshabilitado correctamente"));
     }
 
     public record LoginResponse(
-        Integer id_u,
-        String dni,
-        String nombre_u,
-        String apellido_pat,
-        String apellido_mat,
-        String telefono,
-        String email,
-        boolean estado_u,
-        String rol,
-        boolean mfaEnabled
-    ) {}
+            Integer id_u,
+            String dni,
+            String nombre_u,
+            String apellido_pat,
+            String apellido_mat,
+            String telefono,
+            String email,
+            boolean estado_u,
+            String rol,
+            boolean mfaEnabled) {
+    }
 }
