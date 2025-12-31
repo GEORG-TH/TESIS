@@ -18,8 +18,8 @@ public interface HistorialActividadRepository extends JpaRepository<HistorialAct
     @Query("SELECT h FROM HistorialActividad h WHERE " +
            "(:usuarioId IS NULL OR h.usuario.id_u = :usuarioId) AND " +
            "(:modulo IS NULL OR h.modulo = :modulo) AND " +
-           "(:fechaInicio IS NULL OR h.fechaHora >= :fechaInicio) AND " +
-           "(:fechaFin IS NULL OR h.fechaHora <= :fechaFin) " +
+           "(h.fechaHora >= COALESCE(:fechaInicio, h.fechaHora)) AND " +
+           "(h.fechaHora <= COALESCE(:fechaFin, h.fechaHora)) " +
            "ORDER BY h.fechaHora DESC")
     List<HistorialActividad> filtrarActividades(
             @Param("usuarioId") Integer usuarioId,
