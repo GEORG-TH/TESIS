@@ -25,6 +25,7 @@ import LoadingScreen from "./components/LoadingScreen_login";
 import DashboardProductos from "./components/Dashboards/Modulos/dashboardProductos";
 import ListaAreas from "./pages/Mod. Producto/ListaAreas";
 import ListaProductos from "./pages/Mod. Producto/ListaProductos";
+import GeneradorEtiquetas from "./pages/Mod. Producto/GeneradorEtiquetas";
 import IngresarProducto from "./pages/Mod. Producto/IngresarProducto";
 import DashboardUsuarios from "./components/Dashboards/Modulos/dashboardUsuarios";
 import IngresarArea from "./pages/Mod. Producto/IngresarArea";
@@ -212,6 +213,12 @@ const RutasProductos = [
     "/categorias/nuevo",
     ADMIN_JEFE,
     IngresarCategoria
+  ),
+  RutaProtegida(
+    "generadorEtiquetas",
+    "/productos/etiquetas",
+    ADMIN_JEFE,
+    GeneradorEtiquetas
   ),
 ];
 
