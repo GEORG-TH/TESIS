@@ -30,7 +30,7 @@ const DashboardProductos = () => {
             id: "generador-codigos",
             titulo: "Generación de Códigos de Barras y QR",
             descripcion: "Genera códigos de barras y códigos QR para productos, listos para colocar en las góndolas.",
-            ruta: "/generador-codigos",
+            ruta: "/productos/etiquetas",
         },
         {
             id: "campañas-promocionales",
