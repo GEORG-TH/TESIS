@@ -66,20 +66,21 @@ const IngresarProducto = () => {
 	} = useForm({
 		resolver: zodResolver(IngresarProductoSchema),
 		defaultValues: {
-		sku: "", ean: "", nombre_producto: "", marca: "", uni_medida: "",
-		precio_venta: "", precio_compra: "", id_area: "", id_cat: "", id_proveedor: ""
+			sku: "", ean: "", nombre_producto: "", marca: "", uni_medida: "",
+			precio_venta: "", precio_compra: "", stockMinimo: 10,
+			stockIdeal: 20, id_area: "", id_cat: "", id_proveedor: ""
 		}
 	});
 	const selectedAreaId = watch("id_area");
 
 	const categoriasDisponibles = useMemo(() => {
-    if (!selectedAreaId) return [];
-    
-    const areaIdNum = parseInt(selectedAreaId, 10);
+		if (!selectedAreaId) return [];
+
+		const areaIdNum = parseInt(selectedAreaId, 10);
 		return categorias.filter((categoria) => {
-		const categoriaAreaRaw = categoria.area?.id_area ?? categoria.id_area;
-		const categoriaAreaId = Number(categoriaAreaRaw);
-		return !Number.isNaN(categoriaAreaId) && categoriaAreaId === areaIdNum;
+			const categoriaAreaRaw = categoria.area?.id_area ?? categoria.id_area;
+			const categoriaAreaId = Number(categoriaAreaRaw);
+			return !Number.isNaN(categoriaAreaId) && categoriaAreaId === areaIdNum;
 		});
 	}, [selectedAreaId, categorias]);
 	useEffect(() => {
@@ -96,11 +97,13 @@ const IngresarProducto = () => {
 			uni_medida: data.uni_medida,
 			precio_venta: data.precio_venta,
 			precio_compra: data.precio_compra,
+			stockMinimo: data.stockMinimo,
+			stockIdeal: data.stockIdeal,
 			estado: true,
 			categoria: { id_cat: parseInt(data.id_cat, 10) },
 			proveedor: { id_proveedor: parseInt(data.id_proveedor, 10) },
 		};
-    
+
 		createProductoMutation.mutate(payload);
 	};
 
@@ -182,8 +185,30 @@ const IngresarProducto = () => {
 						/>
 						{errors.precio_compra && <span className="error-message">{errors.precio_compra.message}</span>}
 					</div>
+					<div className="form-group">
+						<label>Stock Mínimo (Alerta):</label>
+						<input
+							type="number"
+							min="0"
+							step="1"
+							placeholder="Ej. 10"
+							{...register("stockMinimo")}
+						/>
+						{errors.stockMinimo && <span className="error-message">{errors.stockMinimo.message}</span>}
+					</div>
 
-                    <div className="form-group">
+					<div className="form-group">
+						<label>Stock Ideal (Meta):</label>
+						<input
+							type="number"
+							min="1"
+							step="1"
+							placeholder="Ej. 50"
+							{...register("stockIdeal")}
+						/>
+						{errors.stockIdeal && <span className="error-message">{errors.stockIdeal.message}</span>}
+					</div>
+					<div className="form-group">
 						<label>Área:</label>
 						<select
 							{...register("id_area")}
@@ -209,8 +234,8 @@ const IngresarProducto = () => {
 								{!selectedAreaId
 									? "Seleccione un área primero"
 									: categoriasDisponibles.length === 0
-									? "Sin categorías disponibles"
-									: "Seleccione una categoría"}
+										? "Sin categorías disponibles"
+										: "Seleccione una categoría"}
 							</option>
 							{categoriasDisponibles.map((categoria) => (
 								<option key={categoria.id_cat || categoria.id_categoria} value={categoria.id_cat || categoria.id_categoria}>

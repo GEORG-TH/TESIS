@@ -3,7 +3,7 @@ import LayoutDashboard from "../../Layouts/LayoutDashboard";
 import GraficoUsuariosPorRol from "../../Graficos/GraficoUsuariosPorRol"
 import FeedActividad from "../../Graficos/FeedActividad";
 import "../../styles/dashboardAdmin.css";
-
+import WidgetReabastecimiento from "../../Graficos/WidgetReabastecimiento";
 
 export default function DashboardAdmin() {
   return (
@@ -15,7 +15,7 @@ export default function DashboardAdmin() {
 
               {/* --- FILA 1: TARJETAS KPI --- */}
               <div className="grid-item-kpi">
-                  {/* <StatCard  ... /> */}
+                    <WidgetReabastecimiento idSede={1} />
               </div>
               <div className="grid-item-kpi">
                   {/* <StatCard  ... /> */}
