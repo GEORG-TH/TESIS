@@ -10,6 +10,8 @@ public class ProductoDto {
     private String uni_medida;
     private Double precio_venta;
     private Double precio_compra;
+    private Integer stockMinimo;
+    private Integer stockIdeal;
     private Boolean estado;
     private CategoriaDto categoria;
     private ProveedorDto proveedor;

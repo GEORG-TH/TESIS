@@ -198,6 +198,8 @@ public class ProductoServiceImpl implements ProductoService {
         dto.setUni_medida(producto.getUni_medida());
         dto.setPrecio_venta(producto.getPrecio_venta());
         dto.setPrecio_compra(producto.getPrecio_compra());
+        dto.setStockMinimo(producto.getStockMinimo());
+        dto.setStockIdeal(producto.getStockIdeal());
         dto.setEstado(producto.getEstado());
 
         if (producto.getCategoria() != null) {

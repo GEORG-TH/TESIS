@@ -40,9 +40,9 @@ const DashboardProductos = () => {
         },
         {
             id: "sugerencia-productos",
-            titulo: "Sugerencia Inteligente de Productos",
-            descripcion: "Abastecete de productos (antiguos o novedades) para la campaña que viene (*Impulsado por IA*)",
-            ruta: "/....",
+            titulo: "Sugerencia de Reabastecimiento y Búsqueda Inteligente de Productos",
+            descripcion: "Proporciona sugerencias para reabastecer productos y facilita la búsqueda inteligente.",
+            ruta: "/productos/sugerencias/reabastecimiento",
         },
     ];
 

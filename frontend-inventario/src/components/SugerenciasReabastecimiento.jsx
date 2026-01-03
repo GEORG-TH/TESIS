@@ -99,8 +99,8 @@ const SugerenciasReabastecimiento = () => {
                                 onChange={(e) => setIdSede(e.target.value)}
                             >
                                 {sedes.map((sede) => (
-                                    <MenuItem key={sede.id_sede} value={sede.id_sede}>
-                                        {sede.nombre_sede}
+                                    <MenuItem key={sede.idSede} value={sede.idSede}>
+                                        {sede.nombreSede}
                                     </MenuItem>
                                 ))}
                             </Select>
