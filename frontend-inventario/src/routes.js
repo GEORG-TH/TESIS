@@ -25,7 +25,9 @@ import LoadingScreen from "./components/LoadingScreen_login";
 import DashboardProductos from "./components/Dashboards/Modulos/dashboardProductos";
 import ListaAreas from "./pages/Mod. Producto/ListaAreas";
 import ListaProductos from "./pages/Mod. Producto/ListaProductos";
+import DetalleProducto from "./pages/Mod. Producto/DetalleProducto";
 import GeneradorEtiquetas from "./pages/Mod. Producto/GeneradorEtiquetas";
+import SugerenciasReabastecimiento from "./components/SugerenciasReabastecimiento";
 import IngresarProducto from "./pages/Mod. Producto/IngresarProducto";
 import DashboardUsuarios from "./components/Dashboards/Modulos/dashboardUsuarios";
 import IngresarArea from "./pages/Mod. Producto/IngresarArea";
@@ -195,6 +197,12 @@ const RutasProductos = [
     ListaProductos
   ),
   RutaProtegida(
+    "detalleProducto",
+    "/productos/detalle/:id",
+    ADMIN_JEFE,
+    DetalleProducto
+  ),
+  RutaProtegida(
     "ingresarProducto",
     "/productos/nuevo",
     ADMIN_JEFE,
@@ -219,6 +227,12 @@ const RutasProductos = [
     "/productos/etiquetas",
     ADMIN_JEFE,
     GeneradorEtiquetas
+  ),
+  RutaProtegida(
+    "sugerenciasReabastecimiento",
+    "/productos/sugerencias/reabastecimiento",
+    ADMIN_JEFE,
+    SugerenciasReabastecimiento
   ),
 ];
 

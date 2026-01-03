@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.inventario.backend_inventario.Dto.ProductoDto;
+import com.inventario.backend_inventario.Dto.SugerenciaCompraDto;
 import com.inventario.backend_inventario.Model.Producto;
 import com.inventario.backend_inventario.Service.ProductoService;
 import com.inventario.backend_inventario.Service.Impl.ProductoServiceImpl;
@@ -51,6 +52,7 @@ public class ProductoController {
         productoService.eliminarProducto(id);
         return ResponseEntity.noContent().build();
     }
+
     @PatchMapping("/{id}/activar")
     public ResponseEntity<Producto> activarProducto(@PathVariable Long id) {
         return ResponseEntity.ok(productoService.activarProducto(id));
@@ -59,5 +61,16 @@ public class ProductoController {
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<Producto> desactivarProducto(@PathVariable Long id) {
         return ResponseEntity.ok(productoService.desactivarProducto(id));
+    }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Producto>> buscarProductosInteligente(@RequestParam("query") String query) {
+        List<Producto> resultados = productoService.buscarSugerencias(query);
+        return ResponseEntity.ok(resultados);
+    }
+
+    @GetMapping("/sugerencias/reabastecer")
+    public ResponseEntity<List<SugerenciaCompraDto>> sugerirCompra(@RequestParam Long idSede) {
+        return ResponseEntity.ok(productoService.obtenerSugerenciasReabastecimiento(idSede));
     }
 }

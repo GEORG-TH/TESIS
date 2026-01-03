@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.inventario.backend_inventario.Dto.CategoriaDto;
 import com.inventario.backend_inventario.Dto.ProductoDto;
 import com.inventario.backend_inventario.Dto.ProveedorDto;
+import com.inventario.backend_inventario.Dto.SugerenciaCompraDto;
 import com.inventario.backend_inventario.Model.Producto;
 import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.CategoriaRepository;
@@ -66,13 +67,17 @@ public class ProductoServiceImpl implements ProductoService {
         Producto productoGuardado = productoRepository.save(producto);
 
         try {
-            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                    .getUsername();
             Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
 
-            String descripcion = "Creó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
-            
+            String descripcion = "Creó el producto '" + productoGuardado.getNombre() + "' (ID: "
+                    + productoGuardado.getId_producto() + ").";
+
             usuarioActual.ifPresent(usuario -> {
-                historialActividadService.registrarActividad(usuario, "CREACIÓN", descripcion, "PRODUCTO", "Producto", Long.valueOf(productoGuardado.getId_producto()), "Producto creado con nombre: " + productoGuardado.getNombre());
+                historialActividadService.registrarActividad(usuario, "CREACIÓN", descripcion, "PRODUCTO", "Producto",
+                        Long.valueOf(productoGuardado.getId_producto()),
+                        "Producto creado con nombre: " + productoGuardado.getNombre());
             });
 
         } catch (Exception e) {
@@ -92,19 +97,25 @@ public class ProductoServiceImpl implements ProductoService {
         existente.setUni_medida(producto.getUni_medida());
         existente.setPrecio_venta(producto.getPrecio_venta());
         existente.setPrecio_compra(producto.getPrecio_compra());
+        existente.setStockMinimo(producto.getStockMinimo());
+        existente.setStockIdeal(producto.getStockIdeal());
         existente.setCategoria(producto.getCategoria());
         existente.setProveedor(producto.getProveedor());
 
         Producto productoGuardado = productoRepository.save(existente);
 
         try {
-            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                    .getUsername();
             Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
 
-            String descripcion = "Actualizó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
-            
+            String descripcion = "Actualizó el producto '" + productoGuardado.getNombre() + "' (ID: "
+                    + productoGuardado.getId_producto() + ").";
+
             usuarioActual.ifPresent(usuario -> {
-                historialActividadService.registrarActividad(usuario, "ACTUALIZACIÓN", descripcion, "PRODUCTO", "Producto", Long.valueOf(productoGuardado.getId_producto()), "Producto actualizado con nombre: " + productoGuardado.getNombre());
+                historialActividadService.registrarActividad(usuario, "ACTUALIZACIÓN", descripcion, "PRODUCTO",
+                        "Producto", Long.valueOf(productoGuardado.getId_producto()),
+                        "Producto actualizado con nombre: " + productoGuardado.getNombre());
             });
 
         } catch (Exception e) {
@@ -120,13 +131,17 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
 
         try {
-            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+            String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                    .getUsername();
             Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
 
-            String descripcion = "Eliminó el producto '" + productoGuardado.getNombre() + "' (ID: " + productoGuardado.getId_producto() + ").";
-            
+            String descripcion = "Eliminó el producto '" + productoGuardado.getNombre() + "' (ID: "
+                    + productoGuardado.getId_producto() + ").";
+
             usuarioActual.ifPresent(usuario -> {
-                historialActividadService.registrarActividad(usuario, "ELIMINACIÓN", descripcion, "PRODUCTO", "Producto", Long.valueOf(productoGuardado.getId_producto()), "Producto eliminado con nombre: " + productoGuardado.getNombre());
+                historialActividadService.registrarActividad(usuario, "ELIMINACIÓN", descripcion, "PRODUCTO",
+                        "Producto", Long.valueOf(productoGuardado.getId_producto()),
+                        "Producto eliminado con nombre: " + productoGuardado.getNombre());
             });
 
         } catch (Exception e) {
@@ -134,7 +149,7 @@ public class ProductoServiceImpl implements ProductoService {
         }
         productoRepository.deleteById(id);
     }
-    
+
     @Override
     public Producto activarProducto(Long id) {
         Producto producto = productoRepository.findById(id)
@@ -149,6 +164,22 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
         producto.setEstado(false);
         return productoRepository.save(producto);
+    }
+
+    @Override
+    public List<Producto> buscarSugerencias(String termino) {
+        if (termino == null || termino.trim().isEmpty()) {
+            return List.of();
+        }
+        return productoRepository.buscarPorSimilitud(termino);
+    }
+
+    @Override
+    public List<SugerenciaCompraDto> obtenerSugerenciasReabastecimiento(Long idSede) {
+        if (idSede == null) {
+            throw new IllegalArgumentException("El ID de la sede es obligatorio para calcular el reabastecimiento.");
+        }
+        return productoRepository.obtenerSugerenciasPorSede(idSede);
     }
 
     public List<ProductoDto> convertirEntidadesADto(List<Producto> productos) {

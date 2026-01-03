@@ -18,3 +18,14 @@ export const activarProducto = (id) =>
   axiosInstance.patch(`/productos/${id}/activar`);
 export const desactivarProducto = (id) =>
   axiosInstance.patch(`/productos/${id}/desactivar`);
+export const searchProductos = async (query) => {
+  if (!query || query.length < 2) return [];
+  const response = await axiosInstance.get(`/productos/buscar?query=${query}`);
+  return response.data;
+};
+export const getSugerenciasReabastecimiento = async (idSede) => {
+  const response = await axiosInstance.get(
+    `/productos/sugerencias/reabastecer?idSede=${idSede}`
+  );
+  return response.data;
+};

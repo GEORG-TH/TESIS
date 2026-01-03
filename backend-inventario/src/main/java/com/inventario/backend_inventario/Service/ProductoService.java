@@ -3,6 +3,7 @@ package com.inventario.backend_inventario.Service;
 import java.util.List;
 import java.util.Optional;
 
+import com.inventario.backend_inventario.Dto.SugerenciaCompraDto;
 import com.inventario.backend_inventario.Model.Producto;
 
 public interface ProductoService {
@@ -13,4 +14,6 @@ public interface ProductoService {
     void eliminarProducto(Long id);
     Producto activarProducto(Long id);
     Producto desactivarProducto(Long id);
+    List<Producto> buscarSugerencias(String termino);
+    List<SugerenciaCompraDto> obtenerSugerenciasReabastecimiento(Long idSede);
 }

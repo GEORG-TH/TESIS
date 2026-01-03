@@ -21,6 +21,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import InfoIcon from "@mui/icons-material/Info";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -251,6 +252,8 @@ const ListaProductos = () => {
       uni_medida: formData.uni_medida,
       precio_venta: Number(formData.precio_venta),
       precio_compra: Number(formData.precio_compra),
+      stockMinimo: Number(formData.stockMinimo),
+      stockIdeal: Number(formData.stockIdeal),
       categoria: { id_cat: parseInt(formData.id_cat,10) },
       proveedor: { id_proveedor: parseInt(formData.id_proveedor,10) }
     };
@@ -289,6 +292,22 @@ const ListaProductos = () => {
         align: 'right',
         headerAlign: 'right'
     }] : []),
+    ...(isDesktop ? [
+      {
+        field: "stockMinimo",
+        headerName: "S. Mín",
+        width: 80,
+        align: 'center',
+        headerAlign: 'center'
+      },
+      {
+        field: "stockIdeal",
+        headerName: "S. Ideal",
+        width: 80,
+        align: 'center',
+        headerAlign: 'center'
+      },
+    ] : []),
     {
       field: "estadoProducto",
       headerName: "Estado",
@@ -306,27 +325,35 @@ const ListaProductos = () => {
       field: "acciones",
       headerName: "Acciones",
       type: "actions",
-      width: 150,
+      width: 180,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => {
         const producto = params.row;
         const productoId = producto.id_producto;
         const estaActivo = producto.estaActivo;
-        
+
         return (
           <Stack direction="row" spacing={0.5} justifyContent="center">
-            
+            <Tooltip title="Ver Detalle">
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => navigate(`/productos/detalle/${productoId}`)}
+              >
+                <InfoIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
             <Tooltip title="Editar">
               <IconButton
                 size="small"
                 color="info"
-                onClick={() => handleEditar(producto)} 
+                onClick={() => handleEditar(producto)}
               >
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-
             {estaActivo ? (
               <Tooltip title="Desactivar">
                 <IconButton
