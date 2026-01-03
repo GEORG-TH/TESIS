@@ -31,7 +31,10 @@ const FormularioDialogoProducto = ({
         resolver: zodResolver(UpdateProductoSchema),
         defaultValues: {
             sku: '', codEan: '', nombre_producto: '', marca: '', uni_medida: '',
-            precio_venta: '', precio_compra: '', id_area: '', id_cat: '', id_proveedor: ''
+            precio_venta: '', precio_compra: '',
+            // 1. INICIALIZAMOS LOS NUEVOS CAMPOS
+            stockMinimo: '', stockIdeal: '',
+            id_area: '', id_cat: '', id_proveedor: ''
         }
     });
 
@@ -47,6 +50,9 @@ const FormularioDialogoProducto = ({
                 uni_medida: producto.uni_medida,
                 precio_venta: producto.precio_venta,
                 precio_compra: producto.precio_compra,
+                // 2. CARGAMOS LOS VALORES ACTUALES DEL PRODUCTO
+                stockMinimo: producto.stockMinimo || '',
+                stockIdeal: producto.stockIdeal || '',
                 id_area: String(areaInicial),
                 id_cat: String(producto.categoria?.id_cat || producto.categoria?.id_categoria || ''),
                 id_proveedor: String(producto.proveedor?.id_proveedor || '')
@@ -78,6 +84,7 @@ const FormularioDialogoProducto = ({
     const onSubmit = (data) => {
         onConfirm(data);
     };
+
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>Editar Producto</DialogTitle>
@@ -108,6 +115,42 @@ const FormularioDialogoProducto = ({
 
                         <Grid item xs={6}><Controller name="precio_venta" control={control} render={({ field }) => (<TextField {...field} type="number" label="Precio Venta" fullWidth error={!!errors.precio_venta} helperText={errors.precio_venta?.message} />)} /></Grid>
                         <Grid item xs={6}><Controller name="precio_compra" control={control} render={({ field }) => (<TextField {...field} type="number" label="Precio Compra" fullWidth error={!!errors.precio_compra} helperText={errors.precio_compra?.message} />)} /></Grid>
+
+                        {/* --- 3. NUEVOS INPUTS AGREGADOS AQUÍ --- */}
+                        <Grid item xs={6}>
+                            <Controller
+                                name="stockMinimo"
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField
+                                        {...field}
+                                        type="number"
+                                        label="Stock Mínimo (Alerta)"
+                                        fullWidth
+                                        error={!!errors.stockMinimo}
+                                        helperText={errors.stockMinimo?.message}
+                                    />
+                                )}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Controller
+                                name="stockIdeal"
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField
+                                        {...field}
+                                        type="number"
+                                        label="Stock Ideal (Meta)"
+                                        fullWidth
+                                        error={!!errors.stockIdeal}
+                                        helperText={errors.stockIdeal?.message}
+                                    />
+                                )}
+                            />
+                        </Grid>
+                        {/* -------------------------------------- */}
+
                         <Grid item xs={12}>
                             <Controller
                                 name="id_area"

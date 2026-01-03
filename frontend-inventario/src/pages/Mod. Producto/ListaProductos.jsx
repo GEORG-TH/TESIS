@@ -130,6 +130,8 @@ const ListaProductos = () => {
         proveedorNombre: obtenerNombreProveedor(u),
         precioVentaFormatted: formatearPrecio(u.precio_venta ?? u.precioVenta),
         precioCompraFormatted: formatearPrecio(u.precio_compra ?? u.precioCompra),
+        stockMinimo: u.stockMinimo ?? 0,
+        stockIdeal: u.stockIdeal ?? 0,
         estadoProducto: estado,
         estaActivo: estaActivo,
       };

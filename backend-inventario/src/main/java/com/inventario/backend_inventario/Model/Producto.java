@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.io.Serializable;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -54,11 +54,10 @@ public class Producto implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "id_cat", nullable = false)
-    @JsonBackReference("categoria-producto")
+    @JsonIgnoreProperties("productos")
     private Categoria categoria;
 
     @ManyToOne
     @JoinColumn(name = "id_proveedor", nullable = false)
-    @JsonBackReference("proveedor-producto")
     private Proveedor proveedor;
 }
