@@ -260,7 +260,7 @@ const ChatIA = () => {
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
                         <TextField
                             fullWidth
-                            placeholder="Escribe tu consulta... (Ej: ¿Dónde hay stock de paracetamol?)"
+                            placeholder="Escribe tu consulta... (Ej: ¿Dónde hay stock de Leche Gloria?)"
                             variant="outlined"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
