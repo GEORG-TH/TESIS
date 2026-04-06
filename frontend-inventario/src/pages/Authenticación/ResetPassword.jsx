@@ -27,19 +27,16 @@ const ResetPassword = () => {
 
         setLoading(true);
         try {
-            const response = await resetPassword(token, password);
-            if (response.status === 200) {
-                await Swal.fire({
-                    icon: 'success',
-                    title: '¡Contraseña Actualizada!',
-                    text: 'Ya puedes iniciar sesión con tu nueva clave.',
-                    confirmButtonText: 'Ir al Login'
-                });
+            await resetPassword(token, password);
 
-                setPassword('');
-                setConfirmPassword('');
-                navigate('/');
-            }
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Contraseña Actualizada!',
+                text: 'Ya puedes iniciar sesión con tu nueva clave.',
+                confirmButtonText: 'Ir al Login'
+            });
+
+            navigate('/');
 
         } catch (error) {
             console.error('Error al restablecer contraseña:', error);

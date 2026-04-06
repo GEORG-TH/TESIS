@@ -61,7 +61,9 @@ const FeedActividad = () => {
                                     <FaClock /> {formatRelativeTime(act.fechaHora)}
                                 </span>
                             </div>
-                            <p className="feed-description">{act.descripcion}</p>
+                            <p className="feed-description">
+                                {act.descripcion}
+                            </p>
                             <div className="feed-item-footer">
                                 <span className={`feed-action-type feed-action-${act.tipoAccion?.toLowerCase()}`}>
                                     <FaTag /> {capitalize(act.tipoAccion)}

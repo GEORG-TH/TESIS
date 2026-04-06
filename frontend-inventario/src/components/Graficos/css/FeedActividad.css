@@ -50,16 +50,23 @@
 
 .feed-item {
     position: relative;
-    padding: 12px 16px 12px 56px;
+    padding: 12px 16px 16px 56px;
+
     background: rgba(148, 163, 184, 0.05);
+    /* ← fondo restaurado */
     border-radius: 14px;
+    /* ← esquinas restauradas */
     border: 1px solid transparent;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    row-gap: 6px;
-    min-height: 102px;
+    /* ← borde restaurado */
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    transition: border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease,
+        background 0.2s ease;
 }
 
 .feed-item::before {
@@ -79,8 +86,8 @@
     position: absolute;
     left: 29px;
     top: 28px;
+    bottom: 14px;
     width: 2px;
-    height: calc(100% - 34px);
     background: rgba(148, 163, 184, 0.25);
 }
 
@@ -136,10 +143,13 @@
     color: var(--card-description);
     line-height: 1.4;
     font-size: 0.88rem;
+    white-space: pre-line;
+    word-break: break-word;
+    line-height: 1.5;
 }
 
 .feed-item-footer {
-    margin-top: 0;
+    margin-top: 8px;
 }
 
 .feed-action-type {
