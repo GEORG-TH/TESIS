@@ -16,4 +16,5 @@ public interface ProductoService {
     Producto desactivarProducto(Long id);
     List<Producto> buscarSugerencias(String termino);
     List<SugerenciaCompraDto> obtenerSugerenciasReabastecimiento(Integer idSede);
+    // Otros métodos relacionados con la gestión de productoss
 }
