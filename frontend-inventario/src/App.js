@@ -9,6 +9,8 @@ import AppRoutes from "./routes";
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 function App() {
   const theme = useGlobalStore((state) => state.theme);
   const fontSize = useGlobalStore((state) => state.fontSize);
@@ -23,9 +25,7 @@ function App() {
     let stompClient = null;
 
     if (token) {
-      const backendUrl =
-        "https://swci-backend.onrender.com" || "http://localhost:8080";
-      const socket = new SockJS(`${backendUrl}/ws`);
+      const socket = new SockJS(`${BACKEND_URL}/ws`);
       stompClient = Stomp.over(socket);
       stompClient.debug = null;
 

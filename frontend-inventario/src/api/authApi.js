@@ -1,7 +1,8 @@
 import axios from "axios";
 import axiosInstance from "./axiosConfig";
 
-const API_URL ="https://swci-backend.onrender.com/api/auth" || "http://localhost:8080/api/auth";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const API_URL = `${BACKEND_URL}/api/auth`;
 //SIN TOKEN
 export const login = async (data) => {
   const response = await axios.post(`${API_URL}/login`, data);
