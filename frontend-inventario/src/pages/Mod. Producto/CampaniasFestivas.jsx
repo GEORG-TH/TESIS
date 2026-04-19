@@ -16,6 +16,8 @@ import '../../components/styles/CampaniaFestivas.css';
 import { useTheme } from '@mui/material/styles';
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function CampaniasFestivas() {
     const theme = useTheme();
     const navigate = useNavigate(); // <--- 3. Inicializar el hook
@@ -73,7 +75,7 @@ export default function CampaniasFestivas() {
     };
 
     const conectarWebSocket = () => {
-        const socket = new SockJS("https://swci-backend.onrender.com/ws");
+        const socket = new SockJS(`${BACKEND_URL}/ws`);
         const stompClient = Stomp.over(socket);
         stompClient.debug = () => { };
 

@@ -21,6 +21,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 // Usamos un estilo que se vea bien en ambos modos
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 const ChatWidget = () => {
     const theme = useTheme(); // 2. Accedemos a las variables del tema (colores)
     const [isOpen, setIsOpen] = useState(false);
@@ -59,7 +61,7 @@ const ChatWidget = () => {
         setIsLoading(true);
 
         // Ajuste de URL para local o producción
-        const API_URL = "https://swci-backend.onrender.com";
+        const API_URL = BACKEND_URL;
 
         try {
             const response = await fetch(`${API_URL}/api/chat-gerente`, {
