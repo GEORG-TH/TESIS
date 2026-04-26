@@ -6,6 +6,7 @@ import { Route } from "react-router-dom";
 import RecepcionMercaderia from "./pages/Mod. Inventario/RecepcionMercaderia";
 
 import ListaInventario from "./pages/Mod. Inventario/ListaInventario";
+import BusquedaPersonalizadaStock from "./pages/Mod. Inventario/BusquedaPersonalizadaStock";
 
 import AuditoriaActividadUsuario from "./pages/Mod. Reportes/AuditoriaActividadUsuario";
 import Login from "./pages/Authenticación/Login";
@@ -361,12 +362,29 @@ const RutasInventario = [
     ALL_ROLES, // Todos pueden ver el Kardex
     ListaMovimientos
   ),
+
   RutaProtegida(
     "lista-inventario",
-    "/inventario/stock", // La ruta que verá el usuario
+    "/inventario/BusquedaPersonalizadaStock/stock", // La ruta que verá el usuario
     ALL_ROLES, // Todos pueden ver el stock
     ListaInventario
+
+
   ),
+  
+
+  RutaProtegida(
+    "Busqueda-Personalizada-Stock",
+    "/inventario/BusquedaPersonalizadaStock", // La ruta que verá el usuario
+    ALL_ROLES, // Todos pueden ver el stock
+    BusquedaPersonalizadaStock
+
+
+  )
+  
+  
+  
+  ,
   RutaProtegida(
     "gestion-transferencias",
     "//inventario/transferencia/gestion",
