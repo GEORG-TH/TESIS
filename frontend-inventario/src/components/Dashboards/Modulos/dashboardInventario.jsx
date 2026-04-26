@@ -9,7 +9,7 @@ const DashboardInventario = () => {
             id: "lista-inventario",
             titulo: "Lista de Inventario",
             descripcion: "Verifica el ultimo inventario de productos...",
-            ruta: "/inventario/stock", // <-- ¡Asegúrate de que coincida!
+            ruta: "/inventario/BusquedaPersonalizadaStock", // <-- ¡Asegúrate de que coincida!
         },
     ];
     const OpcionMovimientosInventario = [

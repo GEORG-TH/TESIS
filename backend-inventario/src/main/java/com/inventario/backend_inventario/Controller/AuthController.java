@@ -23,6 +23,8 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class AuthController {
 
+    //GYGFYDGFYFD
+
     private final UsuarioRepository usuarioRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
