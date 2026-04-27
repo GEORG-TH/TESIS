@@ -219,11 +219,6 @@ function ListaUsuarios() {
   };
   const columns = [
     { 
-      field: "id_u", 
-      headerName: "ID", 
-      width: 70 
-    },
-    { 
       field: "dni", 
       headerName: "DNI", 
       width: 100 

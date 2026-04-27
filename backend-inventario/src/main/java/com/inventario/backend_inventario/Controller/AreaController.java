@@ -1,11 +1,13 @@
 package com.inventario.backend_inventario.Controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.inventario.backend_inventario.Dto.AreaDto;
 import com.inventario.backend_inventario.Model.Area;
 import com.inventario.backend_inventario.Service.AreaService;
 
@@ -19,13 +21,17 @@ public class AreaController {
     private AreaService areaService;
 
     @GetMapping
-    public ResponseEntity<List<Area>> listarAreas() {
-        return ResponseEntity.ok(areaService.listarAreas());
+    public ResponseEntity<List<AreaDto>> listarAreas() {
+        List<AreaDto> areas = areaService.listarAreas().stream()
+                .map(this::convertirAreaADto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(areas);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Area> obtenerArea(@PathVariable Integer id) {
+    public ResponseEntity<AreaDto> obtenerArea(@PathVariable Integer id) {
         return areaService.obtenerPorId(id)
+                .map(this::convertirAreaADto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -44,5 +50,12 @@ public class AreaController {
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         areaService.eliminarArea(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private AreaDto convertirAreaADto(Area area) {
+        AreaDto dto = new AreaDto();
+        dto.setId_area(area.getId_area());
+        dto.setNombreArea(area.getNombreArea());
+        return dto;
     }
 }

@@ -102,11 +102,6 @@ function ListaRoles() {
   };
   const columns = [
     { 
-      field: "id_rol", 
-      headerName: "ID", 
-      width: 70 
-    },
-    { 
       field: "nombreRol", 
       headerName: "Nombre del Rol", 
       flex: 1, 

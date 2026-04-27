@@ -19,6 +19,12 @@ const DashboardProductos = () => {
             ruta: "/lista-categorias",
         },
         {
+            id: "gestion-subcategorias",
+            titulo: "Gestión de Subcategorías",
+            descripcion: "Administra subcategorías por cada categoría.",
+            ruta: "/lista-subcategorias",
+        },
+        {
             id: "gestion-productos",
             titulo: "Gestión de Productos",
             descripcion: "Administra productos en el sistema.",

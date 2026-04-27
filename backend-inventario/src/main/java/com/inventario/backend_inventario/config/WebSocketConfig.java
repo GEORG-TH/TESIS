@@ -39,7 +39,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOriginPatterns(
                     "http://localhost:3000",      // Tu entorno local (Vite)
                     "https://*.vercel.app",       // Comodín para cualquier deploy de Vercel
-                    "https://swci-frontend.vercel.app" // Tu dominio específico de Vercel (por si acaso)
+                    "https://swci.vercel.app"
                 )
                 .withSockJS();
     }

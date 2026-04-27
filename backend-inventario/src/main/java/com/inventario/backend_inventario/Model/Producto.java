@@ -53,9 +53,9 @@ public class Producto implements Serializable {
     private Boolean estado = true;
 
     @ManyToOne
-    @JoinColumn(name = "id_cat", nullable = false)
+    @JoinColumn(name = "id_subcategoria", referencedColumnName = "id", nullable = false)
     @JsonIgnoreProperties("productos")
-    private Categoria categoria;
+    private Subcategoria subcategoria;
 
     @ManyToOne
     @JoinColumn(name = "id_proveedor", nullable = false)

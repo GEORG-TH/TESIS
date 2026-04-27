@@ -5,8 +5,8 @@ package com.inventario.backend_inventario.Service.Impl;
 import com.inventario.backend_inventario.Dto.InventarioActualDto;
 import com.inventario.backend_inventario.Dto.MovimientoDto;
 import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
-import com.inventario.backend_inventario.Model.*; // Importa todos tus modelos
-import com.inventario.backend_inventario.Repository.*; // Importa todos tus repos
+import com.inventario.backend_inventario.Model.*; 
+import com.inventario.backend_inventario.Repository.*;
 import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.InventarioService;
 import jakarta.persistence.EntityNotFoundException;

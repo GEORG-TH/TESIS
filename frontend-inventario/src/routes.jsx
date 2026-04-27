@@ -42,6 +42,8 @@ import HistorialAccesos from "./pages/Mod. Usuario/HistorialAccesos";
 import UsuariosConectados from "./pages/Mod. Usuario/UsuariosConectados";
 import ListaCategorias from "./pages/Mod. Producto/ListaCategorias";
 import IngresarCategoria from "./pages/Mod. Producto/IngresarCategoria";
+import ListaSubcategorias from "./pages/Mod. Producto/ListaSubcategorias";
+import IngresarSubcategoria from "./pages/Mod. Producto/IngresarSubcategoria";
 import DashboardProveedores from "./components/Dashboards/Modulos/dashboardProveedores";
 import ListaProveedores from "./pages/Mod. Proveedor/ListaProveedores";
 import IngresarProveedor from "./pages/Mod. Proveedor/IngresarProveedor";
@@ -243,6 +245,18 @@ const RutasProductos = [
     "/categorias/nuevo",
     ADMIN_JEFE,
     IngresarCategoria
+  ),
+  RutaProtegida(
+    "listaSubcategorias",
+    "/lista-subcategorias",
+    ADMIN_JEFE,
+    ListaSubcategorias
+  ),
+  RutaProtegida(
+    "ingresarSubcategoria",
+    "/subcategorias/nuevo",
+    ADMIN_JEFE,
+    IngresarSubcategoria
   ),
   RutaProtegida(
     "generadorEtiquetas",

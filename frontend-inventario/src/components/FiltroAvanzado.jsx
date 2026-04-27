@@ -141,12 +141,26 @@ const FiltroAvanzado = ({
                   
                   {/* Input y Flecha (Alineados al borde usando flex: 1) */}
                   <Box sx={{ display: 'flex', gap: 2, width: '100%', flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <TextField 
-                      size="small" 
-                      sx={{ flex: 1 }} // Esto obliga al input a empujar el botón a la derecha
-                      value={toggleInput} 
-                      onChange={(e) => setToggleInput(e.target.value)} 
-                    />
+                    {filtroToggle.options && filtroToggle.options[toggleSelection] ? (
+                      <Autocomplete
+                        disablePortal
+                        freeSolo
+                        options={filtroToggle.options[toggleSelection]}
+                        value={toggleInput}
+                        onChange={(e, newValue) => setToggleInput(newValue || '')}
+                        onInputChange={(e, newInputValue) => setToggleInput(newInputValue || '')}
+                        renderInput={(params) => <TextField {...params} size="small" placeholder={`Escribir ${toggleSelection}`} />}
+                        sx={{ flex: 1 }}
+                      />
+                    ) : (
+                      <TextField 
+                        size="small" 
+                        sx={{ flex: 1 }} 
+                        placeholder={`Escribir ${toggleSelection}`}
+                        value={toggleInput} 
+                        onChange={(e) => setToggleInput(e.target.value)} 
+                      />
+                    )}
                     <Button variant="contained" color="primary" sx={{ minWidth: { xs: '100%', sm: '45px' }, width: { xs: '100%', sm: '45px' } }}>
                       <ArrowRightAltIcon sx={{ transform: { xs: 'rotate(90deg)', sm: 'none' } }} />
                     </Button>
@@ -157,8 +171,11 @@ const FiltroAvanzado = ({
             )}
 
             {/* 3. Rangos Dinámicos */}
-            {filtrosRango.map((rango, index) => {
+            {filtrosRango.map((rangoItem, index) => {
               const isLast = index === filtrosRango.length - 1;
+              const rango = typeof rangoItem === 'string' ? rangoItem : rangoItem.label;
+              const hasOptions = typeof rangoItem === 'object' && rangoItem.options;
+
               return (
                 <Box key={rango} sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, borderBottom: isLast ? 0 : 1, borderColor: 'divider' }}>
                   <Box sx={{ ...labelColumnStyle, borderBottom: isLast ? 0 : labelColumnStyle.borderBottom }}>
@@ -166,19 +183,51 @@ const FiltroAvanzado = ({
                     <Typography variant="caption" color="text.secondary">Rango de ID</Typography>
                   </Box>
                   <Box sx={contentColumnStyle}>
-                    <TextField 
-                      size="small" placeholder="Desde" sx={{ flex: 1 }} 
-                      value={rangosState[rango]?.desde || ''}
-                      onChange={(e) => handleRangoChange(rango, 'desde', e.target.value)}
-                    />
-                    <Box sx={{ bgcolor: 'action.selected', borderRadius: '50%', minWidth: 28, height: 28, display: { xs: 'none', sm: 'flex' }, alignItems: 'center', justifyContent: 'center' }}>
-                      <Typography variant="body2" fontWeight="bold" color="text.secondary">a</Typography>
-                    </Box>
-                    <TextField 
-                      size="small" placeholder="Hasta" sx={{ flex: 1 }}
-                      value={rangosState[rango]?.hasta || ''}
-                      onChange={(e) => handleRangoChange(rango, 'hasta', e.target.value)}
-                    />
+                    {hasOptions ? (
+                      <>
+                        <Autocomplete
+                          disablePortal
+                          options={rangoItem.options}
+                          value={rangosState[rango]?.desdeObj || null}
+                          onChange={(e, newValue) => {
+                            handleRangoChange(rango, 'desdeObj', newValue);
+                            handleRangoChange(rango, 'desde', newValue ? newValue.id : '');
+                          }}
+                          renderInput={(params) => <TextField {...params} size="small" placeholder="Desde" />}
+                          sx={{ flex: 1 }}
+                        />
+                        <Box sx={{ bgcolor: 'action.selected', borderRadius: '50%', minWidth: 28, height: 28, display: { xs: 'none', sm: 'flex' }, alignItems: 'center', justifyContent: 'center' }}>
+                          <Typography variant="body2" fontWeight="bold" color="text.secondary">a</Typography>
+                        </Box>
+                        <Autocomplete
+                          disablePortal
+                          options={rangoItem.options}
+                          value={rangosState[rango]?.hastaObj || null}
+                          onChange={(e, newValue) => {
+                            handleRangoChange(rango, 'hastaObj', newValue);
+                            handleRangoChange(rango, 'hasta', newValue ? newValue.id : '');
+                          }}
+                          renderInput={(params) => <TextField {...params} size="small" placeholder="Hasta" />}
+                          sx={{ flex: 1 }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <TextField 
+                          size="small" placeholder="Desde" sx={{ flex: 1 }} 
+                          value={rangosState[rango]?.desde || ''}
+                          onChange={(e) => handleRangoChange(rango, 'desde', e.target.value)}
+                        />
+                        <Box sx={{ bgcolor: 'action.selected', borderRadius: '50%', minWidth: 28, height: 28, display: { xs: 'none', sm: 'flex' }, alignItems: 'center', justifyContent: 'center' }}>
+                          <Typography variant="body2" fontWeight="bold" color="text.secondary">a</Typography>
+                        </Box>
+                        <TextField 
+                          size="small" placeholder="Hasta" sx={{ flex: 1 }}
+                          value={rangosState[rango]?.hasta || ''}
+                          onChange={(e) => handleRangoChange(rango, 'hasta', e.target.value)}
+                        />
+                      </>
+                    )}
                     <Button variant="contained" color="primary" sx={{ minWidth: { xs: '100%', sm: '45px' }, width: { xs: '100%', sm: '45px' } }}>
                       <ArrowRightAltIcon sx={{ transform: { xs: 'rotate(90deg)', sm: 'none' } }} />
                     </Button>

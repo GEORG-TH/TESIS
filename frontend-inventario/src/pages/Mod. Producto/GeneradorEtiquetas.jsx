@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import Barcode from 'react-barcode';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -13,10 +14,12 @@ import {
 import PrintIcon from '@mui/icons-material/Print';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 
 const GeneradorEtiquetas = () => {
     const theme = useTheme();
+    const navigate = useNavigate();
     const [productos, setProductos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filtro, setFiltro] = useState('');
@@ -49,6 +52,18 @@ const GeneradorEtiquetas = () => {
         });
     }, [productos, filtro]);
 
+    const getNombreCategoria = (producto) => {
+        return (
+            producto?.categoria?.nombreCat ||
+            producto?.subcategoria?.categoria?.nombreCat ||
+            'Gral'
+        );
+    };
+
+    const getNombreSubcategoria = (producto) => {
+        return producto?.subcategoria?.nombreSubcat || 'Sin subcat';
+    };
+
     const handleSelectAll = (event) => {
         if (event.target.checked) {
             setSeleccionados(productosFiltrados.map(p => p.id_producto));
@@ -74,11 +89,28 @@ const GeneradorEtiquetas = () => {
         documentTitle: 'Etiquetas_Gondola',
     });
 
-    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
+    if (loading) {
+        return (
+            <LayoutDashboard>
+                <Box sx={{ p: 3 }}>
+                    <Paper sx={{ p: 4, minHeight: 220, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <CircularProgress />
+                    </Paper>
+                </Box>
+            </LayoutDashboard>
+        );
+    }
 
     return (
         <LayoutDashboard>
             <Box sx={{ p: 3 }}>
+                <Button 
+                    startIcon={<ArrowBackIcon />} 
+                    onClick={() => navigate(-1)} 
+                    sx={{ mb: 2 }}
+                >
+                    Volver
+                </Button>
                 <Typography variant="h4" gutterBottom>Impresión de Etiquetas</Typography>
 
                 <Paper sx={{ p: 2, mb: 3 }}>
@@ -317,7 +349,8 @@ const GeneradorEtiquetas = () => {
                                                     {!isQR && (
                                                         <span><strong>UND:</strong> {p.uni_medida || 'UN'}</span>
                                                     )}
-                                                    <span><strong>CAT:</strong> {p.categoria?.nombreCat || 'Gral'}</span>
+                                                    <span><strong>CAT:</strong> {getNombreCategoria(p)}</span>
+                                                    <span><strong>SUB:</strong> {getNombreSubcategoria(p)}</span>
                                                 </div>
 
                                                 <div className="tag-price-box">

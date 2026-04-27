@@ -12,6 +12,7 @@ import {
 } from "../../api/productoApi";
 import { getAreas } from "../../api/areaApi";
 import { getCategorias } from "../../api/categoriaApi";
+import { getSubcategorias } from "../../api/subcategoriaApi";
 import { getProveedores } from "../../api/proveedorApi";
 import {
   Stack,
@@ -57,6 +58,11 @@ const ListaProductos = () => {
     queryFn: getCategorias,
     initialData: [],
   });
+  const { data: subcategoriasData, isLoading: isLoadingSubcategorias } = useQuery({
+    queryKey: ["subcategorias"],
+    queryFn: getSubcategorias,
+    initialData: [],
+  });
   const { data: proveedoresData, isLoading: isLoadingProveedores } = useQuery({
     queryKey: ["proveedores"],
     queryFn: getProveedores,
@@ -64,10 +70,15 @@ const ListaProductos = () => {
   });
 
   const isLoading =
-    isLoadingProductos || isLoadingAreas || isLoadingCategorias || isLoadingProveedores;
+    isLoadingProductos ||
+    isLoadingAreas ||
+    isLoadingCategorias ||
+    isLoadingSubcategorias ||
+    isLoadingProveedores;
   const productos = productosData || [];
   const areas = areasData || [];
   const categorias = categoriasData || [];
+  const subcategorias = subcategoriasData || [];
   const proveedores = proveedoresData || [];
 
   const resolveProductoId = (producto) => producto.id_producto;
@@ -101,12 +112,32 @@ const ListaProductos = () => {
   };
   
   const obtenerNombreCategoria = (producto) => {
+    const categoriaNombreDirecto =
+      producto.categoria?.nombreCat || producto.subcategoria?.categoria?.nombreCat;
+    if (categoriaNombreDirecto) {
+      return categoriaNombreDirecto;
+    }
+
     const categoriaId =
-        producto.categoria?.id_cat || producto.categoria?.id_categoria || producto.id_cat;
+      producto.categoria?.id_cat ||
+      producto.subcategoria?.categoria?.id_cat ||
+      producto.categoria?.id_categoria ||
+      producto.id_cat;
     const categoria = categorias.find(
-        (cat) => cat.id_cat === categoriaId
+      (cat) => String(cat.id_cat) === String(categoriaId)
     );
     return categoria?.nombreCat || "Sin categoría";
+  };
+
+  const obtenerNombreSubcategoria = (producto) => {
+    const subcatNombreDirecto = producto.subcategoria?.nombreSubcat;
+    if (subcatNombreDirecto) {
+      return subcatNombreDirecto;
+    }
+
+    const subcatId = producto.subcategoria?.id || producto.id_subcat;
+    const subcat = subcategorias.find((item) => String(item.id) === String(subcatId));
+    return subcat?.nombreSubcat || "Sin subcategoría";
   };
   
   const obtenerNombreProveedor = (producto) => {
@@ -127,6 +158,7 @@ const ListaProductos = () => {
         id: resolveProductoId(u), 
         nombreProducto: u.nombre_producto || u.nombreProducto || u.nombre || "-",
         categoriaNombre: obtenerNombreCategoria(u),
+        subcategoriaNombre: obtenerNombreSubcategoria(u),
         proveedorNombre: obtenerNombreProveedor(u),
         precioVentaFormatted: formatearPrecio(u.precio_venta ?? u.precioVenta),
         precioCompraFormatted: formatearPrecio(u.precio_compra ?? u.precioCompra),
@@ -136,7 +168,7 @@ const ListaProductos = () => {
         estaActivo: estaActivo,
       };
     });
-  }, [productos, categorias, proveedores]);
+  }, [productos, categorias, subcategorias, proveedores]);
 
   const deleteProductoMutation = useMutation({
     mutationFn: deleteProducto,
@@ -249,14 +281,14 @@ const ListaProductos = () => {
       id_producto: productoSeleccionado.id_producto,
       sku: formData.sku,
       codEan: formData.codEan,
-      nombre: formData.nombre_producto,
+      nombre: formData.nombre,
       marca: formData.marca,
       uni_medida: formData.uni_medida,
       precio_venta: Number(formData.precio_venta),
       precio_compra: Number(formData.precio_compra),
       stockMinimo: Number(formData.stockMinimo),
       stockIdeal: Number(formData.stockIdeal),
-      categoria: { id_cat: parseInt(formData.id_cat,10) },
+      subcategoria: { id: parseInt(formData.id_subcat, 10) },
       proveedor: { id_proveedor: parseInt(formData.id_proveedor,10) }
     };
 
@@ -273,12 +305,12 @@ const ListaProductos = () => {
 
 
   const columns = [
-	...(isDesktop ? [{ field: "id_producto", headerName: "ID", width: 30 },] : []),
     { field: "sku", headerName: "SKU", width: 90 },
     { field: "codEan", headerName: "EAN", width: 150 },
     { field: "nombreProducto", headerName: "Nombre", flex: 1, minWidth: 110 },
 	...(isDesktop ? [{ field: "marca", headerName: "Marca", width: 100 },] : []),
     { field: "categoriaNombre", headerName: "Categoría", width: 150 },
+  { field: "subcategoriaNombre", headerName: "Subcategoría", width: 150 },
     ...(isDesktop ? [{ field: "uni_medida", headerName: "Unidad", width: 70 },] : []),
     ...(isDesktop ? [{ 
         field: "precioVentaFormatted", 
@@ -413,6 +445,7 @@ const ListaProductos = () => {
         producto={productoSeleccionado}
         areas={areas}
         categorias={categorias}
+        subcategorias={subcategorias}
         proveedores={proveedores}
         onConfirm={onSaveEdit}
         isSaving={updateProductoMutation.isPending}

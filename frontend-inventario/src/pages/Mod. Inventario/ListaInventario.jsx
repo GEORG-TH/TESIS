@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Chip, Typography } from "@mui/material";
@@ -8,6 +8,8 @@ import TablaLista from "../../components/TablaLista";
 
 function ListaInventario() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const filtros = location.state?.filtros;
 
   const { data: response, isLoading, refetch } = useQuery({
     queryKey: ["inventarioActual"],
@@ -18,7 +20,8 @@ function ListaInventario() {
 
   const inventarioProcesado = useMemo(() => {
     if (!response) return [];
-    return response.map(inv => {
+    
+    let procesado = response.map(inv => {
       const fechaStr = inv.ultimaActualizacion;
       if (!fechaStr) return { ...inv, ultimaActualizacionFormateada: '-' };
 
@@ -29,7 +32,35 @@ function ListaInventario() {
         ultimaActualizacionFormateada: format(new Date(fechaUTC), "dd/MM/yyyy HH:mm:ss")
       };
     });
-  }, [response]);
+
+    if (filtros) {
+      // 1. Filtro por Sede (Autocomplete)
+      if (filtros.autocomplete?.id) {
+        procesado = procesado.filter(inv => {
+          const nombreSedeFiltro = filtros.autocomplete.label.split('-')[1]?.trim()?.toLowerCase() || filtros.autocomplete.label.toLowerCase();
+          return inv.idSede === filtros.autocomplete.id || inv.nombreSede?.toLowerCase().includes(nombreSedeFiltro);
+        });
+      }
+
+      if (filtros.toggle?.valor) {
+        const valorFiltro = typeof filtros.toggle.valor === 'string' ? filtros.toggle.valor.toLowerCase() : String(filtros.toggle.valor).toLowerCase();
+        const tipo = filtros.toggle.tipo; 
+        
+        procesado = procesado.filter(inv => {
+          if (tipo === "SKU") {
+            return inv.skuProducto?.toLowerCase().includes(valorFiltro);
+          } else if (tipo === "NOMBRE") {
+            return inv.nombreProducto?.toLowerCase().includes(valorFiltro);
+          } else if (tipo === "EAN") {
+            return inv.eanProducto?.toLowerCase().includes(valorFiltro) || inv.skuProducto?.toLowerCase().includes(valorFiltro);
+          }
+          return true;
+        });
+      }
+    }
+
+    return procesado;
+  }, [response, filtros]);
 
   const columns = [
     { field: "idInventario", headerName: "ID", width: 80 },
@@ -64,7 +95,7 @@ function ListaInventario() {
       columns={columns}
       data={inventarioProcesado}
       isLoading={isLoading}
-      onBack={() => navigate("/dashboard-inventario")}
+      onBack={() => navigate("/inventario/BusquedaPersonalizadaStock")}
       onRefresh={refetch}
       getRowId={(row) => row.idInventario}
       showAddButton={false}

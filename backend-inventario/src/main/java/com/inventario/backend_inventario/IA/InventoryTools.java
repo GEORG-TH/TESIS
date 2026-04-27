@@ -296,7 +296,9 @@ public class InventoryTools {
                     p.getNombre(),
                     p.getMarca(),
                     p.getSku(), p.getCodEan(),
-                    (p.getCategoria() != null ? p.getCategoria().getNombreCat() : "N/A"),
+                        (p.getSubcategoria() != null && p.getSubcategoria().getCategoria() != null
+                            ? p.getSubcategoria().getCategoria().getNombreCat()
+                            : "N/A"),
                     p.getPrecio_venta(),
                     p.getPrecio_compra(),
                     p.getUni_medida(),

@@ -2,35 +2,33 @@ package com.inventario.backend_inventario.Model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.io.Serializable;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import lombok.*;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @ToString
 @Entity
-@Table(name = "CATEGORIA")
-public class Categoria implements Serializable {
+@Table(name = "SUBCATEGORIA")
+public class Subcategoria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id_cat;
+    private Integer id;
 
     @Column(nullable = false, unique = true)
-    @NotBlank(message = "El nombre de la categoría es obligatorio")
-    private String nombreCat;
+    @NotBlank(message = "El nombre de la subcategoría es obligatorio")
+    private String nombreSubcat;
 
     @ManyToOne
-    @JoinColumn(name = "id_area", nullable = false)
+    @JoinColumn(name = "id_cat", nullable = false)
     @JsonBackReference
-    private Area area;
+    private Categoria categoria;
 
-    @OneToMany(mappedBy = "categoria", fetch = FetchType.LAZY)
-    private List<Subcategoria> subcategorias;
+    @OneToMany(mappedBy = "subcategoria", fetch = FetchType.LAZY)
+    private List<Producto> productos;
     
 }

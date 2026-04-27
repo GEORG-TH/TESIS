@@ -9,10 +9,17 @@ export const categoriaSchema = z.object({
     .min(4, "El nombre debe tener al menos 4 caracteres"),
   id_area: z.string().nonempty("Debes seleccionar un área"),
 });
+export const subcategoriaSchema = z.object({
+  nombreSubcat: z
+    .string()
+    .trim()
+    .min(4, "El nombre debe tener al menos 4 caracteres"),
+  id_cat: z.string().nonempty("Debes seleccionar una categoría"),
+});
 export const IngresarProductoSchema = z.object({
   sku: z.string().trim().min(4, "El SKU es obligatorio (mín. 4 caracteres)"),
-  ean: z.string().trim().min(13, "El EAN es obligatorio (mín. 13 caracteres)"),
-  nombre_producto: z
+  codEan: z.string().trim().min(13, "El EAN es obligatorio (mín. 13 caracteres)"),
+  nombre: z
     .string()
     .trim()
     .min(4, "El nombre es obligatorio (mín. 4 caracteres)"),
@@ -35,6 +42,7 @@ export const IngresarProductoSchema = z.object({
     .positive("El stock ideal debe ser mayor a 0"),
   id_area: z.string().nonempty("Debes seleccionar un área"),
   id_cat: z.string().nonempty("Debes seleccionar una categoría"),
+  id_subcat: z.string().nonempty("Debes seleccionar una subcategoría"),
   id_proveedor: z.string().nonempty("Debes seleccionar un proveedor"),
 });
 export const UpdateProductoSchema = z.object({
@@ -43,7 +51,7 @@ export const UpdateProductoSchema = z.object({
     .string()
     .trim()
     .min(13, "El EAN es obligatorio (mín. 13 caracteres)"),
-  nombre_producto: z
+  nombre: z
     .string()
     .trim()
     .min(4, "El nombre es obligatorio (mín. 4 caracteres)"),
@@ -65,5 +73,6 @@ export const UpdateProductoSchema = z.object({
     .positive("El stock ideal debe ser mayor a 0"),
   id_area: z.coerce.string().min(1, "Debes seleccionar un área"),
   id_cat: z.coerce.string().min(1, "Debes seleccionar una categoría"),
+  id_subcat: z.coerce.string().min(1, "Debes seleccionar una subcategoría"),
   id_proveedor: z.coerce.string().min(1, "Debes seleccionar un proveedor"),
 });
