@@ -13,6 +13,6 @@ public class ProductoDto {
     private Integer stockMinimo;
     private Integer stockIdeal;
     private Boolean estado;
-    private CategoriaDto categoria;
+    private SubcategoriaDto subcategoria;
     private ProveedorDto proveedor;
 }

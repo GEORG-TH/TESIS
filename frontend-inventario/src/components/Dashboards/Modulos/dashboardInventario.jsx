@@ -6,10 +6,10 @@ const DashboardInventario = () => {
     const navigate = useNavigate();
     const OpcionInventario = [
         {
-            id: "lista-inventario",
-            titulo: "Lista de Inventario",
-            descripcion: "Verifica el ultimo inventario de productos...",
-            ruta: "/inventario/BusquedaPersonalizadaStock", // <-- ¡Asegúrate de que coincida!
+            id: "consulta-stock",
+            titulo: "Consulta de Stock",
+            descripcion: "Verifica stock de productos.",
+            ruta: "/inventario/BusquedaPersonalizadaStock", 
         },
     ];
     const OpcionMovimientosInventario = [

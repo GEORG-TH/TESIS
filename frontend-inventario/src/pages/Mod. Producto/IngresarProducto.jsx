@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProducto } from "../../api/productoApi";
 import { getCategorias } from "../../api/categoriaApi";
+import { getSubcategorias } from "../../api/subcategoriaApi";
 import { getProveedores } from "../../api/proveedorApi";
 import { getAreas } from "../../api/areaApi";
 import { IngresarProductoSchema } from "../../Utils/productoSchema";
@@ -26,11 +27,19 @@ const IngresarProducto = () => {
 		queryKey: ["categorias"],
 		queryFn: getCategorias,
 	});
+	const { data: subcategorias = [], isLoading: isLoadingSubcategorias } = useQuery({
+		queryKey: ["subcategorias"],
+		queryFn: getSubcategorias,
+	});
 	const { data: proveedores = [], isLoading: isLoadingProveedores } = useQuery({
 		queryKey: ["proveedores"],
 		queryFn: getProveedores,
 	});
-	const cargandoTablas = isLoadingAreas || isLoadingCategorias || isLoadingProveedores;
+	const cargandoTablas =
+		isLoadingAreas ||
+		isLoadingCategorias ||
+		isLoadingSubcategorias ||
+		isLoadingProveedores;
 	const createProductoMutation = useMutation({
 		mutationFn: createProducto,
 		onSuccess: () => {
@@ -66,12 +75,13 @@ const IngresarProducto = () => {
 	} = useForm({
 		resolver: zodResolver(IngresarProductoSchema),
 		defaultValues: {
-			sku: "", ean: "", nombre_producto: "", marca: "", uni_medida: "",
+			sku: "", codEan: "", nombre: "", marca: "", uni_medida: "",
 			precio_venta: "", precio_compra: "", stockMinimo: 10,
-			stockIdeal: 20, id_area: "", id_cat: "", id_proveedor: ""
+			stockIdeal: 20, id_area: "", id_cat: "", id_subcat: "", id_proveedor: ""
 		}
 	});
 	const selectedAreaId = watch("id_area");
+	const selectedCategoriaId = watch("id_cat");
 
 	const categoriasDisponibles = useMemo(() => {
 		if (!selectedAreaId) return [];
@@ -83,16 +93,32 @@ const IngresarProducto = () => {
 			return !Number.isNaN(categoriaAreaId) && categoriaAreaId === areaIdNum;
 		});
 	}, [selectedAreaId, categorias]);
+
+	const subcategoriasDisponibles = useMemo(() => {
+		if (!selectedCategoriaId) return [];
+
+		const categoriaIdNum = parseInt(selectedCategoriaId, 10);
+		return subcategorias.filter((subcat) => {
+			const subcatCategoriaRaw = subcat.categoria?.id_cat ?? subcat.id_cat;
+			const subcatCategoriaId = Number(subcatCategoriaRaw);
+			return !Number.isNaN(subcatCategoriaId) && subcatCategoriaId === categoriaIdNum;
+		});
+	}, [selectedCategoriaId, subcategorias]);
+
 	useEffect(() => {
 		setValue("id_cat", "");
+		setValue("id_subcat", "");
 	}, [selectedAreaId, setValue]);
+
+	useEffect(() => {
+		setValue("id_subcat", "");
+	}, [selectedCategoriaId, setValue]);
+
 	const onSubmit = (data) => {
 		const payload = {
 			sku: data.sku,
-			ean: data.ean,
-			codEan: data.ean,
-			nombre_producto: data.nombre_producto,
-			nombre: data.nombre_producto,
+			codEan: data.codEan,
+			nombre: data.nombre,
 			marca: data.marca,
 			uni_medida: data.uni_medida,
 			precio_venta: data.precio_venta,
@@ -100,7 +126,7 @@ const IngresarProducto = () => {
 			stockMinimo: data.stockMinimo,
 			stockIdeal: data.stockIdeal,
 			estado: true,
-			categoria: { id_cat: parseInt(data.id_cat, 10) },
+			subcategoria: { id: parseInt(data.id_subcat, 10) },
 			proveedor: { id_proveedor: parseInt(data.id_proveedor, 10) },
 		};
 
@@ -132,18 +158,18 @@ const IngresarProducto = () => {
 						<label>EAN:</label>
 						<input
 							type="text"
-							{...register("ean")}
+							{...register("codEan")}
 						/>
-						{errors.ean && <span className="error-message">{errors.ean.message}</span>}
+						{errors.codEan && <span className="error-message">{errors.codEan.message}</span>}
 					</div>
 
 					<div className="form-group">
 						<label>Nombre:</label>
 						<input
 							type="text"
-							{...register("nombre_producto")}
+							{...register("nombre")}
 						/>
-						{errors.nombre_producto && <span className="error-message">{errors.nombre_producto.message}</span>}
+						{errors.nombre && <span className="error-message">{errors.nombre.message}</span>}
 					</div>
 
 					<div className="form-group">
@@ -244,6 +270,28 @@ const IngresarProducto = () => {
 							))}
 						</select>
 						{errors.id_cat && <span className="error-message">{errors.id_cat.message}</span>}
+					</div>
+
+					<div className="form-group">
+						<label>Subcategoría:</label>
+						<select
+							{...register("id_subcat")}
+							disabled={cargandoTablas || !selectedCategoriaId || subcategoriasDisponibles.length === 0}
+						>
+							<option value="">
+								{!selectedCategoriaId
+									? "Seleccione una categoría primero"
+									: subcategoriasDisponibles.length === 0
+										? "Sin subcategorías disponibles"
+										: "Seleccione una subcategoría"}
+							</option>
+							{subcategoriasDisponibles.map((subcategoria) => (
+								<option key={subcategoria.id} value={subcategoria.id}>
+									{subcategoria.nombreSubcat}
+								</option>
+							))}
+						</select>
+						{errors.id_subcat && <span className="error-message">{errors.id_subcat.message}</span>}
 					</div>
 
 					<div className="form-group">

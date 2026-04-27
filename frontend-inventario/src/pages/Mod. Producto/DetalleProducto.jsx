@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import { getProducto, updateProducto } from '../../api/productoApi';
 import { getAreas } from "../../api/areaApi";
 import { getCategorias } from "../../api/categoriaApi";
+import { getSubcategorias } from "../../api/subcategoriaApi";
 import { getProveedores } from "../../api/proveedorApi";
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 import FormularioDialogoProducto from '../../components/FormularioDialogoProducto';
@@ -32,9 +35,12 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 
+const MySwal = withReactContent(Swal);
+
 const DetalleProducto = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [openEditDialog, setOpenEditDialog] = useState(false);
 
     const { data: producto, isLoading, isError } = useQuery({
@@ -44,6 +50,7 @@ const DetalleProducto = () => {
     });
     const { data: areas = [] } = useQuery({ queryKey: ["areas"], queryFn: getAreas });
     const { data: categorias = [] } = useQuery({ queryKey: ["categorias"], queryFn: getCategorias });
+    const { data: subcategorias = [] } = useQuery({ queryKey: ["subcategorias"], queryFn: getSubcategorias });
     const { data: proveedores = [] } = useQuery({ queryKey: ["proveedores"], queryFn: getProveedores });
 
     const updateProductoMutation = useMutation({
@@ -64,14 +71,14 @@ const DetalleProducto = () => {
             id_producto: producto.id_producto,
             sku: formData.sku,
             codEan: formData.codEan,
-            nombre: formData.nombre_producto,
+            nombre: formData.nombre,
             marca: formData.marca,
             uni_medida: formData.uni_medida,
             precio_venta: Number(formData.precio_venta),
             precio_compra: Number(formData.precio_compra),
             stockMinimo: Number(formData.stockMinimo),
             stockIdeal: Number(formData.stockIdeal),
-            categoria: { id_cat: parseInt(formData.id_cat, 10) },
+            subcategoria: { id: parseInt(formData.id_subcat, 10) },
             proveedor: { id_proveedor: parseInt(formData.id_proveedor, 10) }
         };
 
@@ -85,6 +92,33 @@ const DetalleProducto = () => {
             style: 'currency',
             currency: 'PEN',
         }).format(value);
+
+    const categoriaNombre = (() => {
+        if (producto?.categoria?.nombreCat) {
+            return producto.categoria.nombreCat;
+        }
+        if (producto?.subcategoria?.categoria?.nombreCat) {
+            return producto.subcategoria.categoria.nombreCat;
+        }
+
+        const subcategoriaId = producto?.subcategoria?.id;
+        if (subcategoriaId) {
+            const subcat = subcategorias.find((item) => String(item.id) === String(subcategoriaId));
+            if (subcat?.categoria?.nombreCat) {
+                return subcat.categoria.nombreCat;
+            }
+
+            const categoriaId = subcat?.categoria?.id_cat;
+            if (categoriaId) {
+                const categoria = categorias.find((item) => String(item.id_cat) === String(categoriaId));
+                if (categoria?.nombreCat) {
+                    return categoria.nombreCat;
+                }
+            }
+        }
+
+        return 'Sin categoría';
+    })();
 
 
     const InfoCard = ({ title, icon, children }) => (
@@ -211,7 +245,7 @@ const DetalleProducto = () => {
                                     {producto.nombre}
                                 </Typography>
                                 <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                                    {producto.marca} · {producto.categoria?.nombreCat || 'Sin categoría'}
+                                    {producto.marca} · {categoriaNombre}
                                 </Typography>
                             </Box>
                         </Stack>
@@ -232,7 +266,8 @@ const DetalleProducto = () => {
                             <Grid container spacing={3}>
                                 <InfoRow label="SKU" value={producto.sku} />
                                 <InfoRow label="EAN" value={producto.codEan || '-'} />
-                                <InfoRow label="Categoría" value={producto.categoria?.nombreCat || '-'} />
+                                <InfoRow label="Categoría" value={categoriaNombre} />
+                                <InfoRow label="Subcategoría" value={producto.subcategoria?.nombreSubcat || '-'} />
                                 <InfoRow label="Unidad" value={producto.uni_medida} />
                             </Grid>
                         </InfoCard>
@@ -308,6 +343,7 @@ const DetalleProducto = () => {
                     producto={producto}
                     areas={areas}
                     categorias={categorias}
+                    subcategorias={subcategorias}
                     proveedores={proveedores}
                     onConfirm={onSaveEdit}
                     isSaving={updateProductoMutation.isPending}

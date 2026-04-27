@@ -12,12 +12,13 @@ import org.springframework.stereotype.Service;
 import com.inventario.backend_inventario.Dto.CategoriaDto;
 import com.inventario.backend_inventario.Dto.ProductoDto;
 import com.inventario.backend_inventario.Dto.ProveedorDto;
+import com.inventario.backend_inventario.Dto.SubcategoriaDto;
 import com.inventario.backend_inventario.Dto.SugerenciaCompraDto;
 import com.inventario.backend_inventario.Model.Producto;
 import com.inventario.backend_inventario.Model.Usuario;
-import com.inventario.backend_inventario.Repository.CategoriaRepository;
 import com.inventario.backend_inventario.Repository.ProductoRepository;
 import com.inventario.backend_inventario.Repository.ProveedorRepository;
+import com.inventario.backend_inventario.Repository.SubcategoriaRepository;
 import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.ProductoService;
@@ -30,7 +31,7 @@ public class ProductoServiceImpl implements ProductoService {
     private ProductoRepository productoRepository;
 
     @Autowired
-    private CategoriaRepository categoriaRepository;
+    private SubcategoriaRepository subcategoriaRepository;
 
     @Autowired
     private ProveedorRepository proveedorRepository;
@@ -59,8 +60,8 @@ public class ProductoServiceImpl implements ProductoService {
         if (productoRepository.existsByCodEan(producto.getCodEan())) {
             throw new IllegalArgumentException("El código EAN ya está registrado");
         }
-        categoriaRepository.findById(producto.getCategoria().getId_cat())
-                .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada"));
+        subcategoriaRepository.findById(producto.getSubcategoria().getId())
+            .orElseThrow(() -> new EntityNotFoundException("Subcategoría no encontrada"));
         proveedorRepository.findById(producto.getProveedor().getId_proveedor())
                 .orElseThrow(() -> new EntityNotFoundException("Proveedor no encontrado"));
 
@@ -99,7 +100,7 @@ public class ProductoServiceImpl implements ProductoService {
         existente.setPrecio_compra(producto.getPrecio_compra());
         existente.setStockMinimo(producto.getStockMinimo());
         existente.setStockIdeal(producto.getStockIdeal());
-        existente.setCategoria(producto.getCategoria());
+        existente.setSubcategoria(producto.getSubcategoria());
         existente.setProveedor(producto.getProveedor());
 
         Producto productoGuardado = productoRepository.save(existente);
@@ -202,11 +203,19 @@ public class ProductoServiceImpl implements ProductoService {
         dto.setStockIdeal(producto.getStockIdeal());
         dto.setEstado(producto.getEstado());
 
-        if (producto.getCategoria() != null) {
-            CategoriaDto catDto = new CategoriaDto();
-            catDto.setId_cat(producto.getCategoria().getId_cat());
-            catDto.setNombreCat(producto.getCategoria().getNombreCat());
-            dto.setCategoria(catDto);
+        if (producto.getSubcategoria() != null) {
+            SubcategoriaDto subcategoriaDto = new SubcategoriaDto();
+            subcategoriaDto.setId(producto.getSubcategoria().getId());
+            subcategoriaDto.setNombreSubcat(producto.getSubcategoria().getNombreSubcat());
+
+            if (producto.getSubcategoria().getCategoria() != null) {
+                CategoriaDto catDto = new CategoriaDto();
+                catDto.setId_cat(producto.getSubcategoria().getCategoria().getId_cat());
+                catDto.setNombreCat(producto.getSubcategoria().getCategoria().getNombreCat());
+                subcategoriaDto.setCategoria(catDto);
+            }
+
+            dto.setSubcategoria(subcategoriaDto);
         }
 
         if (producto.getProveedor() != null) {

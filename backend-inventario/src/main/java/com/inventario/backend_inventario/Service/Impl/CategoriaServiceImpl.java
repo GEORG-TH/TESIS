@@ -96,8 +96,8 @@ public class CategoriaServiceImpl implements CategoriaService {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada con el ID: " + id));
 
-        if (categoria.getProductos() != null && !categoria.getProductos().isEmpty()) {
-            throw new ResourceConflictException("No se puede eliminar la categoría porque tiene productos asociados.");
+        if (categoria.getSubcategorias() != null && !categoria.getSubcategorias().isEmpty()) {
+            throw new ResourceConflictException("No se puede eliminar la categoría porque tiene subcategorías asociadas.");
         }
         try {
             String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();

@@ -31,6 +31,6 @@ public class Categoria implements Serializable {
     private Area area;
 
     @OneToMany(mappedBy = "categoria", fetch = FetchType.LAZY)
-    private List<Producto> productos;
+    private List<Subcategoria> subcategorias;
     
 }

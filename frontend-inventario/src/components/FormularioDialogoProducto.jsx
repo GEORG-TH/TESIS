@@ -24,43 +24,52 @@ const FormularioDialogoProducto = ({
     producto,
     areas,
     categorias,
+    subcategorias,
     proveedores,
     isSaving
 }) => {
     const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(UpdateProductoSchema),
         defaultValues: {
-            sku: '', codEan: '', nombre_producto: '', marca: '', uni_medida: '',
+            sku: '', codEan: '', nombre: '', marca: '', uni_medida: '',
             precio_venta: '', precio_compra: '',
-            // 1. INICIALIZAMOS LOS NUEVOS CAMPOS
             stockMinimo: '', stockIdeal: '',
-            id_area: '', id_cat: '', id_proveedor: ''
+            id_area: '', id_cat: '', id_subcat: '', id_proveedor: ''
         }
     });
 
     useEffect(() => {
         if (producto && open) {
-            const areaInicial = producto.categoria?.id_area || producto.categoria?.area?.id_area || '';
+            const areaInicial =
+                producto.categoria?.area?.id_area ||
+                producto.subcategoria?.categoria?.area?.id_area ||
+                '';
 
             reset({
                 sku: producto.sku,
                 codEan: producto.codEan,
-                nombre_producto: producto.nombre || producto.nombre_producto,
+                nombre: producto.nombre || producto.nombre_producto,
                 marca: producto.marca,
                 uni_medida: producto.uni_medida,
                 precio_venta: producto.precio_venta,
                 precio_compra: producto.precio_compra,
-                // 2. CARGAMOS LOS VALORES ACTUALES DEL PRODUCTO
                 stockMinimo: producto.stockMinimo || '',
                 stockIdeal: producto.stockIdeal || '',
                 id_area: String(areaInicial),
-                id_cat: String(producto.categoria?.id_cat || producto.categoria?.id_categoria || ''),
+                id_cat: String(
+                    producto.categoria?.id_cat ||
+                    producto.subcategoria?.categoria?.id_cat ||
+                    producto.categoria?.id_categoria ||
+                    ''
+                ),
+                id_subcat: String(producto.subcategoria?.id || ''),
                 id_proveedor: String(producto.proveedor?.id_proveedor || '')
             });
         }
     }, [producto, open, reset]);
 
     const selectedAreaId = watch("id_area");
+    const selectedCategoriaId = watch("id_cat");
 
     const categoriasDisponibles = useMemo(() => {
         if (!selectedAreaId) return [];
@@ -71,15 +80,35 @@ const FormularioDialogoProducto = ({
         });
     }, [selectedAreaId, categorias]);
 
+    const subcategoriasDisponibles = useMemo(() => {
+        if (!selectedCategoriaId) return [];
+        const categoriaIdNum = parseInt(selectedCategoriaId, 10);
+        return subcategorias.filter((subcat) => {
+            const subcatCategoriaId = Number(subcat.categoria?.id_cat || subcat.id_cat);
+            return subcatCategoriaId === categoriaIdNum;
+        });
+    }, [selectedCategoriaId, subcategorias]);
+
     useEffect(() => {
         if (open && selectedAreaId) {
             const currentCat = watch('id_cat');
             const isCatValid = categoriasDisponibles.some(cat => (cat.id_cat || cat.id_categoria) == currentCat);
             if (!isCatValid && currentCat !== '') {
                 setValue("id_cat", "");
+                setValue("id_subcat", "");
             }
         }
     }, [selectedAreaId, setValue, categoriasDisponibles, open, watch]);
+
+    useEffect(() => {
+        if (open && selectedCategoriaId) {
+            const currentSubcat = watch('id_subcat');
+            const isSubcatValid = subcategoriasDisponibles.some((subcat) => String(subcat.id) === String(currentSubcat));
+            if (!isSubcatValid && currentSubcat !== '') {
+                setValue("id_subcat", "");
+            }
+        }
+    }, [selectedCategoriaId, setValue, subcategoriasDisponibles, open, watch]);
 
     const onSubmit = (data) => {
         onConfirm(data);
@@ -109,14 +138,13 @@ const FormularioDialogoProducto = ({
                                 )}
                             />
                         </Grid>
-                        <Grid item xs={12}><Controller name="nombre_producto" control={control} render={({ field }) => (<TextField {...field} label="Nombre" fullWidth error={!!errors.nombre_producto} helperText={errors.nombre_producto?.message} />)} /></Grid>
+                        <Grid item xs={12}><Controller name="nombre" control={control} render={({ field }) => (<TextField {...field} label="Nombre" fullWidth error={!!errors.nombre} helperText={errors.nombre?.message} />)} /></Grid>
                         <Grid item xs={6}><Controller name="marca" control={control} render={({ field }) => (<TextField {...field} label="Marca" fullWidth error={!!errors.marca} helperText={errors.marca?.message} />)} /></Grid>
                         <Grid item xs={6}><Controller name="uni_medida" control={control} render={({ field }) => (<TextField {...field} label="Unidad de Medida" fullWidth error={!!errors.uni_medida} helperText={errors.uni_medida?.message} disabled={true} />)} /></Grid>
 
                         <Grid item xs={6}><Controller name="precio_venta" control={control} render={({ field }) => (<TextField {...field} type="number" label="Precio Venta" fullWidth error={!!errors.precio_venta} helperText={errors.precio_venta?.message} />)} /></Grid>
                         <Grid item xs={6}><Controller name="precio_compra" control={control} render={({ field }) => (<TextField {...field} type="number" label="Precio Compra" fullWidth error={!!errors.precio_compra} helperText={errors.precio_compra?.message} />)} /></Grid>
 
-                        {/* --- 3. NUEVOS INPUTS AGREGADOS AQUÍ --- */}
                         <Grid item xs={6}>
                             <Controller
                                 name="stockMinimo"
@@ -149,7 +177,6 @@ const FormularioDialogoProducto = ({
                                 )}
                             />
                         </Grid>
-                        {/* -------------------------------------- */}
 
                         <Grid item xs={12}>
                             <Controller
@@ -194,6 +221,30 @@ const FormularioDialogoProducto = ({
                                             ))}
                                         </Select>
                                         <FormHelperText>{errors.id_cat?.message}</FormHelperText>
+                                    </FormControl>
+                                )}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Controller
+                                name="id_subcat"
+                                control={control}
+                                render={({ field }) => (
+                                    <FormControl fullWidth error={!!errors.id_subcat} sx={{ minWidth: { xs: '100%', sm: 120 } }}>
+                                        <InputLabel id="subcategoria-label">Subcategoría</InputLabel>
+                                        <Select
+                                            {...field}
+                                            labelId="subcategoria-label"
+                                            label="Subcategoría"
+                                            disabled={!selectedCategoriaId}
+                                        >
+                                            {subcategoriasDisponibles.map((subcat) => (
+                                                <MenuItem key={subcat.id} value={subcat.id}>
+                                                    {subcat.nombreSubcat}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        <FormHelperText>{errors.id_subcat?.message}</FormHelperText>
                                     </FormControl>
                                 )}
                             />
