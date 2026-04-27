@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   TextField,
   Button,
@@ -14,15 +14,23 @@ import {
   Typography,
   Box,
   CircularProgress,
+  IconButton,
+  Grid,
+  Paper,
+  Divider,
+  Container,
+  Autocomplete
 } from "@mui/material";
 
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import SaveIcon from "@mui/icons-material/Save";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { getProductos } from "../../api/productoApi";
 import { getSedes } from "../../api/sedeApi";
 import { registrarRecepcion } from "../../api/InventarioApi";
-
-
-import { recepcionSchema } from "../../Utils/inventarioSchema";
+import { recepcionMasivaSchema } from "../../Utils/inventarioSchema";
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
 import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
@@ -31,24 +39,14 @@ const MySwal = withReactContent(Swal);
 
 function RecepcionMercaderia() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
-
-  const {
-    data: productos,
-    isLoading: isLoadingProductos,
-    isError: isErrorProductos,
-  } = useQuery({
+  const { data: productos, isLoading: isLoadingProductos } = useQuery({
     queryKey: ["productos"],
     queryFn: getProductos,
     initialData: [],
   });
 
-  const {
-    data: sedes,
-    isLoading: isLoadingSedes,
-    isError: isErrorSedes,
-  } = useQuery({
+  const { data: sedes, isLoading: isLoadingSedes } = useQuery({
     queryKey: ["sedes"],
     queryFn: getSedes,
     initialData: [],
@@ -59,64 +57,58 @@ function RecepcionMercaderia() {
     handleSubmit,
     control,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
-    resolver: zodResolver(recepcionSchema),
+    resolver: zodResolver(recepcionMasivaSchema),
     defaultValues: {
-      // 🛑 CORRECCIÓN: Inicializar con 0 en lugar de ""
-      id_producto: 0,
-      sedeIdOrigen: 0,
-      cantidad: 0, // CAMBIO: También para Cantidad, ya que espera número
+      sedeIdOrigen: "",
       descripcion: "",
+      detalles: [{ productoId: "", cantidad: "" }],
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "detalles",
+  });
 
   const createRecepcionMutation = useMutation({
     mutationFn: registrarRecepcion,
-    onSuccess: (data) => {
+    onSuccess: () => {
       MySwal.fire({
         title: "¡Éxito!",
-        text: "Recepción registrada correctamente.",
+        text: "La recepción masiva se registró correctamente.",
         icon: "success",
-        timer: 2000,
+        confirmButtonColor: "#3085d6",
       });
       reset();
-
     },
     onError: (error) => {
       MySwal.fire({
         title: "Error",
-        text: error.response?.data?.message || "No se pudo registrar la recepción",
+        text: error.response?.data?.message || "Error en el servidor",
         icon: "error",
       });
     },
   });
 
-
   const onSubmit = (data) => {
-    // 1. Limpiamos y aseguramos el payload final
     const payload = {
-      // Aseguramos que los IDs sean números (aunque Zod lo hizo, es más seguro)
-      productoId: parseInt(data.id_producto),
       sedeIdOrigen: parseInt(data.sedeIdOrigen),
-
-      // La cantidad ya es número gracias al pipe de Zod
-      cantidad: data.cantidad,
-
-      // Aseguramos que la descripción sea null si está vacía, no una cadena vacía ""
       descripcion: data.descripcion || null,
+      detalles: data.detalles.map(item => ({
+        productoId: parseInt(item.productoId),
+        cantidad: parseInt(item.cantidad)
+      }))
     };
-
-    // 2. Ejecutamos la mutación con el payload limpio
     createRecepcionMutation.mutate(payload);
   };
 
   if (isLoadingProductos || isLoadingSedes) {
     return (
       <LayoutDashboard>
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "80vh" }}>
+          <CircularProgress size={60} />
         </Box>
       </LayoutDashboard>
     );
@@ -124,116 +116,178 @@ function RecepcionMercaderia() {
 
   return (
     <LayoutDashboard>
+      <Container maxWidth="xl" sx={{ mt: 3, mb: 3 }}> {/* Cambiado a maxWidth="xl" para dar más espacio */}
 
-      <div className="form-panel-container">
-        <button
-          className="form-panel-back"
-          onClick={() => navigate("/dashboard-inventario")}
-        >
-          <Typography>Volver</Typography>
-        </button>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="form-panel">
-          <Typography variant="h4" component="h2" gutterBottom>
-            Registrar Recepción de Mercadería
-          </Typography>
-          <Typography variant="body2" color="textSecondary" gutterBottom>
-            Registra una nueva entrada de productos al inventario.
-          </Typography>
-
-
-          <FormControl
-            fullWidth
-            margin="normal"
-            error={!!errors.sedeId}
-          >
-            <InputLabel id="sede-label">Sede *</InputLabel>
-            <Controller
-              name="sedeIdOrigen"
-              control={control}
-              render={({ field }) => (
-                <Select labelId="sede-label" label="Sede *" {...field}>
-                  <MenuItem value="">
-                    <em>Seleccione una sede</em>
-                  </MenuItem>
-                  {sedes.map((sede) => (
-                    <MenuItem
-                      key={sede.idSede}
-                      value={String(sede.idSede)} // 🛑 CORRECCIÓN: Forzar el ID a ser un string
-                    >
-                      {sede.nombreSede}
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            />
-            <FormHelperText>{errors.sedeId?.message}</FormHelperText>
-          </FormControl>
-
-
-          <FormControl
-            fullWidth
-            margin="normal"
-            error={!!errors.id_producto}
-          >
-            <InputLabel id="producto-label">Producto *</InputLabel>
-            <Controller
-              name="id_producto"
-              control={control}
-              render={({ field }) => (
-                <Select labelId="producto-label" label="Producto *" {...field}>
-                  <MenuItem value="">
-                    <em>Seleccione un producto</em>
-                  </MenuItem>
-                  {productos.map((prod) => (
-                    <MenuItem
-                      key={prod.id_producto}
-                      value={String(prod.id_producto)} // 🛑 CORRECCIÓN: Forzar el ID a ser un string
-                    >
-                      {prod.sku} - {prod.nombre}
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            />
-            <FormHelperText>{errors.id_producto?.message}</FormHelperText>
-          </FormControl>
-
-
-          <TextField
-            label="Cantidad *"
-            type="number"
-            fullWidth
-            margin="normal"
-            {...register("cantidad")}
-            error={!!errors.cantidad}
-            helperText={errors.cantidad?.message}
-          />
-
-
-          <TextField
-            label="Descripción (Opcional)"
-            type="text"
-            fullWidth
-            margin="normal"
-            {...register("descripcion")}
-            error={!!errors.descripcion}
-            helperText={errors.descripcion?.message}
-          />
-
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
           <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={createRecepcionMutation.isPending}
-            sx={{ mt: 3 }}
+            variant="outlined"
+            color="inherit"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/dashboard-inventario")}
           >
-            {createRecepcionMutation.isPending
-              ? "Registrando..."
-              : "Registrar Recepción"}
+            Volver
           </Button>
-        </form>
-      </div>
+          <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+            Registrar Entrada de Inventario
+          </Typography>
+        </Box>
+
+        <Paper elevation={3} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, bgcolor: 'background.paper' }}>
+          <form onSubmit={handleSubmit(onSubmit)}>
+
+            <Typography variant="h6" color="primary" sx={{ mb: 2, fontWeight: 600 }}>
+              Configuración de la Recepción
+            </Typography>
+
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              {/* CAMPO SEDE: Ocupa todo el ancho */}
+              <Grid item xs={12} md={12}>
+                <FormControl fullWidth error={!!errors.sedeIdOrigen} required>
+                  <InputLabel id="sede-label">Sede donde ingresa la mercadería</InputLabel>
+                  <Controller
+                    name="sedeIdOrigen"
+                    control={control}
+                    render={({ field }) => (
+                      <Select labelId="sede-label" label="Sede donde ingresa la mercadería" {...field}>
+                        <MenuItem value=""><em>Seleccione una sede</em></MenuItem>
+                        {sedes.map((sede) => (
+                          <MenuItem key={sede.idSede} value={String(sede.idSede)}>
+                            {sede.nombreSede}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                  <FormHelperText>{errors.sedeIdOrigen?.message}</FormHelperText>
+                </FormControl>
+              </Grid>
+
+              {/* CAMPO NOTAS: Ocupa todo el ancho */}
+              <Grid item xs={12} md={12}>
+                <TextField
+                  label="Referencia / Notas"
+                  fullWidth
+                  {...register("descripcion")}
+                  placeholder="Ej: Guía de remisión 001..."
+                />
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ mb: 4 }} />
+
+            <Typography variant="h6" color="primary" sx={{ mb: 2, fontWeight: 600 }}>
+              Detalle de Productos a Ingresar
+            </Typography>
+
+            {fields.map((item, index) => (
+              <Paper
+                key={item.id}
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  mb: 2,
+                  bgcolor: 'background.default',
+                  borderWidth: 1.5,
+                  '&:hover': { bgcolor: 'action.hover', borderColor: 'primary.main' }
+                }}
+              >
+                <Grid container spacing={2} alignItems="center">
+
+                  {/* CAMPO PRODUCTO: Ocupa gran parte de la fila */}
+                  <Grid item xs={12} sm={9} md={10} lg={10}>
+                    <Controller
+                      name={`detalles.${index}.productoId`}
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <Autocomplete
+                          options={productos}
+                          getOptionLabel={(option) => `[${option.sku}] ${option.nombre}`}
+                          isOptionEqualToValue={(option, value) => option.id_producto === value}
+                          onChange={(_, newValue) => onChange(newValue ? newValue.id_producto : "")}
+                          value={productos.find(p => p.id_producto === value) || null}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Buscar por SKU o Nombre de Producto"
+                              required
+                              fullWidth
+                              error={!!errors.detalles?.[index]?.productoId}
+                              helperText={errors.detalles?.[index]?.productoId?.message}
+                            />
+                          )}
+                        />
+                      )}
+                    />
+                  </Grid>
+
+                  {/* CANTIDAD: Campo más compacto */}
+                  <Grid item xs={8} sm={9} md={2} lg={1}>
+                    <TextField
+                      label="Cant."
+                      type="number"
+                      fullWidth
+                      inputProps={{ min: 1 }}
+                      {...register(`detalles.${index}.cantidad`)}
+                      error={!!errors.detalles?.[index]?.cantidad}
+                      helperText={errors.detalles?.[index]?.cantidad?.message}
+                    />
+                  </Grid>
+
+                  {/* ELIMINAR */}
+                  <Grid item xs={4} sm={3} md={1} lg={1} sx={{ textAlign: 'center' }}>
+                    <IconButton
+                      color="error"
+                      onClick={() => remove(index)}
+                      disabled={fields.length === 1}
+                      sx={{ border: '1px solid', borderColor: 'error.light' }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Grid>
+                </Grid>
+              </Paper>
+            ))}
+
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Button
+                variant="text"
+                color="primary"
+                size="large"
+                startIcon={<AddIcon />}
+                onClick={() => append({ productoId: "", cantidad: "" })}
+                sx={{ fontWeight: 'bold' }}
+              >
+                Agregar otra fila
+              </Button>
+
+              {errors.detalles?.root && (
+                <Typography color="error" variant="caption">
+                  {errors.detalles.root.message}
+                </Typography>
+              )}
+            </Box>
+
+            <Box sx={{ mt: 5, display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                startIcon={createRecepcionMutation.isPending ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                disabled={createRecepcionMutation.isPending}
+                sx={{
+                  px: 6,
+                  py: 2,
+                  borderRadius: 2,
+                  fontSize: '1.1rem',
+                  boxShadow: 4
+                }}
+              >
+                {createRecepcionMutation.isPending ? "Procesando..." : "Finalizar Recepción"}
+              </Button>
+            </Box>
+          </form>
+        </Paper>
+      </Container>
     </LayoutDashboard>
   );
 }
