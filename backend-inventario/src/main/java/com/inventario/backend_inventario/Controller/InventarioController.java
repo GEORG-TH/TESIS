@@ -2,8 +2,8 @@
 package com.inventario.backend_inventario.Controller;
 
 import com.inventario.backend_inventario.Dto.InventarioActualDto;
-import com.inventario.backend_inventario.Dto.MovimientoDto;
 import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
+import com.inventario.backend_inventario.Dto.RecepcionMasivaDto;
 import com.inventario.backend_inventario.Service.InventarioService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -27,10 +27,10 @@ public class InventarioController {
      * POST /api/inventario/recepcion
      */
     @PostMapping("/recepcion")
-    public ResponseEntity<?> registrarRecepcion(@Valid @RequestBody MovimientoDto movimientoDto) {
+    public ResponseEntity<?> registrarRecepcion(@Valid @RequestBody RecepcionMasivaDto recepcionDto) {
         try {
-            inventarioService.registrarRecepcion(movimientoDto);
-            return ResponseEntity.ok(Map.of("message", "Recepción registrada con éxito"));
+            inventarioService.registrarRecepcion(recepcionDto);
+            return ResponseEntity.ok(Map.of("message", "Recepción de múltiples productos registrada con éxito"));
         } catch (EntityNotFoundException e) {
             // Error si el Producto o Sede no existen
             return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));

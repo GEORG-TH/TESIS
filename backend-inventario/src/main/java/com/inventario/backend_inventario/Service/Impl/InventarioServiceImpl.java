@@ -3,8 +3,8 @@
 package com.inventario.backend_inventario.Service.Impl;
 
 import com.inventario.backend_inventario.Dto.InventarioActualDto;
-import com.inventario.backend_inventario.Dto.MovimientoDto;
 import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
+import com.inventario.backend_inventario.Dto.RecepcionMasivaDto;
 import com.inventario.backend_inventario.Model.*; 
 import com.inventario.backend_inventario.Repository.*;
 import com.inventario.backend_inventario.Service.HistorialActividadService;
@@ -32,58 +32,58 @@ public class InventarioServiceImpl implements InventarioService {
 
     @Override
     @Transactional
-    public void registrarRecepcion(MovimientoDto movimientoDto) {
+    public void registrarRecepcion(RecepcionMasivaDto recepcionDto) {
 
         Usuario usuario = getUsuarioLogueado();
 
-        Producto producto = productoRepository.findById(movimientoDto.getProductoId())
-                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + movimientoDto.getProductoId()));
+        // 1. Validar la Sede una sola vez para toda la transacción
+        Sede sede = sedeRepository.findById(recepcionDto.getSedeIdOrigen())
+                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + recepcionDto.getSedeIdOrigen()));
 
-        Sede sede = sedeRepository.findById(movimientoDto.getSedeIdOrigen())
-                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + movimientoDto.getSedeIdOrigen()));
-
-        // Busca el TIPO de movimiento "Recepción"
+        // 2. Buscar el TIPO de movimiento "Recepción"
         TipoMovimiento tipoRecepcion = tipoMovimientoRepository.findByTipo("Recepción")
                 .orElseThrow(() -> new EntityNotFoundException("Tipo de movimiento 'Recepción' no encontrado. Asegúrate de crearlo en la tabla TIPO_MOVIMIENTO."));
 
-        Inventario inventario = inventarioRepository.findByProductoAndSede(producto, sede)
-                .orElse(new Inventario(producto, sede, 0)); // Si no existe, creamos uno nuevo con stock 0
+        // 3. Iterar sobre la lista de productos
+        for (RecepcionMasivaDto.DetalleItem item : recepcionDto.getDetalles()) {
+                
+                Producto producto = productoRepository.findById(item.getProductoId())
+                        .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + item.getProductoId()));
 
-        // La Lógica de Stock
-        int stockAnterior = inventario.getStockActual();
-        int cantidadRecibida = movimientoDto.getCantidad();
-        int stockNuevo = stockAnterior + cantidadRecibida;
+                Inventario inventario = inventarioRepository.findByProductoAndSede(producto, sede)
+                        .orElse(new Inventario(producto, sede, 0)); // Si no existe, creamos uno nuevo con stock 0
 
-        inventario.setStockActual(stockNuevo);
-        inventarioRepository.save(inventario);
+                // Lógica de Stock
+                int stockAnterior = inventario.getStockActual();
+                int cantidadRecibida = item.getCantidad();
+                int stockNuevo = stockAnterior + cantidadRecibida;
 
-        // Crear el registro en el KARDEX (adaptado a TU BD)
-        // Usamos el campo 'observaciones' de tu BD para guardar un resumen
-        String observaciones = String.format("Stock: %d -> %d. %s",
-                stockAnterior, stockNuevo,
-                (movimientoDto.getDescripcion() != null ? movimientoDto.getDescripcion() : ""));
+                inventario.setStockActual(stockNuevo);
+                inventarioRepository.save(inventario);
 
-        MovimientoInventario movimiento = new MovimientoInventario(
-                producto,
-                sede,
-                usuario,
-                tipoRecepcion, // <-- Objeto TipoMovimiento
-                cantidadRecibida, // Cantidad (+ para entradas)
-                observaciones // Usamos el campo 'observaciones'
-        );
+                // Crear el registro en el KARDEX
+                String observaciones = String.format("Stock: %d -> %d. %s",
+                        stockAnterior, stockNuevo,
+                        (recepcionDto.getDescripcion() != null ? recepcionDto.getDescripcion() : ""));
 
-        movimientoInventarioRepository.save(movimiento);
+                MovimientoInventario movimiento = new MovimientoInventario(
+                        producto,
+                        sede,
+                        usuario,
+                        tipoRecepcion,
+                        cantidadRecibida, 
+                        observaciones 
+                );
 
-        // 5. Registrar en tu Historial de Actividad (como ya lo haces)
-        String descripcionAuditoria = String.format("Registró recepción de %d unidad(es) del producto '%s' (SKU: %s) en la sede '%s'. Stock: %d -> %d",
-                cantidadRecibida, producto.getNombre(), producto.getSku(), sede.getNombreSede(), stockAnterior, stockNuevo);
+                movimientoInventarioRepository.save(movimiento);
 
-        historialActividadService.registrarActividad(usuario, "RECEPCIÓN", descripcionAuditoria,"INVENTARIO", "MovimientoInventario", movimiento.getId(), observaciones);
+                // Registrar en el Historial de Actividad
+                String descripcionAuditoria = String.format("Registró recepción de %d unidad(es) del producto '%s' (SKU: %s) en la sede '%s'. Stock: %d -> %d",
+                        cantidadRecibida, producto.getNombre(), producto.getSku(), sede.getNombreSede(), stockAnterior, stockNuevo);
+
+                historialActividadService.registrarActividad(usuario, "RECEPCIÓN", descripcionAuditoria,"INVENTARIO", "MovimientoInventario", movimiento.getId(), observaciones);
+        }
     }
-
-    /**
-     * Método privado para obtener el usuario desde el contexto de seguridad
-     */
     private Usuario getUsuarioLogueado() {
         String email = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
         return usuarioRepository.findByEmail(email)
