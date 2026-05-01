@@ -19,7 +19,8 @@ import {
   Paper,
   Divider,
   Container,
-  Autocomplete
+  Autocomplete,
+  Stack
 } from "@mui/material";
 
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -116,7 +117,7 @@ function RecepcionMercaderia() {
 
   return (
     <LayoutDashboard>
-      <Container maxWidth="xl" sx={{ mt: 3, mb: 3 }}> {/* Cambiado a maxWidth="xl" para dar más espacio */}
+      <Container maxWidth={false} sx={{ mt: 3, mb: 3, px: { xs: 2, sm: 3, md: 4 } }}>
 
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
           <Button
@@ -139,39 +140,50 @@ function RecepcionMercaderia() {
               Configuración de la Recepción
             </Typography>
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              {/* CAMPO SEDE: Ocupa todo el ancho */}
-              <Grid item xs={12} md={12}>
-                <FormControl fullWidth error={!!errors.sedeIdOrigen} required>
-                  <InputLabel id="sede-label">Sede donde ingresa la mercadería</InputLabel>
-                  <Controller
-                    name="sedeIdOrigen"
-                    control={control}
-                    render={({ field }) => (
-                      <Select labelId="sede-label" label="Sede donde ingresa la mercadería" {...field}>
-                        <MenuItem value=""><em>Seleccione una sede</em></MenuItem>
-                        {sedes.map((sede) => (
-                          <MenuItem key={sede.idSede} value={String(sede.idSede)}>
-                            {sede.nombreSede}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    )}
-                  />
-                  <FormHelperText>{errors.sedeIdOrigen?.message}</FormHelperText>
-                </FormControl>
-              </Grid>
-
-              {/* CAMPO NOTAS: Ocupa todo el ancho */}
-              <Grid item xs={12} md={12}>
-                <TextField
-                  label="Referencia / Notas"
-                  fullWidth
-                  {...register("descripcion")}
-                  placeholder="Ej: Guía de remisión 001..."
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  md: 'minmax(360px, 1.4fr) minmax(280px, 1fr)',
+                },
+                gap: 3,
+                mb: 4,
+                alignItems: 'start',
+              }}
+            >
+              <FormControl fullWidth error={!!errors.sedeIdOrigen} required sx={{ minWidth: 0 }}>
+                <InputLabel id="sede-label">Sede donde ingresa la mercadería</InputLabel>
+                <Controller
+                  name="sedeIdOrigen"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      fullWidth
+                      labelId="sede-label"
+                      label="Sede donde ingresa la mercadería"
+                      {...field}
+                    >
+                      <MenuItem value=""><em>Seleccione una sede</em></MenuItem>
+                      {sedes.map((sede) => (
+                        <MenuItem key={sede.idSede} value={String(sede.idSede)}>
+                          {sede.nombreSede}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
                 />
-              </Grid>
-            </Grid>
+                <FormHelperText>{errors.sedeIdOrigen?.message}</FormHelperText>
+              </FormControl>
+
+              <TextField
+                label="Referencia / Notas"
+                fullWidth
+                {...register("descripcion")}
+                placeholder="Ej: Guía de remisión 001..."
+                sx={{ minWidth: 0 }}
+              />
+            </Box>
 
             <Divider sx={{ mb: 4 }} />
 
@@ -191,20 +203,24 @@ function RecepcionMercaderia() {
                   '&:hover': { bgcolor: 'action.hover', borderColor: 'primary.main' }
                 }}
               >
-                <Grid container spacing={2} alignItems="center">
-
-                  {/* CAMPO PRODUCTO: Ocupa gran parte de la fila */}
-                  <Grid item xs={12} sm={9} md={10} lg={10}>
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  spacing={2}
+                  sx={{ width: '100%', alignItems: { xs: 'stretch', md: 'flex-start' } }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Controller
                       name={`detalles.${index}.productoId`}
                       control={control}
                       render={({ field: { onChange, value } }) => (
                         <Autocomplete
+                          fullWidth
                           options={productos}
                           getOptionLabel={(option) => `[${option.sku}] ${option.nombre}`}
                           isOptionEqualToValue={(option, value) => option.id_producto === value}
                           onChange={(_, newValue) => onChange(newValue ? newValue.id_producto : "")}
                           value={productos.find(p => p.id_producto === value) || null}
+                          sx={{ width: '100%' }}
                           renderInput={(params) => (
                             <TextField
                               {...params}
@@ -218,10 +234,9 @@ function RecepcionMercaderia() {
                         />
                       )}
                     />
-                  </Grid>
+                  </Box>
 
-                  {/* CANTIDAD: Campo más compacto */}
-                  <Grid item xs={8} sm={9} md={2} lg={1}>
+                  <Box sx={{ width: { xs: '100%', md: 160 }, flexShrink: 0 }}>
                     <TextField
                       label="Cant."
                       type="number"
@@ -231,10 +246,9 @@ function RecepcionMercaderia() {
                       error={!!errors.detalles?.[index]?.cantidad}
                       helperText={errors.detalles?.[index]?.cantidad?.message}
                     />
-                  </Grid>
+                  </Box>
 
-                  {/* ELIMINAR */}
-                  <Grid item xs={4} sm={3} md={1} lg={1} sx={{ textAlign: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'flex-start', md: 'center' }, flexShrink: 0 }}>
                     <IconButton
                       color="error"
                       onClick={() => remove(index)}
@@ -243,8 +257,8 @@ function RecepcionMercaderia() {
                     >
                       <DeleteIcon />
                     </IconButton>
-                  </Grid>
-                </Grid>
+                  </Box>
+                </Stack>
               </Paper>
             ))}
 

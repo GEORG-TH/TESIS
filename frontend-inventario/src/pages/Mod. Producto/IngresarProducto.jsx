@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -7,7 +7,7 @@ import "../../components/styles/styleRegistrar.css";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createProducto } from "../../api/productoApi";
+import { createProducto, createProductoConImagen } from "../../api/productoApi";
 import { getCategorias } from "../../api/categoriaApi";
 import { getSubcategorias } from "../../api/subcategoriaApi";
 import { getProveedores } from "../../api/proveedorApi";
@@ -19,6 +19,8 @@ const MySwal = withReactContent(Swal);
 const IngresarProducto = () => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const [imagenFile, setImagenFile] = useState(null);
+	const imagenInputRef = useRef(null);
 	const { data: areas = [], isLoading: isLoadingAreas } = useQuery({
 		queryKey: ["areas"],
 		queryFn: getAreas,
@@ -41,11 +43,20 @@ const IngresarProducto = () => {
 		isLoadingSubcategorias ||
 		isLoadingProveedores;
 	const createProductoMutation = useMutation({
-		mutationFn: createProducto,
+		mutationFn: ({ payload, file }) => {
+			if (file) {
+				return createProductoConImagen(payload, file);
+			}
+			return createProducto(payload);
+		},
 		onSuccess: () => {
 			MySwal.fire("Éxito", "Producto registrado correctamente", "success");
 			queryClient.invalidateQueries(["productos"]);
 			reset();
+			setImagenFile(null);
+			if (imagenInputRef.current) {
+				imagenInputRef.current.value = "";
+			}
 		},
 		onError: (error) => {
 			console.error("Error al registrar producto:", error);
@@ -75,7 +86,7 @@ const IngresarProducto = () => {
 	} = useForm({
 		resolver: zodResolver(IngresarProductoSchema),
 		defaultValues: {
-			sku: "", codEan: "", nombre: "", marca: "", uni_medida: "",
+			sku: "", codEan: "", imagenUrl: "", nombre: "", marca: "", uni_medida: "",
 			precio_venta: "", precio_compra: "", stockMinimo: 10,
 			stockIdeal: 20, id_area: "", id_cat: "", id_subcat: "", id_proveedor: ""
 		}
@@ -118,6 +129,7 @@ const IngresarProducto = () => {
 		const payload = {
 			sku: data.sku,
 			codEan: data.codEan,
+			imagenUrl: data.imagenUrl?.trim() || null,
 			nombre: data.nombre,
 			marca: data.marca,
 			uni_medida: data.uni_medida,
@@ -130,7 +142,7 @@ const IngresarProducto = () => {
 			proveedor: { id_proveedor: parseInt(data.id_proveedor, 10) },
 		};
 
-		createProductoMutation.mutate(payload);
+		createProductoMutation.mutate({ payload, file: imagenFile });
 	};
 
 	return (
@@ -161,6 +173,26 @@ const IngresarProducto = () => {
 							{...register("codEan")}
 						/>
 						{errors.codEan && <span className="error-message">{errors.codEan.message}</span>}
+					</div>
+
+					<div className="form-group">
+						<label>URL de Imagen:</label>
+						<input
+							type="url"
+							placeholder="https://ejemplo.com/imagen.jpg"
+							{...register("imagenUrl")}
+						/>
+						{errors.imagenUrl && <span className="error-message">{errors.imagenUrl.message}</span>}
+					</div>
+
+					<div className="form-group">
+						<label>Subir Imagen (archivo):</label>
+						<input
+							ref={imagenInputRef}
+							type="file"
+							accept="image/*"
+							onChange={(e) => setImagenFile(e.target.files?.[0] || null)}
+						/>
 					</div>
 
 					<div className="form-group">

@@ -1,13 +1,18 @@
 package com.inventario.backend_inventario.Service.Impl;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.inventario.backend_inventario.Dto.CategoriaDto;
 import com.inventario.backend_inventario.Dto.ProductoDto;
@@ -42,6 +47,21 @@ public class ProductoServiceImpl implements ProductoService {
     @Autowired
     private HistorialActividadService historialActividadService;
 
+    @Autowired
+    private Cloudinary cloudinary;
+
+    @SuppressWarnings("unchecked")
+    private String subirImagen(MultipartFile archivo) throws IOException {
+        if (archivo == null || archivo.isEmpty()) {
+            return null;
+        }
+
+        Map<String, Object> uploadResult = (Map<String, Object>) cloudinary.uploader().upload(
+                archivo.getBytes(),
+                ObjectUtils.asMap("folder", "productos"));
+        return (String) uploadResult.get("secure_url");
+    }
+
     @Override
     public List<Producto> listarProductos() {
         return productoRepository.findAll();
@@ -54,6 +74,15 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public Producto registrarProducto(Producto producto) {
+        try {
+            return registrarProducto(producto, null);
+        } catch (IOException e) {
+            throw new IllegalStateException("Error al registrar el producto", e);
+        }
+    }
+
+    @Override
+    public Producto registrarProducto(Producto producto, MultipartFile archivo) throws IOException {
         if (productoRepository.existsBySku(producto.getSku())) {
             throw new IllegalArgumentException("El SKU ya está registrado");
         }
@@ -64,6 +93,11 @@ public class ProductoServiceImpl implements ProductoService {
             .orElseThrow(() -> new EntityNotFoundException("Subcategoría no encontrada"));
         proveedorRepository.findById(producto.getProveedor().getId_proveedor())
                 .orElseThrow(() -> new EntityNotFoundException("Proveedor no encontrado"));
+
+        String urlImagen = subirImagen(archivo);
+        if (urlImagen != null) {
+            producto.setImagenUrl(urlImagen);
+        }
 
         Producto productoGuardado = productoRepository.save(producto);
 
@@ -100,6 +134,7 @@ public class ProductoServiceImpl implements ProductoService {
         existente.setPrecio_compra(producto.getPrecio_compra());
         existente.setStockMinimo(producto.getStockMinimo());
         existente.setStockIdeal(producto.getStockIdeal());
+        existente.setImagenUrl(producto.getImagenUrl());
         existente.setSubcategoria(producto.getSubcategoria());
         existente.setProveedor(producto.getProveedor());
 
@@ -124,6 +159,21 @@ public class ProductoServiceImpl implements ProductoService {
         }
 
         return productoGuardado;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Producto actualizarImagen(Long id, MultipartFile archivo) throws IOException {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
+
+        if (archivo == null || archivo.isEmpty()) {
+            throw new IllegalArgumentException("El archivo está vacío");
+        }
+
+        String urlImagen = subirImagen(archivo);
+        producto.setImagenUrl(urlImagen);
+        return productoRepository.save(producto);
     }
 
     @Override
@@ -202,6 +252,7 @@ public class ProductoServiceImpl implements ProductoService {
         dto.setStockMinimo(producto.getStockMinimo());
         dto.setStockIdeal(producto.getStockIdeal());
         dto.setEstado(producto.getEstado());
+        dto.setImagenUrl(producto.getImagenUrl());
 
         if (producto.getSubcategoria() != null) {
             SubcategoriaDto subcategoriaDto = new SubcategoriaDto();

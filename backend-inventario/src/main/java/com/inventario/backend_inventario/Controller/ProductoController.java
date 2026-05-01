@@ -1,10 +1,14 @@
 package com.inventario.backend_inventario.Controller;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.inventario.backend_inventario.Dto.ProductoDto;
 import com.inventario.backend_inventario.Dto.SugerenciaCompraDto;
@@ -37,14 +41,44 @@ public class ProductoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/registrar")
+    @PostMapping(value = "/registrar", consumes = "application/json")
     public ResponseEntity<Producto> registrarProducto(@Valid @RequestBody Producto producto) {
         return ResponseEntity.ok(productoService.registrarProducto(producto));
+    }
+
+    @PostMapping(value = "/registrar", consumes = "multipart/form-data")
+    public ResponseEntity<?> registrarProductoConImagen(@RequestPart("producto") @Valid Producto producto,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        try {
+            Producto productoGuardado = productoService.registrarProducto(producto, file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(productoGuardado);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al subir la imagen: " + e.getMessage()));
+        }
     }
 
     @PutMapping("/actualizar/{id}")
     public ResponseEntity<Producto> actualizarProducto(@PathVariable Long id, @Valid @RequestBody Producto producto) {
         return ResponseEntity.ok(productoService.actualizarProducto(id, producto));
+    }
+
+    @PostMapping(value = "/{id}/imagen", consumes = "multipart/form-data")
+    public ResponseEntity<?> subirImagenProducto(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            Producto productoActualizado = productoService.actualizarImagen(id, file);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Imagen actualizada con éxito",
+                    "imagenUrl", productoActualizado.getImagenUrl()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al subir la imagen: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/eliminar/{id}")

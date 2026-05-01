@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import { getProducto, updateProducto } from '../../api/productoApi';
+import { getProducto, updateProducto, uploadProductoImagen } from '../../api/productoApi';
 import { getAreas } from "../../api/areaApi";
 import { getCategorias } from "../../api/categoriaApi";
 import { getSubcategorias } from "../../api/subcategoriaApi";
@@ -25,11 +25,16 @@ import {
     Card,
     CardContent,
     Container,
-    Avatar
+    Avatar,
+    Dialog,
+    DialogContent,
+    IconButton
 } from '@mui/material';
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import CloseIcon from '@mui/icons-material/Close';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
@@ -42,6 +47,8 @@ const DetalleProducto = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [openImagePreview, setOpenImagePreview] = useState(false);
+    const imagenInputRef = useRef(null);
 
     const { data: producto, isLoading, isError } = useQuery({
         queryKey: ['producto', id],
@@ -66,11 +73,25 @@ const DetalleProducto = () => {
             MySwal.fire("Error", mensaje, "error");
         }
     });
+
+    const uploadImagenMutation = useMutation({
+        mutationFn: (file) => uploadProductoImagen(id, file),
+        onSuccess: () => {
+            queryClient.invalidateQueries(['producto', id]);
+            queryClient.invalidateQueries(['productos']);
+            MySwal.fire('Actualizado', 'Imagen del producto actualizada correctamente', 'success');
+        },
+        onError: (err) => {
+            const mensaje = err.response?.data?.message || 'No se pudo actualizar la imagen del producto';
+            MySwal.fire('Error', mensaje, 'error');
+        }
+    });
     const onSaveEdit = (formData) => {
         const payload = {
             id_producto: producto.id_producto,
             sku: formData.sku,
             codEan: formData.codEan,
+            imagenUrl: formData.imagenUrl?.trim() || null,
             nombre: formData.nombre,
             marca: formData.marca,
             uni_medida: formData.uni_medida,
@@ -92,6 +113,8 @@ const DetalleProducto = () => {
             style: 'currency',
             currency: 'PEN',
         }).format(value);
+
+    const productoImagenUrl = producto?.imagenUrl || producto?.imagen_url || '';
 
     const categoriaNombre = (() => {
         if (producto?.categoria?.nombreCat) {
@@ -119,6 +142,27 @@ const DetalleProducto = () => {
 
         return 'Sin categoría';
     })();
+
+    const handleClickSubirImagen = () => {
+        if (imagenInputRef.current) {
+            imagenInputRef.current.click();
+        }
+    };
+
+    const handleSeleccionImagen = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            return;
+        }
+        uploadImagenMutation.mutate(file);
+        event.target.value = '';
+    };
+
+    const abrirVistaImagen = () => {
+        if (productoImagenUrl) {
+            setOpenImagePreview(true);
+        }
+    };
 
 
     const InfoCard = ({ title, icon, children }) => (
@@ -213,14 +257,32 @@ const DetalleProducto = () => {
                         Volver
                     </Button>
 
-                    <Button
-                        variant="contained"
-                        startIcon={<EditIcon />}
-                        onClick={() => setOpenEditDialog(true)}
-                        sx={{ borderRadius: 2, textTransform: 'none', px: 3, boxShadow: 2 }}
-                    >
-                        Editar Producto
-                    </Button>
+                    <Stack direction="row" spacing={1.5}>
+                        <input
+                            ref={imagenInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleSeleccionImagen}
+                            style={{ display: 'none' }}
+                        />
+                        <Button
+                            variant="outlined"
+                            startIcon={<AddPhotoAlternateIcon />}
+                            onClick={handleClickSubirImagen}
+                            disabled={uploadImagenMutation.isPending}
+                            sx={{ borderRadius: 2, textTransform: 'none', px: 3 }}
+                        >
+                            {uploadImagenMutation.isPending ? 'Subiendo...' : 'Subir Imagen'}
+                        </Button>
+                        <Button
+                            variant="contained"
+                            startIcon={<EditIcon />}
+                            onClick={() => setOpenEditDialog(true)}
+                            sx={{ borderRadius: 2, textTransform: 'none', px: 3, boxShadow: 2 }}
+                        >
+                            Editar Producto
+                        </Button>
+                    </Stack>
                 </Box>
                 <Paper sx={{ borderRadius: 3, mb: 4, overflow: 'hidden' }}>
                     <Box
@@ -236,7 +298,18 @@ const DetalleProducto = () => {
                         }}
                     >
                         <Stack direction="row" spacing={3} alignItems="center">
-                            <Avatar sx={{ width: 80, height: 80, bgcolor: 'white', color: 'primary.main' }}>
+                            <Avatar
+                                src={productoImagenUrl || undefined}
+                                alt={producto.nombre}
+                                onClick={abrirVistaImagen}
+                                sx={{
+                                    width: 80,
+                                    height: 80,
+                                    bgcolor: 'white',
+                                    color: 'primary.main',
+                                    cursor: productoImagenUrl ? 'zoom-in' : 'default',
+                                }}
+                            >
                                 <Inventory2Icon sx={{ fontSize: 40 }} />
                             </Avatar>
 
@@ -348,6 +421,36 @@ const DetalleProducto = () => {
                     onConfirm={onSaveEdit}
                     isSaving={updateProductoMutation.isPending}
                 />
+
+                <Dialog
+                    open={openImagePreview}
+                    onClose={() => setOpenImagePreview(false)}
+                    maxWidth="md"
+                    fullWidth
+                >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2, pt: 1 }}>
+                        <Typography variant="h6" fontWeight={700}>
+                            Vista previa de imagen
+                        </Typography>
+                        <IconButton onClick={() => setOpenImagePreview(false)}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    <DialogContent sx={{ pt: 0 }}>
+                        <Box
+                            component="img"
+                            src={productoImagenUrl}
+                            alt={producto.nombre}
+                            sx={{
+                                width: '100%',
+                                maxHeight: '75vh',
+                                objectFit: 'contain',
+                                borderRadius: 2,
+                                backgroundColor: '#f5f5f5',
+                            }}
+                        />
+                    </DialogContent>
+                </Dialog>
             </Container>
         </LayoutDashboard>
     );

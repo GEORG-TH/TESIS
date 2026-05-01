@@ -19,6 +19,14 @@ export const subcategoriaSchema = z.object({
 export const IngresarProductoSchema = z.object({
   sku: z.string().trim().min(4, "El SKU es obligatorio (mín. 4 caracteres)"),
   codEan: z.string().trim().min(13, "El EAN es obligatorio (mín. 13 caracteres)"),
+  imagenUrl: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (valor) => !valor || /^https?:\/\/.+/i.test(valor),
+      "La imagen debe ser una URL válida (http o https)"
+    ),
   nombre: z
     .string()
     .trim()
@@ -51,6 +59,14 @@ export const UpdateProductoSchema = z.object({
     .string()
     .trim()
     .min(13, "El EAN es obligatorio (mín. 13 caracteres)"),
+  imagenUrl: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (valor) => !valor || /^https?:\/\/.+/i.test(valor),
+      "La imagen debe ser una URL válida (http o https)"
+    ),
   nombre: z
     .string()
     .trim()
