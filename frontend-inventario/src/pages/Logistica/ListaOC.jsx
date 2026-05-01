@@ -41,6 +41,31 @@ import { getOrdenes, enviarOrdenCorreo } from "../../api/comprasApi";
 
 const MySwal = withReactContent(Swal);
 
+const fireSwalAboveDialog = (titleOrOptions, text, icon) => {
+    const options =
+        typeof titleOrOptions === "object"
+            ? titleOrOptions
+            : { title: titleOrOptions, text, icon };
+
+    return MySwal.fire({
+        ...options,
+        didOpen: (popup) => {
+            const container = popup?.parentElement;
+            if (container) {
+                container.style.zIndex = "20000";
+            }
+            popup.style.zIndex = "20001";
+            const backdrop = container?.querySelector(".swal2-backdrop-show, .swal2-container");
+            if (backdrop) {
+                backdrop.style.zIndex = "20000";
+            }
+            if (typeof options.didOpen === "function") {
+                options.didOpen(popup);
+            }
+        },
+    });
+};
+
 const ListaOC = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -55,11 +80,11 @@ const ListaOC = () => {
     const enviarMutation = useMutation({
         mutationFn: enviarOrdenCorreo,
         onSuccess: () => {
-            MySwal.fire("Enviada", "La orden de compra ha sido enviada por correo al proveedor.", "success");
+            fireSwalAboveDialog("Enviada", "La orden de compra ha sido enviada por correo al proveedor.", "success");
             queryClient.invalidateQueries(["ordenesCompra"]);
         },
         onError: (err) => {
-            MySwal.fire("Error", err.response?.data?.message || "No se pudo enviar el correo.", "error");
+            fireSwalAboveDialog("Error", err.response?.data?.message || "No se pudo enviar el correo.", "error");
         }
     });
 
@@ -75,11 +100,11 @@ const ListaOC = () => {
 
     const handleEnviarCorreo = (orden) => {
         if (!orden.proveedor?.email) {
-            MySwal.fire("Sin Email", "El proveedor no tiene un correo registrado.", "warning");
+            fireSwalAboveDialog("Sin Email", "El proveedor no tiene un correo registrado.", "warning");
             return;
         }
 
-        MySwal.fire({
+        fireSwalAboveDialog({
             title: `¿Enviar Orden ${orden.codigoOrden}?`,
             text: `Se enviará un correo a ${orden.proveedor.nombre_proveedor} (${orden.proveedor.email}) con el detalle del pedido.`,
             icon: "question",

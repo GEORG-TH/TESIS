@@ -52,6 +52,9 @@ public class Producto implements Serializable {
     @Column(nullable = false)
     private Boolean estado = true;
 
+    @Column(name = "imagen_url")
+    private String imagenUrl;
+
     @ManyToOne
     @JoinColumn(name = "id_subcategoria", referencedColumnName = "id", nullable = false)
     @JsonIgnoreProperties("productos")

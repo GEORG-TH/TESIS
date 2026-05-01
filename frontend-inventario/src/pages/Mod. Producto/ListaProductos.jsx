@@ -281,6 +281,7 @@ const ListaProductos = () => {
       id_producto: productoSeleccionado.id_producto,
       sku: formData.sku,
       codEan: formData.codEan,
+      imagenUrl: formData.imagenUrl?.trim() || null,
       nombre: formData.nombre,
       marca: formData.marca,
       uni_medida: formData.uni_medida,

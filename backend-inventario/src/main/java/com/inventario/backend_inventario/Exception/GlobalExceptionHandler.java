@@ -6,6 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,5 +50,10 @@ public class GlobalExceptionHandler {
         response.put("error", "Error interno del servidor");
         response.put("message", ex.getMessage());
         return ResponseEntity.internalServerError().body(response);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException exc) {
+        return ResponseEntity.badRequest().body("El archivo es demasiado grande. El tamaño máximo permitido es de 10 MB.");
     }
 }

@@ -10,8 +10,32 @@ export const getProducto = async (id) => {
 };
 export const createProducto = (data) =>
   axiosInstance.post("/productos/registrar", data);
+
+export const createProductoConImagen = (producto, file) => {
+  const formData = new FormData();
+  formData.append(
+    "producto",
+    new Blob([JSON.stringify(producto)], { type: "application/json" })
+  );
+  if (file) {
+    formData.append("file", file);
+  }
+
+  return axiosInstance.post("/productos/registrar", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
 export const updateProducto = (id, data) =>
   axiosInstance.put(`/productos/actualizar/${id}`, data);
+
+export const uploadProductoImagen = (id, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return axiosInstance.post(`/productos/${id}/imagen`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
 export const deleteProducto = (id) =>
   axiosInstance.delete(`/productos/eliminar/${id}`);
 export const activarProducto = (id) =>

@@ -31,7 +31,7 @@ const FormularioDialogoProducto = ({
     const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(UpdateProductoSchema),
         defaultValues: {
-            sku: '', codEan: '', nombre: '', marca: '', uni_medida: '',
+            sku: '', codEan: '', imagenUrl: '', nombre: '', marca: '', uni_medida: '',
             precio_venta: '', precio_compra: '',
             stockMinimo: '', stockIdeal: '',
             id_area: '', id_cat: '', id_subcat: '', id_proveedor: ''
@@ -48,6 +48,7 @@ const FormularioDialogoProducto = ({
             reset({
                 sku: producto.sku,
                 codEan: producto.codEan,
+                imagenUrl: producto.imagenUrl || producto.imagen_url || '',
                 nombre: producto.nombre || producto.nombre_producto,
                 marca: producto.marca,
                 uni_medida: producto.uni_medida,
@@ -139,6 +140,7 @@ const FormularioDialogoProducto = ({
                             />
                         </Grid>
                         <Grid item xs={12}><Controller name="nombre" control={control} render={({ field }) => (<TextField {...field} label="Nombre" fullWidth error={!!errors.nombre} helperText={errors.nombre?.message} />)} /></Grid>
+                        <Grid item xs={12}><Controller name="imagenUrl" control={control} render={({ field }) => (<TextField {...field} type="url" label="URL de Imagen" placeholder="https://ejemplo.com/imagen.jpg" fullWidth error={!!errors.imagenUrl} helperText={errors.imagenUrl?.message} />)} /></Grid>
                         <Grid item xs={6}><Controller name="marca" control={control} render={({ field }) => (<TextField {...field} label="Marca" fullWidth error={!!errors.marca} helperText={errors.marca?.message} />)} /></Grid>
                         <Grid item xs={6}><Controller name="uni_medida" control={control} render={({ field }) => (<TextField {...field} label="Unidad de Medida" fullWidth error={!!errors.uni_medida} helperText={errors.uni_medida?.message} disabled={true} />)} /></Grid>
 
