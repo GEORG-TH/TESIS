@@ -84,6 +84,9 @@ import DashboardLogistica from "./components/Dashboards/Modulos/dashboardLogisti
 import GestionHu from "./pages/Logistica/GestionHu";
 import ActualizarHu from "./pages/Logistica/ActualizarHu";
 import CrearHu from "./pages/Logistica/CrearHu";
+import DetalleHu from "./pages/Logistica/DetalleHu";
+import NoAutorizado from "./pages/NoAutorizado";
+import NoEncontrado from "./pages/NoEncontrado";
 import GenerarOrdenCompra from "./pages/Logistica/GenerarOrdenCompra";
 import ListaOC from "./pages/Logistica/ListaOC";
 
@@ -543,6 +546,12 @@ const RutasLogistica = [
     ActualizarHu
   ),
   RutaProtegida(
+    "detalleHu",
+    "/hu/gestion/detalle/:id",
+    ADMIN_JEFE,
+    DetalleHu
+  ),
+  RutaProtegida(
     "crearHu",
     "/hu/gestion/crear",
     ADMIN_JEFE,
@@ -570,6 +579,11 @@ const RutasIA = [
   ),
 ];
 
+const RutasEstado = [
+  <Route key="noAutorizado" path="/no-autorizado" element={<NoAutorizado />} />,
+  <Route key="noEncontrado" path="*" element={<NoEncontrado />} />,
+];
+
 const AppRoutes = [
   ...RutasAutenticacion,
   ...RutasDashboard,
@@ -583,6 +597,7 @@ const AppRoutes = [
   ...RutasReportes,
   ...RutasLogistica,
   ...RutasIA,
+  ...RutasEstado,
 ];
 
 export default AppRoutes;

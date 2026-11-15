@@ -39,7 +39,7 @@ function Login() {
             navigate("/dashboard-operador-tienda");
             break;
           default:
-            navigate("/usuarios");
+            navigate("/");
             break;
     }
   };

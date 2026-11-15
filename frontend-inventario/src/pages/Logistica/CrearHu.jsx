@@ -92,7 +92,7 @@ const CrearHu = () => {
                 icon: "success",
                 confirmButtonText: "Ok",
             }).then(() => {
-                navigate("/gestion-hu");
+                navigate("/hu/gestion");
             });
         },
         onError: (error) => {

@@ -49,7 +49,7 @@ const MfaVerify = () => {
                 navigate("/dashboard-operador-tienda");
                 break;
             default:
-                navigate("/usuarios");
+                navigate("/");
                 break;
         }
     };
