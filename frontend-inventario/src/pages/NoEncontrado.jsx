@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, Typography } from "@mui/material";
 import { useGlobalStore } from "../store/useGlobalStore";
-import { rutaPorRol } from "../utils/rutaPorRol";
+import { rutaPorRol } from "../Utils/rutaPorRol";
 
 const NoEncontrado = () => {
     const navigate = useNavigate();
