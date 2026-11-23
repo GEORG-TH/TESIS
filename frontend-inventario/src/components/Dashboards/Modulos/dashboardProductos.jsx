@@ -1,134 +1,38 @@
-import { useNavigate } from "react-router-dom";
-import LayoutDashboard from "../../Layouts/LayoutDashboard";
-import PageHeader from "../../PageHeader";
-import "../../styles/dashboardProductos.css";
+import CategoryIcon from "@mui/icons-material/Category";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import LabelIcon from "@mui/icons-material/Label";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
+import CampaignIcon from "@mui/icons-material/Campaign";
+import AutoGraphIcon from "@mui/icons-material/AutoGraph";
+import SellIcon from "@mui/icons-material/Sell";
+import ModuloDashboard from "../Shared/ModuloDashboard";
 
-const DashboardProductos = () => {
-    const navigate = useNavigate();
-
-    const OpcionesGestion = [
-        {
-            id: "gestion-areas",
-            titulo: "Gestión de Áreas",
-            descripcion: "Administra áreas del negocio.",
-            ruta: "/lista-areas",
-        },
-        {
-            id: "gestion-categorias",
-            titulo: "Gestión de Categorías",
-            descripcion: "Administra categorías de productos.",
-            ruta: "/lista-categorias",
-        },
-        {
-            id: "gestion-subcategorias",
-            titulo: "Gestión de Subcategorías",
-            descripcion: "Administra subcategorías por cada categoría.",
-            ruta: "/lista-subcategorias",
-        },
-        {
-            id: "gestion-productos",
-            titulo: "Gestión de Productos",
-            descripcion: "Administra productos en el sistema.",
-            ruta: "/lista-productos",
-        }
-    ];
-    const OpcionesOperacion = [
-        {
-            id: "generador-codigos",
-            titulo: "Generación de Códigos de Barras y QR",
-            descripcion: "Genera códigos de barras y códigos QR para productos, listos para colocar en las góndolas.",
-            ruta: "/productos/etiquetas",
-        },
-        {
-            id: "campañas-promocionales",
-            titulo: "Campañas Promocionales",
-            descripcion: "Verifica que campañas se acercan para promocionar productos.",
-            ruta: "/productos/campanias-activas",
-        },
-        {
-            id: "sugerencia-productos",
-            titulo: "Sugerencia de Reabastecimiento y Búsqueda Inteligente de Productos",
-            descripcion: "Proporciona sugerencias para reabastecer productos y facilita la búsqueda inteligente.",
-            ruta: "/productos/sugerencias/reabastecimiento",
-        },
-    ];
-
-    const manejarClick = (ruta) => {
-        navigate(ruta);
-    };
-
-    return (
-        <LayoutDashboard>
-            <section className="dashboard-productos">
-                <PageHeader
-                    title="Gestión de Productos"
-                    subtitle="Selecciona un módulo para administrar catálogo, campañas y operaciones."
-                />
-                <h2>Gestión y Control</h2>
-                <ul className="dashboard-productos__lista">
-                    {OpcionesGestion.map((opcion) => (
-                        <li key={opcion.id}>
-                                <div
-                                    className="dashboard-productos__card"
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => manejarClick(opcion.ruta)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" || e.key === " ") {
-                                            e.preventDefault();
-                                            manejarClick(opcion.ruta);
-                                        }
-                                    }}
-                                >
-                                    <div className="dashboard-productos__card-header">
-                                        <span className="dashboard-productos__card-title">
-                                            {opcion.titulo}
-                                        </span>
-                                        <span className="dashboard-productos__card-icon">→</span>
-                                    </div>
-                                    {opcion.descripcion && (
-                                        <p className="dashboard-productos__card-description">
-                                            {opcion.descripcion}
-                                        </p>
-                                    )}
-                                </div>
-                        </li>
-                    ))}
-                </ul>
-                <h2>Operaciones</h2>
-                <ul className="dashboard-productos__lista">
-                    {OpcionesOperacion.map((opcion) => (
-                        <li key={opcion.id}>
-                            <div
-                                className="dashboard-productos__card"
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => manejarClick(opcion.ruta)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        manejarClick(opcion.ruta);
-                                    }
-                                }}
-                            >
-                                <div className="dashboard-productos__card-header">
-                                    <span className="dashboard-productos__card-title">
-                                        {opcion.titulo}
-                                    </span>
-                                    <span className="dashboard-productos__card-icon">→</span>
-                                </div>
-                                {opcion.descripcion && (
-                                    <p className="dashboard-productos__card-description">
-                                        {opcion.descripcion}
-                                    </p>
-                                )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </section>
-        </LayoutDashboard>
-    );
-};
+const DashboardProductos = () => (
+    <ModuloDashboard
+        titulo="Gestión de Productos"
+        subtitulo="Administra el catálogo, las campañas y las operaciones de productos."
+        icon={<SellIcon />}
+        secciones={[
+            {
+                titulo: "Gestión y control",
+                items: [
+                    { id: "areas", titulo: "Gestión de Áreas", descripcion: "Administra áreas del negocio.", ruta: "/lista-areas", icon: <AccountTreeIcon />, color: "primary" },
+                    { id: "categorias", titulo: "Gestión de Categorías", descripcion: "Administra categorías de productos.", ruta: "/lista-categorias", icon: <CategoryIcon />, color: "info" },
+                    { id: "subcategorias", titulo: "Gestión de Subcategorías", descripcion: "Administra subcategorías por cada categoría.", ruta: "/lista-subcategorias", icon: <LabelIcon />, color: "secondary" },
+                    { id: "productos", titulo: "Gestión de Productos", descripcion: "Administra productos en el sistema.", ruta: "/lista-productos", icon: <Inventory2Icon />, color: "success" },
+                ],
+            },
+            {
+                titulo: "Operaciones",
+                items: [
+                    { id: "etiquetas", titulo: "Códigos de Barras y QR", descripcion: "Genera códigos de barras y QR para productos, listos para colocar en las góndolas.", ruta: "/productos/etiquetas", icon: <QrCode2Icon />, color: "primary" },
+                    { id: "campanias", titulo: "Campañas Promocionales", descripcion: "Verifica qué campañas se acercan para promocionar productos.", ruta: "/productos/campanias-activas", icon: <CampaignIcon />, color: "warning" },
+                    { id: "reabastecimiento", titulo: "Sugerencia de Reabastecimiento", descripcion: "Sugerencias para reabastecer productos y búsqueda inteligente.", ruta: "/productos/sugerencias/reabastecimiento", icon: <AutoGraphIcon />, color: "info" },
+                ],
+            },
+        ]}
+    />
+);
 
 export default DashboardProductos;

@@ -70,7 +70,6 @@ const getMenuItems = (rol) => {
     ],
     "Jefe de Almacén": [
       { icon: <HomeIcon />, label: "Inicio", path: "/dashboard-jefe-almacen" },
-      { icon: <SmartToyIcon />, label: "IA", path: "/chat-ia" },
       { icon: <PalletIcon />, label: "Logistica", path: "/dashboard-logistica" },
     ]
   };
@@ -136,15 +135,15 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
 
   const menuItems = useMemo(() => getMenuItems(user?.rol), [user?.rol]);
   const drawerContent = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden', }}>
-      <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0, overflow: 'hidden', }}>
+      <Box sx={{ p: 'clamp(4px, 1.2vh, 12px)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Avatar
           src={user?.fotoUrl || "/logo.png"}
           alt="Foto de perfil"
           sx={{
-            width: isOpen ? 56 : 36,
-            height: isOpen ? 56 : 36,
-            mb: 0.75,
+            width: isOpen ? 'clamp(30px, 7vh, 56px)' : 'clamp(26px, 5vh, 36px)',
+            height: isOpen ? 'clamp(30px, 7vh, 56px)' : 'clamp(26px, 5vh, 36px)',
+            mb: 'clamp(2px, 0.6vh, 6px)',
             cursor: 'pointer',
             transition: 'all 0.2s',
             border: '2px solid',
@@ -157,19 +156,28 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
           }}
           onClick={() => handleMenuNavigation("/perfil")}
         />
-        <Typography variant="body2" fontWeight={600} noWrap sx={{ display: isOpen ? 'block' : 'none', maxWidth: '100%', color: chromeText }}>
+        {/* En pantallas bajas se ocultan primero el correo/rol y luego el nombre,
+            para que el menú quepa sin scroll. El avatar sigue llevando al perfil. */}
+        <Typography variant="body2" fontWeight={600} noWrap sx={{ display: isOpen ? 'block' : 'none', maxWidth: '100%', color: chromeText, '@media (max-height: 620px)': { display: 'none' } }}>
           {`${user?.nombre_u || ""} ${user?.apellido_pat || ""} ${user?.apellido_mat || ""}`}
         </Typography>
-        <Typography variant="caption" noWrap sx={{ display: isOpen ? 'block' : 'none', color: chromeTextMuted, maxWidth: '100%' }}>
+        <Typography variant="caption" noWrap sx={{ display: isOpen ? 'block' : 'none', color: chromeTextMuted, maxWidth: '100%', '@media (max-height: 760px)': { display: 'none' } }}>
           {user?.email}
         </Typography>
-        <Typography variant="caption" noWrap sx={{ display: isOpen ? 'block' : 'none', color: '#38bdf8', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+        <Typography variant="caption" noWrap sx={{ display: isOpen ? 'block' : 'none', color: '#38bdf8', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', '@media (max-height: 760px)': { display: 'none' } }}>
           {user?.rol}
         </Typography>
       </Box>
       <Divider sx={{ borderColor: chromeDivider }} />
 
-      <List sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden', px: 1, py: 0.5 }}>
+      {/* Sin barra de scroll visible; sigue siendo desplazable si aún no cupiera. */}
+      <List
+        sx={{
+          flexGrow: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', px: 1, py: 0.5,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+        }}
+      >
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -181,8 +189,8 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
               sx={{
                 justifyContent: isOpen ? 'initial' : 'center',
                 px: 1.5,
-                py: 0.6,
-                minHeight: 40,
+                py: 'clamp(1px, 0.5vh, 5px)',
+                minHeight: 'clamp(30px, 5.2vh, 40px)',
                 borderRadius: 1.5,
                 borderLeft: '3px solid transparent',
                 color: chromeText,
@@ -204,7 +212,7 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 0, mr: isOpen ? 2.5 : 'auto', justifyContent: 'center', '& svg': { fontSize: '1.25rem' } }}>
+              <ListItemIcon sx={{ minWidth: 0, mr: isOpen ? 2.5 : 'auto', justifyContent: 'center', '& svg': { fontSize: 'clamp(1.05rem, 2.8vh, 1.25rem)' } }}>
                 {item.icon}
               </ListItemIcon>
               <ListItemText
@@ -225,15 +233,15 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
           sx={{
             justifyContent: isOpen ? 'initial' : 'center',
             px: 1.5,
-            py: 0.6,
-            minHeight: 40,
+            py: 'clamp(1px, 0.5vh, 5px)',
+            minHeight: 'clamp(30px, 5.2vh, 40px)',
             borderRadius: 1.5,
             color: chromeText,
             '& .MuiListItemIcon-root': { color: chromeText },
             '&:hover': { backgroundColor: chromeHoverBg },
           }}
         >
-          <ListItemIcon sx={{ minWidth: 0, mr: isOpen ? 2.5 : 'auto', justifyContent: 'center', '& svg': { fontSize: '1.25rem' } }}>
+          <ListItemIcon sx={{ minWidth: 0, mr: isOpen ? 2.5 : 'auto', justifyContent: 'center', '& svg': { fontSize: 'clamp(1.05rem, 2.8vh, 1.25rem)' } }}>
             <LogoutIcon />
           </ListItemIcon>
           <ListItemText
@@ -276,19 +284,23 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
               duration: theme.transitions.duration.enteringScreen,
             }),
             overflowX: 'hidden',
+            overflowY: 'hidden', // el scroll (si hiciera falta) lo maneja solo la lista del menú
             backgroundColor: mode === 'light'
               ? sidebarLightBg
               : 'background.paper',
           },
         }}
       >
+        {/* El logo de la cabecera solo se muestra con el menú expandido:
+            colapsado ya aparece el avatar con el mismo logo justo debajo. */}
+        {isOpen && (
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: isOpen ? 'space-between' : 'center',
-            p: 1.5,
-            minHeight: 64,
+            p: 'clamp(6px, 1.5vh, 12px) 12px',
+            minHeight: 'clamp(46px, 9vh, 64px)',
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
@@ -297,8 +309,8 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
               src="/logo.png"
               alt="Logo"
               sx={{
-                width: 32,
-                height: 32,
+                width: 'clamp(26px, 5vh, 32px)',
+                height: 'clamp(26px, 5vh, 32px)',
                 flexShrink: 0,
                 mr: isOpen ? 1.5 : 0,
                 bgcolor: '#ffffff',
@@ -320,7 +332,8 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
             </IconButton>
           )}
         </Box>
-        <Divider sx={{ borderColor: chromeDivider }} />
+        )}
+        {isOpen && <Divider sx={{ borderColor: chromeDivider }} />}
         {!isMobile && !isOpen && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 0.5 }}>
             <IconButton onClick={onCollapsedChange} size="small" sx={{ color: chromeText }}>

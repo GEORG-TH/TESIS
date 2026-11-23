@@ -1,104 +1,29 @@
-import { useNavigate } from "react-router-dom";
-import LayoutDashboard from "../../Layouts/LayoutDashboard";
-import "../../styles/dashboardProductos.css";
+import PalletIcon from "@mui/icons-material/ViewInAr";
+import ListAltIcon from "@mui/icons-material/ListAlt";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
+import ModuloDashboard from "../Shared/ModuloDashboard";
 
-const dashboardLogistica = () => {
-    const navigate = useNavigate();
-    const OpcionGestion = [
-        {
-            id: "gestionHu",
-            titulo: "Lista de HU's",
-            descripcion: "Gestiona las HUs (Handling Units / Paletas) en el sistema.",
-            ruta: "/hu/gestion",
-        },
-    ];
-    const OpcionOperacion = [
-        {
-            id: "Generacion-OC",
-            titulo: "Generación de Orden de Compra",
-            descripcion: "Genera órdenes de compra para los pedidos realizados a los proveedores.",
-            ruta: "/logistica/oc/lista",
-        },
-        {
-            id: "-----",
-            titulo: "------",
-            descripcion: "------",
-            ruta: "-----------",
-        },
-    ];
+const DashboardLogistica = () => (
+    <ModuloDashboard
+        titulo="Logística"
+        subtitulo="Unidades de manejo (HU) y órdenes de compra a proveedores."
+        icon={<PalletIcon />}
+        secciones={[
+            {
+                titulo: "Gestión y control",
+                items: [
+                    { id: "hu", titulo: "Lista de HU", descripcion: "Gestiona las HU (Handling Units / paletas) en el sistema.", ruta: "/hu/gestion", icon: <PalletIcon />, color: "primary" },
+                ],
+            },
+            {
+                titulo: "Operaciones",
+                items: [
+                    { id: "oc-generar", titulo: "Generar Orden de Compra", descripcion: "Genera órdenes de compra para los pedidos a proveedores.", ruta: "/logistica/oc/generar", icon: <NoteAddIcon />, color: "info" },
+                    { id: "oc-lista", titulo: "Lista de Órdenes de Compra", descripcion: "Consulta, envía y da seguimiento a las órdenes emitidas.", ruta: "/logistica/oc/lista", icon: <ListAltIcon />, color: "success" },
+                ],
+            },
+        ]}
+    />
+);
 
-    const manejarClick = (ruta) => {
-        navigate(ruta);
-    };
-
-    return (
-        <LayoutDashboard>
-            <section className="dashboard-productos">
-                <h2>Gestion y Control</h2>
-                <ul className="dashboard-productos__lista">
-                    {OpcionGestion.map((opcion) => (
-                        <li key={opcion.id}>
-                            <div
-                                className="dashboard-productos__card"
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => manejarClick(opcion.ruta)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        manejarClick(opcion.ruta);
-                                    }
-                                }}
-                            >
-                                <div className="dashboard-productos__card-header">
-                                    <span className="dashboard-productos__card-title">
-                                        {opcion.titulo}
-                                    </span>
-                                    <span className="dashboard-productos__card-icon">→</span>
-                                </div>
-                                {opcion.descripcion && (
-                                    <p className="dashboard-productos__card-description">
-                                        {opcion.descripcion}
-                                    </p>
-                                )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-                <h2>Operaciones</h2>
-                <ul className="dashboard-productos__lista">
-                    {OpcionOperacion.map((opcion) => (
-                        <li key={opcion.id}>
-                            <div
-                                className="dashboard-productos__card"
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => manejarClick(opcion.ruta)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        manejarClick(opcion.ruta);
-                                    }
-                                }}
-                            >
-                                <div className="dashboard-productos__card-header">
-                                    <span className="dashboard-productos__card-title">
-                                        {opcion.titulo}
-                                    </span>
-                                    <span className="dashboard-productos__card-icon">→</span>
-                                </div>
-                                {opcion.descripcion && (
-                                    <p className="dashboard-productos__card-description">
-                                        {opcion.descripcion}
-                                    </p>
-                                )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </section>
-        </LayoutDashboard>
-    );
-};
-
-export default dashboardLogistica;
+export default DashboardLogistica;

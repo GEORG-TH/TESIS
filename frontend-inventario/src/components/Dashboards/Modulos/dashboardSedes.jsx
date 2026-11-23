@@ -1,111 +1,35 @@
-import { useNavigate } from "react-router-dom";
-import LayoutDashboard from "../../Layouts/LayoutDashboard";
-import "../../styles/dashboardProductos.css";
+import StorefrontIcon from "@mui/icons-material/Storefront";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
+import ModuloDashboard from "../Shared/ModuloDashboard";
+import { usePendientes } from "../Shared/dashboardData";
 
 const DashboardSedes = () => {
-	const navigate = useNavigate();
-
-	const OpcionesGestion = [
-		{
-			id: "lista-sedes",
-			titulo: "Gestión de Sedes",
-			descripcion: "Consulta y administra la información de las sedes.",
-			ruta: "/lista-sedes",
-		},
-		{
-			id: "inventario-sede",
-			titulo: "Inventario por Sede",
-			descripcion: "Asocia productos a cada sede y consulta su stock.",
-			ruta: "/sedes/inventario",
-		},
-	];
-	const OpcionesOperacion = [
-		{
-			id: "pedido-transferencia-sedes",
-			titulo: "Pedido de Transferencia de productos entre Sedes",
-			descripcion: "Realiza pedidos de transferencia de productos entre diferentes sedes.",
-			ruta: "/inventario/transferencia/solicitar",
-		},
-		{
-			id: "solicitudes-transferencia-sedes",
-			titulo: "Solicitudes de Transferencia de productos entre Sedes",
-			descripcion: "Consulta los pedidos de transferencia de productos entre diferentes sedes.",
-			ruta: "/inventario/transferencia/gestion",
-		}
-	];
-
-	const manejarClick = (ruta) => {
-		navigate(ruta);
-	};
-
-	return (
-		<LayoutDashboard>
-			<section className="dashboard-productos">
-				<h2>Gestión y Control</h2>
-				<ul className="dashboard-productos__lista">
-					{OpcionesGestion.map((opcion) => (
-						<li key={opcion.id}>
-							<div
-								className="dashboard-productos__card"
-								role="button"
-								tabIndex={0}
-								onClick={() => manejarClick(opcion.ruta)}
-								onKeyDown={(event) => {
-									if (event.key === "Enter" || event.key === " ") {
-										event.preventDefault();
-										manejarClick(opcion.ruta);
-									}
-								}}
-							>
-								<div className="dashboard-productos__card-header">
-									<span className="dashboard-productos__card-title">
-										{opcion.titulo}
-									</span>
-									<span className="dashboard-productos__card-icon">→</span>
-								</div>
-								{opcion.descripcion && (
-									<p className="dashboard-productos__card-description">
-										{opcion.descripcion}
-									</p>
-								)}
-							</div>
-						</li>
-					))}
-				</ul>
-				<h2>Operaciones</h2>
-				<ul className="dashboard-productos__lista">
-					{OpcionesOperacion.map((opcion) => (
-						<li key={opcion.id}>
-							<div
-								className="dashboard-productos__card"
-								role="button"
-								tabIndex={0}
-								onClick={() => manejarClick(opcion.ruta)}
-								onKeyDown={(event) => {
-									if (event.key === "Enter" || event.key === " ") {
-										event.preventDefault();
-										manejarClick(opcion.ruta);
-									}
-								}}
-							>
-								<div className="dashboard-productos__card-header">
-									<span className="dashboard-productos__card-title">
-										{opcion.titulo}
-									</span>
-									<span className="dashboard-productos__card-icon">→</span>
-								</div>
-								{opcion.descripcion && (
-									<p className="dashboard-productos__card-description">
-										{opcion.descripcion}
-									</p>
-								)}
-							</div>
-						</li>
-					))}
-				</ul>
-			</section>
-		</LayoutDashboard>
-	);
+    const pend = usePendientes();
+    return (
+        <ModuloDashboard
+            titulo="Sedes"
+            subtitulo="Información de las sedes, su inventario y las transferencias entre ellas."
+            icon={<StorefrontIcon />}
+            secciones={[
+                {
+                    titulo: "Gestión y control",
+                    items: [
+                        { id: "sedes", titulo: "Gestión de Sedes", descripcion: "Consulta y administra la información de las sedes.", ruta: "/lista-sedes", icon: <StorefrontIcon />, color: "primary" },
+                        { id: "inventario-sede", titulo: "Inventario por Sede", descripcion: "Asocia productos a cada sede y consulta su stock.", ruta: "/sedes/inventario", icon: <InventoryIcon />, color: "success" },
+                    ],
+                },
+                {
+                    titulo: "Operaciones",
+                    items: [
+                        { id: "transf-solicitar", titulo: "Pedido de Transferencia entre Sedes", descripcion: "Solicita transferir productos de una sede a otra.", ruta: "/inventario/transferencia/solicitar", icon: <SwapHorizIcon />, color: "info" },
+                        { id: "transf-gestion", titulo: "Solicitudes de Transferencia", descripcion: "Consulta los pedidos de transferencia entre sedes.", ruta: "/inventario/transferencia/gestion", icon: <FactCheckIcon />, color: "warning", badge: pend.transferencias.length },
+                    ],
+                },
+            ]}
+        />
+    );
 };
 
 export default DashboardSedes;

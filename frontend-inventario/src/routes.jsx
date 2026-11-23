@@ -526,47 +526,49 @@ const RutasInventario = [
   ),
 
 ];
+// Logística: el Jefe de Almacén también opera aquí (HU y órdenes de compra).
+const ADMIN_JEFE_ALMACEN = [ROLES.ADMIN, ROLES.JEFE_INV, ROLES.JEFE_ALMACEN];
 const RutasLogistica = [
   RutaProtegida(
     "dashboardLogistica",
     "/dashboard-logistica",
-    ADMIN_JEFE,
+    ADMIN_JEFE_ALMACEN,
     DashboardLogistica
   ),
   RutaProtegida(
     "gestionHu",
     "/hu/gestion",
-    ADMIN_JEFE,
+    ADMIN_JEFE_ALMACEN,
     GestionHu
   ),
   RutaProtegida(
     "actualizarHu",
     "/hu/gestion/actualizar/:id",
-    ADMIN_JEFE,
+    ADMIN_JEFE_ALMACEN,
     ActualizarHu
   ),
   RutaProtegida(
     "detalleHu",
     "/hu/gestion/detalle/:id",
-    ADMIN_JEFE,
+    ADMIN_JEFE_ALMACEN,
     DetalleHu
   ),
   RutaProtegida(
     "crearHu",
     "/hu/gestion/crear",
-    ADMIN_JEFE,
+    ADMIN_JEFE_ALMACEN,
     CrearHu
   ),
   RutaProtegida(
     "generarOrdenCompra",
     "/logistica/oc/generar",
-    ADMIN_JEFE,
+    ADMIN_JEFE_ALMACEN,
     GenerarOrdenCompra
   ),
   RutaProtegida(
     "listaOrdenesCompra",
     "/logistica/oc/lista",
-    ADMIN_JEFE,
+    ADMIN_JEFE_ALMACEN,
     ListaOC
   ),
 ];

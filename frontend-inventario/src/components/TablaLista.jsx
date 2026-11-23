@@ -1,9 +1,10 @@
-import {useState} from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-    Paper, Box, Button,
+    Card, Box, Button,
     Menu, MenuItem, ListItemIcon, ListItemText, useTheme
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { DataGrid } from "@mui/x-data-grid";
 import { esES } from "@mui/x-data-grid/locales";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -11,13 +12,14 @@ import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LayoutDashboard from "./Layouts/LayoutDashboard";
 import PageHeader from "./PageHeader";
-import FileDownloadIcon from "@mui/icons-material/FileDownload"; // Icono principal
-import DescriptionIcon from '@mui/icons-material/Description';   // Icono Excel
-import TextSnippetIcon from '@mui/icons-material/TextSnippet';   // Icono CSV
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import DescriptionIcon from '@mui/icons-material/Description';
+import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useGlobalStore } from "../store/useGlobalStore";
 import { exportTableData } from "../Utils/exportUtils";
-import { TABLE_HEADER_BG, LOGO_NAVY, LOGO_NAVY_DARK } from "../theme/appTheme";
+
+const GRADIENTE = "linear-gradient(135deg, #2563eb, #3b82f6 55%, #06b6d4)";
 
 const TablaLista = ({
     title,
@@ -33,8 +35,8 @@ const TablaLista = ({
 }) => {
     const density = useGlobalStore((state) => state.density);
     const theme = useTheme();
-    const isLight = theme.palette.mode === "light";
-    const headerBg = TABLE_HEADER_BG[theme.palette.mode] ?? TABLE_HEADER_BG.light;
+    const isDark = theme.palette.mode === "dark";
+    const encabezadoBg = alpha(theme.palette.primary.main, isDark ? 0.14 : 0.08);
     const [anchorEl, setAnchorEl] = useState(null);
     const openMenu = Boolean(anchorEl);
 
@@ -50,6 +52,9 @@ const TablaLista = ({
         exportTableData(data, columns, title.replace(/\s+/g, '_'), format);
         handleCloseMenu();
     };
+
+    const botonSuave = { borderColor: "divider" };
+
     return (
         <LayoutDashboard>
             {children}
@@ -58,14 +63,13 @@ const TablaLista = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
             >
-                <Paper
+                <Card
                     sx={{
-                        p: { xs: 3 },
-                        borderRadius: 2,
-                        boxShadow: 3,
+                        p: { xs: 2, md: 3 },
                         display: 'flex',
                         flexDirection: 'column',
-                        height: { xs: 'auto', md: 'calc(100vh - 140px)' },
+                        height: { xs: 'auto', md: 'calc(100dvh - 140px)' },
+                        minHeight: { md: 460 },
                         overflow: 'hidden'
                     }}
                 >
@@ -76,6 +80,8 @@ const TablaLista = ({
                                 {onBack && (
                                     <Button
                                         variant="outlined"
+                                        color="inherit"
+                                        sx={botonSuave}
                                         startIcon={<ArrowBackIcon />}
                                         onClick={onBack}
                                     >
@@ -85,6 +91,8 @@ const TablaLista = ({
                                 {onRefresh && (
                                     <Button
                                         variant="outlined"
+                                        color="inherit"
+                                        sx={botonSuave}
                                         startIcon={<RefreshIcon />}
                                         onClick={onRefresh}
                                         disabled={isLoading}
@@ -97,21 +105,22 @@ const TablaLista = ({
                                         variant="contained"
                                         startIcon={<AddIcon />}
                                         onClick={onAdd}
-                                        sx={isLight ? {
-                                            bgcolor: LOGO_NAVY,
-                                            boxShadow: `0 6px 16px rgba(122, 213, 0, 0.4)`,
+                                        sx={{
+                                            backgroundImage: GRADIENTE,
+                                            boxShadow: "0 8px 20px rgba(37, 99, 235, 0.35)",
                                             "&:hover": {
-                                                bgcolor: LOGO_NAVY_DARK,
-                                                boxShadow: `0 6px 16px rgba(122, 213, 0, 0.5)`,
+                                                filter: "brightness(1.08)",
+                                                boxShadow: "0 10px 24px rgba(37, 99, 235, 0.45)",
                                             },
-                                        } : undefined}
+                                        }}
                                     >
                                         {addButtonLabel}
                                     </Button>
                                 )}
                                 <Button
                                     variant="outlined"
-                                    color="success"
+                                    color="inherit"
+                                    sx={botonSuave}
                                     startIcon={<FileDownloadIcon />}
                                     endIcon={<KeyboardArrowDownIcon />}
                                     onClick={handleClickExport}
@@ -143,7 +152,18 @@ const TablaLista = ({
                             </>
                         }
                     />
-                    <Box sx={{ height: "650px", width: "100%" }}>
+                    {/* La grilla ocupa todo el alto restante de la tarjeta (antes tenía 650px fijos). */}
+                    <Box
+                        sx={{
+                            flex: 1,
+                            minHeight: 380,
+                            width: "100%",
+                            borderRadius: 3,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            overflow: "hidden",
+                        }}
+                    >
                         <DataGrid
                             rows={data}
                             columns={columns}
@@ -157,33 +177,51 @@ const TablaLista = ({
                             disableRowSelectionOnClick
                             overflowY="hidden"
                             sx={{
+                                border: "none",
                                 "--DataGrid-overlayHeight": "300px",
-                                "& .MuiDataGrid-columnHeaders": {
-                                    backgroundColor: headerBg,
+                                // El encabezado es "sticky": su fondo debe ser OPACO (color de la tarjeta
+                                // + tinte encima). Con un color translúcido las filas se ven a través al hacer scroll.
+                                "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader, & .MuiDataGrid-filler, & .MuiDataGrid-scrollbarFiller": {
+                                    backgroundColor: theme.palette.background.paper,
+                                    backgroundImage: `linear-gradient(${encabezadoBg}, ${encabezadoBg})`,
                                 },
                                 "& .MuiDataGrid-columnHeader": {
-                                    backgroundColor: headerBg,
-                                    color: "#ffffff",
+                                    color: theme.palette.text.secondary,
                                 },
                                 "& .MuiDataGrid-columnHeaderTitle": {
+                                    fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                                    fontSize: 11,
                                     fontWeight: 700,
+                                    letterSpacing: "0.05em",
+                                    textTransform: "uppercase",
                                 },
                                 "& .MuiDataGrid-columnHeader .MuiSvgIcon-root": {
-                                    color: "#ffffff",
+                                    color: theme.palette.text.secondary,
                                 },
                                 "& .MuiDataGrid-columnSeparator": {
-                                    color: "rgba(255, 255, 255, 0.4)",
+                                    color: theme.palette.divider,
+                                },
+                                "& .MuiDataGrid-cell": {
+                                    borderColor: theme.palette.divider,
                                 },
                                 "& .MuiDataGrid-row:hover": {
-                                    backgroundColor: theme.palette.mode === "dark"
-                                        ? "rgba(59, 130, 246, 0.14)"
-                                        : "rgba(37, 99, 235, 0.06)",
+                                    backgroundColor: alpha(theme.palette.primary.main, isDark ? 0.14 : 0.06),
+                                },
+                                "& .MuiDataGrid-footerContainer": {
+                                    borderColor: theme.palette.divider,
                                 },
                             }}
                             localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+                            slotProps={{
+                                pagination: {
+                                    labelRowsPerPage: "Filas por página:",
+                                    labelDisplayedRows: ({ from, to, count }) =>
+                                        `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`,
+                                },
+                            }}
                         />
                     </Box>
-                </Paper>
+                </Card>
             </motion.div>
         </LayoutDashboard>
     );
