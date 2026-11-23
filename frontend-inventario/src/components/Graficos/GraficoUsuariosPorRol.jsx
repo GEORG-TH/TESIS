@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from "@mui/material/styles";
@@ -31,6 +31,7 @@ function getColorForRole(rol, palette) {
 
 function GraficoUsuariosPorRol() {
   const theme = useTheme();
+  const [angosto, setAngosto] = useState(false);
   const palette = theme.palette.mode === "dark" ? CATEGORICAL_DARK : CATEGORICAL_LIGHT;
 
   const {
@@ -72,13 +73,20 @@ function GraficoUsuariosPorRol() {
   return (
     <div className="grafico-usuarios-container">
       {datosFormateados.length > 0 ? (
-      <ResponsiveContainer width="100%" height={210}>
+      // Ocupa todo el alto disponible y cambia la leyenda de lado (derecha) a
+      // abajo cuando el panel es angosto, así nunca hace falta scroll.
+      <ResponsiveContainer
+        width="100%"
+        height="100%"
+        minHeight={180}
+        onResize={(w) => setAngosto(w < 460)}
+      >
         <PieChart>
           <Pie
             data={datosFormateados}
-            cx="34%"
-            cy="50%"
-            outerRadius={75}
+            cx={angosto ? "50%" : "32%"}
+            cy={angosto ? "42%" : "50%"}
+            outerRadius={angosto ? "60%" : "78%"}
             dataKey="value"
             nameKey="name"
           >
@@ -90,15 +98,19 @@ function GraficoUsuariosPorRol() {
             formatter={(value, name) => [`${value} usuario${value > 1 ? "s" : ""}`, name]}
           />
           <Legend
-            layout="vertical"
-            verticalAlign="middle"
-            align="right"
+            layout={angosto ? "horizontal" : "vertical"}
+            verticalAlign={angosto ? "bottom" : "middle"}
+            align={angosto ? "center" : "right"}
             formatter={(value, entry) => (
               <span style={{ color: theme.palette.text.secondary }}>
                 {value} ({entry.payload.value})
               </span>
             )}
-            wrapperStyle={{ fontSize: 12, lineHeight: "22px", maxWidth: "46%" }}
+            wrapperStyle={
+              angosto
+                ? { fontSize: 12, lineHeight: "20px", width: "100%" }
+                : { fontSize: 12, lineHeight: "22px", maxWidth: "50%" }
+            }
           />
         </PieChart>
       </ResponsiveContainer>

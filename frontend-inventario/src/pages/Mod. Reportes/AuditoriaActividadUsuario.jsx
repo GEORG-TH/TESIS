@@ -126,7 +126,6 @@ const AuditoriaActividadUsuario = () => {
         { field: 'modulo', headerName: 'Módulo', width: 130 },
         { field: 'entidadAfectada', headerName: 'Entidad', width: 120 },
         { field: 'descripcion', headerName: 'Descripción', flex: 1, minWidth: 250 },
-        { field: 'ipDireccion', headerName: 'IP', width: 130 },
     ], []);
 
     return (

@@ -1,13 +1,17 @@
 import { createTheme } from "@mui/material/styles";
 
 const FONT_FAMILY =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", ' +
+  '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", ' +
   '"Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif';
+
+// Títulos con Sora (misma tipografía del login y los dashboards).
+const HEADING_FONT = '"Sora", "Inter", -apple-system, "Segoe UI", sans-serif';
 
 const PALETTES = {
   light: {
     mode: "light",
     primary: { main: "#2563eb", dark: "#1d4ed8" },
+    info: { main: "#0891b2", dark: "#0e7490" },
     success: { main: "#16a34a", dark: "#15803d" },
     warning: { main: "#f97316" },
     error: { main: "#dc2626", dark: "#b91c1c" },
@@ -17,17 +21,16 @@ const PALETTES = {
   },
   dark: {
     mode: "dark",
-    // Fondos/superficies neutros (negro/zinc, sin tinte azul) + acento azul
-    // fuerte para lo interactivo (botones, headers, selección). Un acento
-    // gris sobre fondo casi negro se leía "muerto"; el azul da vida y
-    // sigue siendo perfectamente legible como texto/ícono sobre el fondo.
+    // Modo oscuro "Cobalt Precision": azul marino profundo (el mismo del login
+    // y los dashboards) con acentos cobalto y cian. Antes era negro/zinc neutro.
     primary: { main: "#3b82f6", dark: "#1d4ed8" },
+    info: { main: "#4cd7f6", dark: "#03b5d3" },
     success: { main: "#34d399", dark: "#22c55e" },
     warning: { main: "#fb923c" },
     error: { main: "#f87171", dark: "#ef4444" },
-    background: { default: "#18181b", paper: "#232326" },
-    text: { primary: "#f4f4f5", secondary: "#a1a1aa" },
-    divider: "rgba(255, 255, 255, 0.1)",
+    background: { default: "#0d1322", paper: "#191f2f" },
+    text: { primary: "#dde2f8", secondary: "#a9adc1" },
+    divider: "rgba(195, 198, 215, 0.14)",
   },
 };
 
@@ -98,6 +101,14 @@ export function createAppTheme(mode, fontSize) {
     typography: {
       fontFamily: FONT_FAMILY,
       fontSize: getFontSizeValue(fontSize),
+      h1: { fontFamily: HEADING_FONT, fontWeight: 700, letterSpacing: "-0.02em" },
+      h2: { fontFamily: HEADING_FONT, fontWeight: 700, letterSpacing: "-0.02em" },
+      h3: { fontFamily: HEADING_FONT, fontWeight: 700, letterSpacing: "-0.015em" },
+      h4: { fontFamily: HEADING_FONT, fontWeight: 700, letterSpacing: "-0.01em" },
+      h5: { fontFamily: HEADING_FONT, fontWeight: 600, letterSpacing: "-0.01em" },
+      h6: { fontFamily: HEADING_FONT, fontWeight: 600 },
+      subtitle1: { fontWeight: 600 },
+      overline: { fontFamily: '"JetBrains Mono", ui-monospace, monospace', letterSpacing: "0.08em" },
     },
     components: {
       MuiButton: {
@@ -105,6 +116,7 @@ export function createAppTheme(mode, fontSize) {
           root: {
             textTransform: "none",
             fontWeight: 600,
+            borderRadius: 10,
             fontSize: fontSize === "large" ? "1rem" : undefined,
           },
           containedPrimary: {
@@ -134,6 +146,65 @@ export function createAppTheme(mode, fontSize) {
           root: {
             fontWeight: 600,
           },
+        },
+      },
+      // Campos de texto: esquinas redondeadas y anillo de foco cian como en el login.
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: 10,
+            "&.Mui-focused": {
+              boxShadow: `0 0 0 3px ${mode === "dark" ? "rgba(76, 215, 246, 0.2)" : "rgba(37, 99, 235, 0.16)"}`,
+            },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderColor: mode === "dark" ? "#4cd7f6" : "#2563eb",
+              borderWidth: 1,
+            },
+          },
+        },
+      },
+      MuiDialog: {
+        styleOverrides: {
+          paper: {
+            borderRadius: 20,
+            border: `1px solid ${palette.divider}`,
+            backgroundImage: "none",
+          },
+        },
+      },
+      MuiDialogTitle: {
+        styleOverrides: {
+          root: { fontFamily: HEADING_FONT, fontWeight: 700, fontSize: "1.2rem" },
+        },
+      },
+      MuiMenu: {
+        styleOverrides: {
+          paper: { borderRadius: 12, border: `1px solid ${palette.divider}` },
+        },
+      },
+      MuiPopover: {
+        styleOverrides: {
+          paper: { borderRadius: 12 },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: { borderRadius: 8, fontSize: "0.75rem", fontWeight: 500 },
+        },
+      },
+      MuiTabs: {
+        styleOverrides: {
+          indicator: { height: 3, borderRadius: 3 },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: { textTransform: "none", fontWeight: 600 },
+        },
+      },
+      MuiAlert: {
+        styleOverrides: {
+          root: { borderRadius: 12 },
         },
       },
     },

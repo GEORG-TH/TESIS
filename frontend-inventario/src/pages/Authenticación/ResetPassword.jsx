@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { resetPassword } from '../../api/authApi';
-import '../../components/styles/Login.css';
+import AuthLayout from '../../components/AuthLayout';
 import Swal from 'sweetalert2';
 
 const ResetPassword = () => {
@@ -11,6 +11,8 @@ const ResetPassword = () => {
 
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPass, setShowPass] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -47,58 +49,67 @@ const ResetPassword = () => {
         }
     };
 
-    return (
-        <div className="container">
-            <div className="card">
-                <div className="card-header">
-                    <div className="brand-badge">SW+</div>
-                    <div className="card-header-text">
-                        <h2>Portal Corporativo SWIC+</h2>
-                        <p>Establece una contraseña segura.</p>
-                    </div>
-                </div>
-
-                <p className="card-support-text">
-                    Crea una nueva contraseña robusta para proteger tu cuenta. Asegúrate de no reutilizar claves anteriores.
-                </p>
-
-                <form className="card-form" onSubmit={handleSubmit}>
-                    <label className="input-label" htmlFor="password">Nueva contraseña</label>
-                    <input
-                        className="input"
-                        type="password"
-                        id="password"
-                        placeholder="Ingresa una contraseña segura"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        autoComplete="new-password"
-                        disabled={loading}
-                        required
-                    />
-
-                    <label className="input-label" htmlFor="confirmPassword">Confirmar contraseña</label>
-                    <input
-                        className="input"
-                        type="password"
-                        id="confirmPassword"
-                        placeholder="Repite la contraseña"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        autoComplete="new-password"
-                        disabled={loading}
-                        required
-                    />
-
-                    <button type="submit" className="button" disabled={loading}>
-                        {loading ? 'Actualizando...' : 'Actualizar contraseña'}
-                    </button>
-                </form>
-
-                <div className="forgot-password-link">
-                    <Link to="/">Volver a iniciar sesión</Link>
-                </div>
+    const passwordField = (id, label, value, setValue, show, setShow, placeholder) => (
+        <div>
+            <label className="lg-label" htmlFor={id}>{label}</label>
+            <div className="lg-field">
+                <span className="material-icons lg-field-icon">lock</span>
+                <input
+                    className="lg-input"
+                    type={show ? 'text' : 'password'}
+                    id={id}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    autoComplete="new-password"
+                    disabled={loading}
+                    required
+                />
+                <button
+                    type="button"
+                    className="lg-eye"
+                    onClick={() => setShow((v) => !v)}
+                    aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                    <span className="material-icons">{show ? 'visibility_off' : 'visibility'}</span>
+                </button>
             </div>
         </div>
+    );
+
+    return (
+        <AuthLayout
+            tag="Nueva contraseña"
+            tagIcon="vpn_key"
+            headline="Establece una contraseña"
+            highlight="segura"
+            subtitle="Protege el acceso a tu inventario: recepción, transferencias, conteos y reportes de todas tus sedes."
+            cards={[
+                { icon: 'check_circle', title: 'Usa una clave robusta', text: 'Combina letras, números y símbolos.' },
+                { icon: 'history', title: 'No reutilices claves anteriores', text: 'Cada contraseña debe ser distinta a las que ya usaste.' },
+            ]}
+            cardText="Crea una nueva contraseña robusta para proteger tu cuenta."
+            footer={<Link to="/" className="lg-back">← Volver a iniciar sesión</Link>}
+        >
+            <form className="lg-form" onSubmit={handleSubmit}>
+                {passwordField('password', 'Nueva contraseña', password, setPassword, showPass, setShowPass, 'Ingresa una contraseña segura')}
+                {passwordField('confirmPassword', 'Confirmar contraseña', confirmPassword, setConfirmPassword, showConfirm, setShowConfirm, 'Repite la contraseña')}
+
+                <button type="submit" className="lg-submit" disabled={loading}>
+                    {loading ? (
+                        <>
+                            <span className="lg-spinner" />
+                            <span>Actualizando...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>Actualizar contraseña</span>
+                            <span className="material-icons">arrow_forward</span>
+                        </>
+                    )}
+                </button>
+            </form>
+        </AuthLayout>
     );
 };
 

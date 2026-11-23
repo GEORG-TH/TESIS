@@ -1,311 +1,156 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-    Box,
-    TextField,
-    IconButton,
-    Typography,
-    Paper,
-    Fab,
-    Avatar,
-    CircularProgress,
-    Collapse,
-    useTheme // 1. Importamos el hook del tema
-} from '@mui/material';
-import {
-    Send as SendIcon,
-    Close as CloseIcon,
-    SmartToy as BotIcon
-} from '@mui/icons-material';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-// Usamos un estilo que se vea bien en ambos modos
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import React, { useState, useRef, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Box, Fab, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import CloseIcon from "@mui/icons-material/Close";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
+import { useChatIA, SUGERENCIAS } from "./useChatIA";
+import { BotAvatar, ChatBubble, ChatInput, ChipsSugerencias, TypingDots, GRADIENTE } from "./ChatParts";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const SORA = '"Sora", "Inter", sans-serif';
+const MONO = '"JetBrains Mono", ui-monospace, monospace';
 
-// Acento propio del asistente IA: azul fuerte fijo, independiente del tema
-// (en modo oscuro el primary del theme es gris neutro y se veía apagado).
-const CHAT_ACCENT = '#2563eb';
-const CHAT_ACCENT_HOVER = '#1d4ed8';
-
+/** Widget flotante del Gerente IA (esquina inferior derecha del dashboard). */
 const ChatWidget = () => {
-    const theme = useTheme(); // 2. Accedemos a las variables del tema (colores)
-    const [isOpen, setIsOpen] = useState(false);
-    const [input, setInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+  const { messages, isLoading, enviar, limpiar } = useChatIA();
+  const [abierto, setAbierto] = useState(false);
+  const [input, setInput] = useState("");
+  const finRef = useRef(null);
+  const inputRef = useRef(null);
 
-    // Estado de mensajes inicial
-    const [messages, setMessages] = useState([
-        {
-            id: 1,
-            text: "¡Hola! Soy tu asistente de inventarios virtual. \n\nPuedo responder preguntas sobre inventarios y escribir código. Ej: *'Escribe un Hello World en Java'*.",
-            sender: 'bot'
-        }
-    ]);
+  useEffect(() => {
+    if (abierto) finRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isLoading, abierto]);
 
-    // Referencia para el auto-scroll
-    const messagesEndRef = useRef(null);
+  const handleSend = () => {
+    if (!input.trim() || isLoading) return;
+    enviar(input);
+    setInput("");
+  };
 
-    // Efecto para bajar el scroll cuando hay mensajes nuevos
-    useEffect(() => {
-        if (isOpen) {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [messages, isOpen, isLoading]);
+  const elegir = (s) => {
+    if (s.prompt.endsWith(" ")) {
+      setInput(s.prompt);
+      inputRef.current?.focus();
+    } else {
+      enviar(s.prompt);
+    }
+  };
 
-    const handleToggle = () => setIsOpen(!isOpen);
-
-    const handleSend = async () => {
-        if (!input.trim()) return;
-
-        const userMessage = { id: Date.now(), text: input, sender: 'user' };
-        setMessages((prev) => [...prev, userMessage]);
-
-        const messageToSend = input; // Guardamos el texto
-        setInput('');
-        setIsLoading(true);
-
-        // Ajuste de URL para local o producción
-        const API_URL = BACKEND_URL;
-
-        try {
-            const response = await fetch(`${API_URL}/api/chat-gerente`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain',
-                },
-                body: messageToSend,
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error del servidor: ${response.status}`);
-            }
-
-            const dataText = await response.text();
-
-            const botResponse = {
-                id: Date.now() + 1,
-                text: dataText,
-                sender: 'bot'
-            };
-
-            setMessages((prev) => [...prev, botResponse]);
-
-        } catch (error) {
-            console.error("Error enviando mensaje:", error);
-            const errorMessage = {
-                id: Date.now() + 1,
-                text: "⚠️ Error de conexión. Verifica que el servidor en Render esté activo (puede tardar unos segundos en despertar).",
-                sender: 'bot'
-            };
-            setMessages((prev) => [...prev, errorMessage]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
-    };
-
-    return (
-        <Box sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
-            {/* Ventana del Chat con animación Collapse */}
-            <Collapse in={isOpen} timeout="auto" unmountOnExit>
-                <Paper
-                    elevation={6}
-                    sx={{
-                        width: 350,
-                        height: 500,
-                        mb: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden',
-                        borderRadius: 3,
-                        // 3. Bordes y Fondos adaptables
-                        border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #e0e0e0',
-                        bgcolor: 'background.paper'
-                    }}
-                >
-                    {/* Header */}
-                    <Box
-                        sx={{
-                            p: 2,
-                            bgcolor: CHAT_ACCENT,
-                            color: '#ffffff',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar sx={{ bgcolor: 'background.paper', color: CHAT_ACCENT, width: 32, height: 32 }}>
-                                <BotIcon fontSize="small" />
-                            </Avatar>
-                            <Typography variant="subtitle1" fontWeight="bold" color="inherit">
-                                Asistente IA
-                            </Typography>
-                        </Box>
-                        <IconButton size="small" onClick={handleToggle} sx={{ color: 'inherit' }}>
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
-
-                    {/* Lista de Mensajes */}
-                    <Box
-                        sx={{
-                            flex: 1,
-                            p: 2,
-                            overflowY: 'auto',
-                            // 4. Fondo grisáceo en claro, oscuro en dark mode
-                            bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#f5f5f5',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 2
-                        }}
-                    >
-                        {messages.map((msg) => (
-                            <Box
-                                key={msg.id}
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        maxWidth: '85%',
-                                        p: 1.5,
-                                        borderRadius: 2,
-                                        // 5. Colores de burbujas dinámicos
-                                        bgcolor: msg.sender === 'user' ? CHAT_ACCENT : 'background.paper',
-                                        color: msg.sender === 'user' ? '#ffffff' : 'text.primary',
-                                        boxShadow: 1,
-                                        // Borde sutil para el bot en modo oscuro
-                                        border: (theme.palette.mode === 'dark' && msg.sender === 'bot')
-                                            ? '1px solid rgba(255,255,255,0.12)'
-                                            : 'none',
-
-                                        // Estilos específicos para el renderizado de Markdown
-                                        '& p': { m: 0 },
-                                        '& pre': { m: 0, p: 0, borderRadius: 1, overflow: 'hidden', mt: 1 }
-                                    }}
-                                >
-                                    {msg.sender === 'user' ? (
-                                        <Typography variant="body2">{msg.text}</Typography>
-                                    ) : (
-                                        // Renderizador de Markdown para el Bot
-                                        <ReactMarkdown
-                                            components={{
-                                                code({ node, inline, className, children, ...props }) {
-                                                    const match = /language-(\w+)/.exec(className || '');
-                                                    return !inline && match ? (
-                                                        <SyntaxHighlighter
-                                                            style={vscDarkPlus}
-                                                            language={match[1]}
-                                                            PreTag="div"
-                                                            {...props}
-                                                        >
-                                                            {String(children).replace(/\n$/, '')}
-                                                        </SyntaxHighlighter>
-                                                    ) : (
-                                                        <code className={className} {...props} style={{
-                                                            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                                                            padding: '2px 4px',
-                                                            borderRadius: '4px'
-                                                        }}>
-                                                            {children}
-                                                        </code>
-                                                    );
-                                                }
-                                            }}
-                                        >
-                                            {msg.text}
-                                        </ReactMarkdown>
-                                    )}
-                                </Box>
-                            </Box>
-                        ))}
-
-                        {/* Indicador de "Escribiendo..." */}
-                        {isLoading && (
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
-                                    <CircularProgress size={20} />
-                                </Box>
-                            </Box>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </Box>
-
-                    {/* Área de Input */}
-                    <Box sx={{
-                        p: 2,
-                        bgcolor: 'background.paper',
-                        borderTop: `1px solid ${theme.palette.divider}`
-                    }}>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                placeholder="Escribe tu consulta..."
-                                variant="outlined"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyPress}
-                                disabled={isLoading}
-                                multiline
-                                maxRows={3}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: 3,
-                                        // Fondo del input adaptable
-                                        bgcolor: theme.palette.mode === 'dark' ? 'background.default' : 'white'
-                                    }
-                                }}
-                            />
-                            <IconButton
-                                onClick={handleSend}
-                                disabled={!input.trim() || isLoading}
-                                sx={{
-                                    bgcolor: CHAT_ACCENT,
-                                    color: 'white',
-                                    '&:hover': { bgcolor: CHAT_ACCENT_HOVER },
-                                    width: 40,
-                                    height: 40,
-                                    // Deshabilitado visualmente correcto en dark mode
-                                    '&.Mui-disabled': {
-                                        bgcolor: theme.palette.action.disabledBackground,
-                                        color: theme.palette.action.disabled
-                                    }
-                                }}
-                            >
-                                <SendIcon fontSize="small" />
-                            </IconButton>
-                        </Box>
-                    </Box>
-                </Paper>
-            </Collapse>
-
-            {/* Botón Flotante para abrir/cerrar */}
-            <Fab
-                aria-label="chat"
-                onClick={handleToggle}
-                sx={{
-                    float: 'right',
-                    mb: 10,
-                    bgcolor: CHAT_ACCENT,
-                    color: '#ffffff',
-                    '&:hover': { bgcolor: CHAT_ACCENT_HOVER },
-                }}
+  return (
+    <Box
+      sx={{
+        position: "fixed", right: { xs: 12, sm: 20 }, bottom: { xs: 12, sm: 20 }, zIndex: 1200,
+        display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1.5,
+      }}
+    >
+      <AnimatePresence>
+        {abierto && (
+          <motion.div
+            key="panel"
+            initial={{ opacity: 0, y: 24, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.94 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            style={{ transformOrigin: "bottom right" }}
+          >
+            <Box
+              role="dialog"
+              aria-label="Asistente IA"
+              sx={{
+                width: { xs: "calc(100vw - 24px)", sm: 390 },
+                height: "min(560px, calc(100dvh - 110px))",
+                display: "flex", flexDirection: "column", overflow: "hidden", borderRadius: 4,
+                bgcolor: "background.paper", border: "1px solid", borderColor: (t) => alpha(t.palette.info.main, 0.35),
+                boxShadow: "0 24px 60px rgba(0, 0, 0, 0.45)",
+              }}
             >
-                {isOpen ? <CloseIcon /> : <BotIcon />}
-            </Fab>
-        </Box>
-    );
+              {/* Cabecera */}
+              <Stack
+                direction="row" alignItems="center" justifyContent="space-between" spacing={1}
+                sx={{
+                  px: 2, py: 1.25, borderBottom: "1px solid", borderColor: "divider",
+                  bgcolor: (t) => alpha(t.palette.primary.main, t.palette.mode === "dark" ? 0.14 : 0.07),
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minWidth: 0 }}>
+                  <BotAvatar size={38} online />
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontFamily: SORA, fontWeight: 700, fontSize: 16, lineHeight: 1.2 }} noWrap>
+                      Gerente IA
+                    </Typography>
+                    <Typography sx={{ fontFamily: MONO, fontSize: 11, color: "success.main" }} noWrap>
+                      ● En línea
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Stack direction="row" spacing={0.25}>
+                  <Tooltip title="Nueva conversación">
+                    <span>
+                      <IconButton size="small" onClick={limpiar} aria-label="Nueva conversación" disabled={messages.length === 1 && !isLoading}>
+                        <DeleteSweepIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title="Cerrar">
+                    <IconButton size="small" onClick={() => setAbierto(false)} aria-label="Cerrar chat">
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+              </Stack>
+
+              {/* Mensajes */}
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.75 }}>
+                {messages.map((m) => <ChatBubble key={m.id} msg={m} compact />)}
+                {isLoading && (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <BotAvatar size={28} />
+                    <Box sx={{ px: 1.5, py: 0.8, borderRadius: 3, border: "1px solid", borderColor: "divider", bgcolor: (t) => alpha(t.palette.primary.main, 0.07) }}>
+                      <TypingDots />
+                    </Box>
+                  </Stack>
+                )}
+                <div ref={finRef} />
+              </Box>
+
+              {/* Sugerencias + entrada */}
+              <Box sx={{ px: 2, pt: 1.25, pb: 1.5, borderTop: "1px solid", borderColor: "divider", display: "flex", flexDirection: "column", gap: 1.1 }}>
+                <ChipsSugerencias sugerencias={SUGERENCIAS} onPick={elegir} disabled={isLoading} />
+                <ChatInput
+                  compact value={input} onChange={setInput} onSend={handleSend} disabled={isLoading}
+                  inputRef={inputRef} placeholder="Escribe tu consulta…"
+                />
+              </Box>
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Botón flotante */}
+      <Box sx={{ position: "relative" }}>
+        <Fab
+          aria-label={abierto ? "Cerrar asistente IA" : "Abrir asistente IA"}
+          onClick={() => setAbierto((v) => !v)}
+          sx={{
+            color: "#fff", backgroundImage: GRADIENTE, boxShadow: "0 10px 28px rgba(37, 99, 235, 0.5)",
+            "&:hover": { filter: "brightness(1.1)", backgroundImage: GRADIENTE },
+          }}
+        >
+          {abierto ? <CloseIcon /> : <SmartToyIcon />}
+        </Fab>
+        {!abierto && (
+          <Box
+            sx={{
+              position: "absolute", top: 2, right: 2, width: 13, height: 13, borderRadius: "50%",
+              bgcolor: "#22c55e", border: "2px solid", borderColor: "background.paper", pointerEvents: "none",
+            }}
+          />
+        )}
+      </Box>
+    </Box>
+  );
 };
 
 export default ChatWidget;

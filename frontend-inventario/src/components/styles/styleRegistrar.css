@@ -1,73 +1,171 @@
+/* Formularios de registro (productos, áreas, categorías, sedes, proveedores, usuarios, roles).
+   Estilo SWIC+: tarjeta con línea de acento, campos redondeados con anillo de foco cian y
+   botón principal en degradado cobalto-cian. Usa las variables del tema claro/oscuro. */
+
 .form-panel-container {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    margin: 24px auto;
+    padding: clamp(20px, 4vw, 32px);
+    overflow: hidden;
+    border-radius: 18px;
     background: var(--surface-color);
-    padding: 30px;
-    margin: 30px auto;
-    max-width: 600px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--surface-border);
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
     color: var(--text-color);
 }
 
+.form-panel-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #2563eb, #06b6d4);
+}
+
+.form-panel-container h2 {
+    margin: 4px 0 20px;
+    font-family: "Sora", "Inter", sans-serif;
+    font-size: clamp(1.2rem, 3vw, 1.5rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* Botón "Volver": discreto, con flecha */
 .form-panel-back {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: linear-gradient(135deg, #38f83e, #48e90e);
-    color: #fff;
-    border: none;
-    padding: 10px 16px;
+    margin-bottom: 8px;
+    padding: 7px 14px;
     border-radius: 10px;
+    border: 1px solid var(--surface-border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    margin-bottom: 16px;
-    box-shadow: 0 12px 20px rgba(14, 165, 233, 0.2);
-    transition: transform 0.15s ease, filter 0.2s ease, box-shadow 0.2s ease;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+
+.form-panel-back::before {
+    content: "←";
+    font-size: 15px;
+    line-height: 1;
 }
 
 .form-panel-back:hover,
-.form-panel-back:focus {
-    filter: brightness(1.05);
-    transform: translateY(-1px);
-    box-shadow: 0 16px 25px rgba(14, 165, 233, 0.28);
+.form-panel-back:focus-visible {
+    color: var(--text-color);
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb), 0.08);
+    transform: translateX(-2px);
     outline: none;
 }
 
 .form-panel {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
+    gap: 6px;
 }
 
 .form-group label {
+    margin: 0;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
     font-weight: 600;
-    margin-bottom: 4px;
-    color: var(--text-color);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
 }
 
 .form-group input,
-.form-group select {
-    padding: 8px;
-    border-radius: 6px;
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
     border: 1px solid var(--input-border);
     background: var(--input-bg);
     color: var(--text-color);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Mensaje de validación (antes solo existía en Login.css, que ya no se carga) */
+.error-message {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--danger-color);
+}
+
+.form-group .error-message::before {
+    content: "⚠ ";
 }
 
 .form-panel-submit {
-    background: var(--primary-color);
-    color: #ffffff;
+    margin-top: 6px;
+    padding: 12px 16px;
     border: none;
-    padding: 10px;
-    border-radius: 6px;
-    font-weight: bold;
+    border-radius: 12px;
+    background-image: linear-gradient(135deg, #2563eb, #3b82f6 55%, #06b6d4);
+    color: #ffffff;
+    font-family: "Sora", "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.3);
+    transition: transform 0.15s ease, filter 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-panel-submit:hover {
-    background: var(--primary-hover);
+.form-panel-submit:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.4);
+}
+
+.form-panel-submit:active:not(:disabled) {
+    transform: translateY(0) scale(0.99);
+}
+
+.form-panel-submit:disabled {
+    cursor: progress;
+    filter: saturate(0.7) brightness(0.92);
+    box-shadow: none;
+}
+
+body.dark-theme .form-panel-container {
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { forgotPassword } from '../../api/authApi';
-import '../../components/styles/Login.css';
+import AuthLayout from '../../components/AuthLayout';
 import Swal from 'sweetalert2';
 
 const ForgotPassword = () => {
@@ -18,7 +18,7 @@ const ForgotPassword = () => {
                 await Swal.fire({
                     icon: 'success',
                     title: 'Solicitud enviada',
-                    text: 'Si el correo que ingresaste existe, recibirás un enlace de recuperación.', 
+                    text: 'Si el correo que ingresaste existe, recibirás un enlace de recuperación.',
                     timer: 3000,
                     timerProgressBar: true
                 });
@@ -37,44 +37,65 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="container">
-            <div className="card">
-                <div className="card-header">
-                    <div className="brand-badge">SW+</div>
-                    <div className="card-header-text">
-                        <h2>Portal Corporativo SWIC+</h2>
-                        <p>Recupera el acceso a tu cuenta.</p>
+        <AuthLayout
+            tag="Recuperación segura"
+            tagIcon="lock_reset"
+            headline="Recupera el acceso a"
+            highlight="tu cuenta"
+            subtitle="Te enviaremos un enlace seguro a tu correo corporativo para que vuelvas a gestionar el inventario de tus sedes."
+            cards={[
+                {
+                    icon: 'link',
+                    title: 'Enlace seguro de un solo uso',
+                    text: 'Restablece tu contraseña desde el enlace que recibirás por correo.',
+                },
+                {
+                    icon: 'verified_user',
+                    title: 'Acceso con doble factor',
+                    text: 'Tu cuenta sigue protegida con autenticación de dos factores.',
+                },
+            ]}
+            cardText="Ingresa tu correo corporativo y te enviaremos un enlace seguro para restablecer tu contraseña."
+            footer={
+                <Link to="/" className="lg-back">
+                    ¿La recordaste? Volver a iniciar sesión
+                </Link>
+            }
+        >
+            <form className="lg-form" onSubmit={handleSubmit}>
+                <div>
+                    <label className="lg-label" htmlFor="email">Correo electrónico</label>
+                    <div className="lg-field">
+                        <span className="material-icons lg-field-icon">mail_outline</span>
+                        <input
+                            className="lg-input"
+                            type="email"
+                            id="email"
+                            placeholder="nombre.apellido@empresa.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            autoComplete="email"
+                            disabled={loading}
+                            required
+                        />
                     </div>
                 </div>
 
-                <p className="card-support-text">
-                    Ingresa tu correo corporativo y te enviaremos un enlace seguro para restablecer tu contraseña.
-                </p>
-
-                <form className="card-form" onSubmit={handleSubmit}>
-                    <label className="input-label" htmlFor="email">Correo electrónico</label>
-                    <input
-                        className="input"
-                        type="email"
-                        id="email"
-                        placeholder="nombre.apellido@empresa.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        autoComplete="email"
-                        disabled={loading}
-                        required
-                    />
-
-                    <button type="submit" className="button" disabled={loading}>
-                        {loading ? 'Enviando enlace...' : 'Enviar enlace'}
-                    </button>
-                </form>
-
-                <div className="forgot-password-link">
-                    <Link to="/">¿La recordaste? Volver a iniciar sesión</Link>
-                </div>
-            </div>
-        </div>
+                <button type="submit" className="lg-submit" disabled={loading}>
+                    {loading ? (
+                        <>
+                            <span className="lg-spinner" />
+                            <span>Enviando enlace...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>Enviar enlace</span>
+                            <span className="material-icons">arrow_forward</span>
+                        </>
+                    )}
+                </button>
+            </form>
+        </AuthLayout>
     );
 };
 

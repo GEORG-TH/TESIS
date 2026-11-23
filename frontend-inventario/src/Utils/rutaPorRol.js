@@ -6,6 +6,7 @@ export const rutaPorRol = (rol) => {
     case "Operador de Recepción de Mercadería": return "/dashboard-operador-recepcion";
     case "Auditor de Inventarios": return "/dashboard-auditor-inventarios";
     case "Operador de Tienda": return "/dashboard-operador-tienda";
+    case "Jefe de Almacén": return "/dashboard-jefe-almacen";
     default: return "/";
   }
 };

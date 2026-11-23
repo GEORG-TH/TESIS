@@ -1,111 +1,31 @@
-import { useNavigate } from "react-router-dom";
-import LayoutDashboard from "../../Layouts/LayoutDashboard";
-import "../../styles/dashboardProductos.css";
+import GroupIcon from "@mui/icons-material/Group";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import HistoryIcon from "@mui/icons-material/History";
+import SensorsIcon from "@mui/icons-material/Sensors";
+import ModuloDashboard from "../Shared/ModuloDashboard";
 
-const DashboardUsuarios = () => {
-    const navigate = useNavigate();
-
-    const OpcionGestion = [
-        {
-            id: "lista-usuarios",
-            titulo: "Gestión de Usuarios",
-            descripcion: "Administra cuentas, roles y estados del personal.",
-            ruta: "/lista-usuarios",
-        },
-        {
-            id: "lista-roles",
-            titulo: "Gestión de Roles",
-            descripcion: "Administra roles y permisos de los usuarios.",
-            ruta: "/roles",
-        }
-    ];
-    const OpcionActividad = [
-        {
-            id: "historial-accesos",
-            titulo: "Historial de Accesos",
-            descripcion: "Verifica cuando fue el último acceso de los usuarios.",
-            ruta: "/historial-accesos",
-        },
-        {
-            id: "usuarios-conectados",
-            titulo: "Usuarios Conectados",
-            descripcion: "Administra que usuarios están usando el sistema en tiempo real.",
-            ruta: "/usuarios-conectados",
-        }
-    ];
-
-    const manejarClick = (ruta) => {
-        navigate(ruta);
-    };
-
-    return (
-        <LayoutDashboard>
-            <section className="dashboard-productos">
-                <h2>Gestión y Control</h2>
-                <ul className="dashboard-productos__lista">
-                    {OpcionGestion.map((opcion) => (
-                        <li key={opcion.id}>
-                            <div
-                                className="dashboard-productos__card"
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => manejarClick(opcion.ruta)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        manejarClick(opcion.ruta);
-                                    }
-                                }}
-                            >
-                                <div className="dashboard-productos__card-header">
-                                    <span className="dashboard-productos__card-title">
-                                        {opcion.titulo}
-                                    </span>
-                                    <span className="dashboard-productos__card-icon">→</span>
-                                </div>
-                                {opcion.descripcion && (
-                                    <p className="dashboard-productos__card-description">
-                                        {opcion.descripcion}
-                                    </p>
-                                )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-                <h2>Actividad del Sistema</h2>
-                <ul className="dashboard-productos__lista">
-                    {OpcionActividad.map((opcion) => (
-                        <li key={opcion.id}>
-                            <div
-                                className="dashboard-productos__card"
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => manejarClick(opcion.ruta)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        manejarClick(opcion.ruta);
-                                    }
-                                }}
-                            >
-                                <div className="dashboard-productos__card-header">
-                                    <span className="dashboard-productos__card-title">
-                                        {opcion.titulo}
-                                    </span>
-                                    <span className="dashboard-productos__card-icon">→</span>
-                                </div>
-                                {opcion.descripcion && (
-                                    <p className="dashboard-productos__card-description">
-                                        {opcion.descripcion}
-                                    </p>
-                                )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </section>
-        </LayoutDashboard>
-    );
-};
+const DashboardUsuarios = () => (
+    <ModuloDashboard
+        titulo="Gestión de Usuarios"
+        subtitulo="Cuentas, roles y actividad del personal en el sistema."
+        icon={<GroupIcon />}
+        secciones={[
+            {
+                titulo: "Gestión y control",
+                items: [
+                    { id: "usuarios", titulo: "Gestión de Usuarios", descripcion: "Administra cuentas, roles y estados del personal.", ruta: "/lista-usuarios", icon: <GroupIcon />, color: "primary" },
+                    { id: "roles", titulo: "Gestión de Roles", descripcion: "Administra roles y permisos de los usuarios.", ruta: "/roles", icon: <AdminPanelSettingsIcon />, color: "secondary" },
+                ],
+            },
+            {
+                titulo: "Actividad del sistema",
+                items: [
+                    { id: "accesos", titulo: "Historial de Accesos", descripcion: "Verifica cuándo fue el último acceso de los usuarios.", ruta: "/historial-accesos", icon: <HistoryIcon />, color: "info" },
+                    { id: "conectados", titulo: "Usuarios Conectados", descripcion: "Consulta qué usuarios están usando el sistema en tiempo real.", ruta: "/usuarios-conectados", icon: <SensorsIcon />, color: "success" },
+                ],
+            },
+        ]}
+    />
+);
 
 export default DashboardUsuarios;
