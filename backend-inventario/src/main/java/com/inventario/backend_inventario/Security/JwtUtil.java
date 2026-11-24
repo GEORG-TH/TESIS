@@ -2,16 +2,30 @@ package com.inventario.backend_inventario.Security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
+
+    private final Key key;
     private final long expiration = 1000 * 60 * 60 * 10;
+
+    public JwtUtil(@Value("${jwt.secret:}") String secret) {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException(
+                "Falta la variable de entorno JWT_SECRET (jwt.secret): debe tener al menos 32 caracteres.");
+        }
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
 
     public String generateToken(String email, String rol, String type_expiration) {
         long expiration_time;
@@ -45,7 +59,7 @@ public class JwtUtil {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("⚠️ Token inválido o expirado: " + e.getMessage());
+            log.warn("Token inválido o expirado: {}", e.getMessage());
             return null;
         }
     }
@@ -56,10 +70,10 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.getSubject(); 
+            return claims.getSubject();
 
         } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("⚠️ Token inválido o expirado al intentar leer el email: " + e.getMessage());
+            log.warn("Token inválido o expirado al leer el email: {}", e.getMessage());
             return null;
         }
     }

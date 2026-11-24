@@ -8,7 +8,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/chat-gerente")
-@CrossOrigin(origins = "*")
+
 public class ChatGerenteController {
 
     private final ChatClient chatClient;

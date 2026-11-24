@@ -40,7 +40,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String token = authHeader.substring(7);
         final Claims claims = jwtUtil.validateToken(token);
 
-        if (claims != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        // Los tokens temporales (reset de contraseña) no llevan claim "rol":
+        // no deben dar acceso a la API.
+        String rolClaim = claims != null ? claims.get("rol", String.class) : null;
+        if (claims != null && rolClaim != null && !rolClaim.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null) {
             String email = claims.getSubject();
 
             var usuarioOpt = usuarioRepo.findByEmail(email);

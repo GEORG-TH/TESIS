@@ -12,7 +12,7 @@ import com.inventario.backend_inventario.Service.HuService;
 
 @RestController
 @RequestMapping("/api/hu")
-@CrossOrigin(origins = "*")
+
 public class HuController {
 
     @Autowired

@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/campanias")
-@CrossOrigin(origins = "*")
+
 public class CampaniaController {
 
     @Autowired

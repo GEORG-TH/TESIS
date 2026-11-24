@@ -15,7 +15,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/areas")
-@CrossOrigin(origins = "*") 
+
 public class AreaController {
     @Autowired
     private AreaService areaService;

@@ -20,7 +20,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/productos")
-@CrossOrigin(origins = "*")
+
 public class ProductoController {
     @Autowired
     private ProductoService productoService;

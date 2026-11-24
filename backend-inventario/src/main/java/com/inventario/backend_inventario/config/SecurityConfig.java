@@ -3,6 +3,7 @@ package com.inventario.backend_inventario.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +28,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String ADMIN = "Administrador";
+    private static final String JEFE_INV = "Jefe de Inventario";
+
     @Autowired
     private JwtAuthenticationFilter jwtFilter;
 
@@ -42,10 +46,29 @@ public class SecurityConfig {
                 "/api/auth/forgot-password", 
                 "/api/auth/reset-password",
                 "/api/auth/mfa/login-verify",
-                "/ws/**",
-                "/api/chat-gerente/**"
+                "/ws/**"
             ).permitAll()
-                .anyRequest().authenticated()           
+            // --- Autorización por rol (el frontend solo oculta; esto es lo que protege) ---
+            .requestMatchers("/api/chat-gerente/**").hasAnyRole(ADMIN, JEFE_INV)
+            .requestMatchers("/api/roles/**").hasRole(ADMIN)
+            .requestMatchers("/api/usuarios/conectados", "/api/historial/accesos").hasRole(ADMIN)
+            .requestMatchers(HttpMethod.POST, "/api/usuarios").hasRole(ADMIN)
+            .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasRole(ADMIN)
+            .requestMatchers(HttpMethod.PATCH, "/api/usuarios/*/activar", "/api/usuarios/*/desactivar").hasRole(ADMIN)
+            .requestMatchers(HttpMethod.PUT, "/api/conteo/*/aprobar", "/api/conteo/*/rechazar",
+                "/api/merma/*/aprobar", "/api/merma/*/rechazar",
+                "/api/devolucion/*/aprobar", "/api/devolucion/*/rechazar",
+                "/api/transferencia/*/aprobar", "/api/transferencia/*/rechazar").hasAnyRole(ADMIN, JEFE_INV)
+            .requestMatchers(HttpMethod.POST, "/api/inventario/ventas/importar").hasAnyRole(ADMIN, JEFE_INV)
+            // Datos maestros: lectura para cualquier autenticado, escritura solo Admin / Jefe de Inventario
+            .requestMatchers(HttpMethod.POST, "/api/areas/**", "/api/categorias/**", "/api/subcategorias/**",
+                "/api/proveedores/**", "/api/sedes/**", "/api/productos/**", "/api/campanias/**").hasAnyRole(ADMIN, JEFE_INV)
+            .requestMatchers(HttpMethod.PUT, "/api/areas/**", "/api/categorias/**", "/api/subcategorias/**",
+                "/api/proveedores/**", "/api/sedes/**", "/api/productos/**", "/api/campanias/**").hasAnyRole(ADMIN, JEFE_INV)
+            .requestMatchers(HttpMethod.PATCH, "/api/productos/**").hasAnyRole(ADMIN, JEFE_INV)
+            .requestMatchers(HttpMethod.DELETE, "/api/areas/**", "/api/categorias/**", "/api/subcategorias/**",
+                "/api/proveedores/**", "/api/sedes/**", "/api/productos/**", "/api/campanias/**").hasAnyRole(ADMIN, JEFE_INV)
+            .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
