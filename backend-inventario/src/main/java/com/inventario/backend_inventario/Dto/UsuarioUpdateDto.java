@@ -1,6 +1,7 @@
 package com.inventario.backend_inventario.Dto;
 
 import com.inventario.backend_inventario.Model.Rol;
+import com.inventario.backend_inventario.Model.Sede;
 import jakarta.validation.constraints.*;
 
 import lombok.*;
@@ -26,4 +27,7 @@ public class UsuarioUpdateDto {
     private String email;
     
     private Rol rol;
+
+    /** Obligatoria salvo para el rol Administrador (multisede). */
+    private Sede sede;
 }

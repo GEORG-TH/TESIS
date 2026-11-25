@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRoles } from "../../api/rolApi";
+import { getSedes } from "../../api/sedeApi";
 import { IngresarUsuarioSchema } from "../../Utils/usuarioSchema";
 
 const MySwal = withReactContent(Swal);
@@ -24,12 +25,20 @@ function RegistrarUsuario() {
     queryFn: getRoles
   });
   const roles = rolesData || [];
+  const { data: sedesData, isLoading: isLoadingSedes } = useQuery({
+    queryKey: ["sedes"],
+    queryFn: getSedes,
+  });
+  const sedes = sedesData || [];
   
   const {
 		register,
 		handleSubmit,
 		formState: { errors },
 		reset,
+		watch,
+		setError,
+		setValue,
 	} = useForm({
 		resolver: zodResolver(usuarioSchema),
     defaultValues: { 
@@ -41,8 +50,12 @@ function RegistrarUsuario() {
       email: "",
       pass: "",
       id_rol: "",
+      id_sede: "",
     }
 	});
+  // Solo el rol Administrador es multisede: el resto debe pertenecer a una sede.
+  const rolSeleccionado = roles.find((r) => String(r.id_rol) === watch("id_rol"));
+  const esAdminSeleccionado = rolSeleccionado?.nombreRol === "Administrador";
   const createUsuarioMutation = useMutation({
 		mutationFn: createUsuario,
 		onSuccess: () => {
@@ -70,6 +83,10 @@ function RegistrarUsuario() {
 		},
 	});
   const onSubmit = (data) => {
+		if (!esAdminSeleccionado && !data.id_sede) {
+			setError("id_sede", { message: "Debes seleccionar la sede del usuario" });
+			return;
+		}
 		const payload = {
 			dni: data.dni,
 			nombre_u: data.nombre_u,
@@ -80,6 +97,7 @@ function RegistrarUsuario() {
 			pass: data.pass,
 			estado_u: 1,
 			rol: { id_rol: parseInt(data.id_rol, 10) }, 
+			sede: esAdminSeleccionado || !data.id_sede ? null : { idSede: parseInt(data.id_sede, 10) },
 		};
 
 		createUsuarioMutation.mutate(payload);
@@ -138,7 +156,10 @@ function RegistrarUsuario() {
 
           <div className="form-group">
             <label>Rol:</label>
-            <select {...register("id_rol")}
+            <select {...register("id_rol", { onChange: (e) => {
+                const r = roles.find((x) => String(x.id_rol) === e.target.value);
+                if (r?.nombreRol === "Administrador") setValue("id_sede", "");
+              } })}
               disabled={isLoadingRoles} >
               <option value="">{isLoadingRoles ? "Cargando roles..." : "Seleccione un rol"}</option>
               {roles.map((r) => (
@@ -148,6 +169,23 @@ function RegistrarUsuario() {
               ))}
             </select>
             {errors.id_rol && <span className="error-message">{errors.id_rol.message}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Sede:</label>
+            <select {...register("id_sede")} disabled={isLoadingSedes || esAdminSeleccionado}>
+              <option value="">
+                {esAdminSeleccionado
+                  ? "Todas las sedes (Administrador)"
+                  : isLoadingSedes ? "Cargando sedes..." : "Seleccione una sede"}
+              </option>
+              {!esAdminSeleccionado && sedes.map((s) => (
+                <option key={s.idSede} value={s.idSede}>
+                  {s.nombreSede}
+                </option>
+              ))}
+            </select>
+            {errors.id_sede && <span className="error-message">{errors.id_sede.message}</span>}
           </div>
 
           <button type="submit" className="form-panel-submit" disabled={isLoadingRoles || createUsuarioMutation.isPending}>{createUsuarioMutation.isPending ? "Registrando..." : "Registrar Usuario"}</button>

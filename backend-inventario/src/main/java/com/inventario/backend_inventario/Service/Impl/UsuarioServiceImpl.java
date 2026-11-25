@@ -17,11 +17,14 @@ import com.cloudinary.utils.ObjectUtils;
 import com.inventario.backend_inventario.Dto.UsuarioUpdateDto;
 import com.inventario.backend_inventario.Exception.ResourceConflictException;
 import com.inventario.backend_inventario.Model.Rol;
+import com.inventario.backend_inventario.Model.Sede;
 import com.inventario.backend_inventario.Model.Usuario;
 import com.inventario.backend_inventario.Repository.RolRepository;
+import com.inventario.backend_inventario.Repository.SedeRepository;
 import com.inventario.backend_inventario.Repository.UsuarioRepository;
 import com.inventario.backend_inventario.Service.HistorialActividadService;
 import com.inventario.backend_inventario.Service.UsuarioService;
+import com.inventario.backend_inventario.Security.SedeAcceso;
 import lombok.RequiredArgsConstructor;
 
 
@@ -30,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository userRepo;
     private final RolRepository rolRepository;
+    private final SedeRepository sedeRepository;
     private final PasswordEncoder passwordEncoder;
     private final Cloudinary cloudinary;
     @Autowired
@@ -66,6 +70,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (existeDni(usuario.getDni())) {
             throw new ResourceConflictException("El DNI ya está registrado");
         }
+        asignarRolYSede(usuario, usuario.getRol(), usuario.getSede());
         String passwordPlano = usuario.getPassword(); 
         
         String passwordEncriptado = passwordEncoder.encode(passwordPlano);
@@ -102,9 +107,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             uDB.setTelefono(usuarioUpdateDto.getTelefono());
             uDB.setEmail(usuarioUpdateDto.getEmail());
 
-            Rol rol = rolRepository.findById(usuarioUpdateDto.getRol().getId_rol())
-                    .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
-            uDB.setRol(rol);
+            asignarRolYSede(uDB, usuarioUpdateDto.getRol(), usuarioUpdateDto.getSede());
             Usuario usuarioGuardado = userRepo.save(uDB);
 
             try {
@@ -187,6 +190,30 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setEstado_u(true);
             return userRepo.save(usuario);
         });
+    }
+
+    /**
+     * Resuelve rol y sede desde BD. Regla de negocio: solo el Administrador es multisede (sin sede);
+     * cualquier otro rol pertenece obligatoriamente a una sede existente.
+     */
+    private void asignarRolYSede(Usuario usuario, Rol rolSolicitado, Sede sedeSolicitada) {
+        if (rolSolicitado == null || rolSolicitado.getId_rol() == null) {
+            throw new ResourceConflictException("El rol es obligatorio");
+        }
+        Rol rol = rolRepository.findById(rolSolicitado.getId_rol())
+                .orElseThrow(() -> new ResourceConflictException("Rol no encontrado"));
+        usuario.setRol(rol);
+
+        if (SedeAcceso.ROL_ADMIN.equals(rol.getNombreRol())) {
+            usuario.setSede(null);
+            return;
+        }
+        if (sedeSolicitada == null || sedeSolicitada.getIdSede() == null) {
+            throw new ResourceConflictException("La sede es obligatoria para el rol " + rol.getNombreRol());
+        }
+        Sede sede = sedeRepository.findById(sedeSolicitada.getIdSede())
+                .orElseThrow(() -> new ResourceConflictException("Sede no encontrada"));
+        usuario.setSede(sede);
     }
 
     @Override

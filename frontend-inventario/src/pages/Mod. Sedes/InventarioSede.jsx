@@ -27,7 +27,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
 import Swal from "sweetalert2";
 
-import { getSedes } from "../../api/sedeApi";
+import { getSedes, soloSedesPropias, sedeInicial } from "../../api/sedeApi";
 import { getProductos } from "../../api/productoApi";
 import { getInventarioPorSede, asociarProductosASede, desasociarProductoDeSede } from "../../api/InventarioApi";
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
@@ -36,11 +36,11 @@ function InventarioSede() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [sedeId, setSedeId] = useState("");
+  const [sedeId, setSedeId] = useState(sedeInicial());
   const [seleccionados, setSeleccionados] = useState([]);
   const [filtro, setFiltro] = useState("");
 
-  const { data: sedes = [], isLoading: ls } = useQuery({ queryKey: ["sedes"], queryFn: getSedes });
+  const { data: sedes = [], isLoading: ls } = useQuery({ queryKey: ["sedes"], queryFn: getSedes, select: soloSedesPropias });
   const { data: productos = [], isLoading: lp } = useQuery({ queryKey: ["productos"], queryFn: getProductos });
 
   const { data: asociados = [], isFetching } = useQuery({

@@ -40,12 +40,14 @@ public class InventarioServiceImpl implements InventarioService {
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private TipoMovimientoRepository tipoMovimientoRepository; // <-- AÑADIDO
     @Autowired private HistorialActividadService historialActividadService;
+    @Autowired private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
 
     @Override
     @Transactional
     public void registrarRecepcion(RecepcionMasivaDto recepcionDto) {
 
         Usuario usuario = getUsuarioLogueado();
+        sedeAcceso.validar(recepcionDto.getSedeIdOrigen());
 
         // 1. Validar la Sede una sola vez para toda la transacción
         Sede sede = sedeRepository.findById(recepcionDto.getSedeIdOrigen())
@@ -100,6 +102,7 @@ public class InventarioServiceImpl implements InventarioService {
     public void registrarMerma(MermaMasivaDto mermaDto) {
 
         Usuario usuario = getUsuarioLogueado();
+        sedeAcceso.validar(mermaDto.getSedeId());
 
         Sede sede = sedeRepository.findById(mermaDto.getSedeId())
                 .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + mermaDto.getSedeId()));
@@ -155,6 +158,7 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     @Transactional
     public ResultadoImportacionVentasDto importarVentas(Integer sedeId, MultipartFile archivo) {
+        sedeAcceso.validar(sedeId);
         if (archivo == null || archivo.isEmpty()) {
             throw new IllegalArgumentException("Debes adjuntar un archivo CSV con datos.");
         }
@@ -344,7 +348,8 @@ public class InventarioServiceImpl implements InventarioService {
     @Transactional(readOnly = true)
     public List<MovimientoInventarioDto> listarMovimientos() {
         // 1. Obtener todos los movimientos (los ordenamos por ID o fecha, que es lo mismo)
-        List<MovimientoInventario> movimientos = movimientoInventarioRepository.findAllWithDetails();
+        List<MovimientoInventario> movimientos = sedeAcceso.filtrar(
+                movimientoInventarioRepository.findAllWithDetails(), m -> List.of(m.getSede().getIdSede()));
 
         // 2. Mapear cada entidad a tu DTO de 9 columnas
         return movimientos.stream().map(mov -> {
@@ -392,7 +397,8 @@ public class InventarioServiceImpl implements InventarioService {
     public List<InventarioActualDto> listarInventarioActual() {
 
         // 1. Llama al nuevo método del repositorio que evita errores LAZY
-        List<Inventario> inventarioLista = inventarioRepository.findAllWithProductoAndSede();
+        List<Inventario> inventarioLista = sedeAcceso.filtrar(
+                inventarioRepository.findAllWithProductoAndSede(), i -> List.of(i.getSede().getIdSede()));
 
         // 2. Mapea la Entidad al DTO (con los nombres que pediste)
         return inventarioLista.stream().map(inv -> {
@@ -420,6 +426,7 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     @Transactional(readOnly = true)
     public List<InventarioActualDto> listarInventarioPorSede(Integer sedeId) {
+        sedeAcceso.validar(sedeId);
         Sede sede = sedeRepository.findById(sedeId)
                 .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + sedeId));
         return inventarioRepository.findBySede(sede).stream().map(inv -> {
@@ -439,6 +446,7 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     @Transactional
     public int asociarProductosASede(Integer sedeId, List<Long> productoIds) {
+        sedeAcceso.validar(sedeId);
         Usuario usuario = getUsuarioLogueado();
         Sede sede = sedeRepository.findById(sedeId)
                 .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + sedeId));
@@ -464,6 +472,7 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     @Transactional
     public void desasociarProductoDeSede(Integer sedeId, Long productoId) {
+        sedeAcceso.validar(sedeId);
         Usuario usuario = getUsuarioLogueado();
         Sede sede = sedeRepository.findById(sedeId)
                 .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + sedeId));

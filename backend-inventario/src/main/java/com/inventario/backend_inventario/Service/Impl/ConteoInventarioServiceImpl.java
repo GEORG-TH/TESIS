@@ -34,11 +34,13 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     @Autowired private CategoriaRepository categoriaRepo;
     @Autowired private SubcategoriaRepository subcategoriaRepo;
     @Autowired private com.inventario.backend_inventario.Service.HistorialActividadService historialActividadService;
+    @Autowired private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
     @Autowired private InventarioService inventarioService; // Para ejecutar el ajuste real de stock al aprobar
 
     @Override
     @Transactional
     public HojaConteoResponseDto generarHoja(GenerarConteoRequestDto dto, Integer usuarioId) {
+        sedeAcceso.validar(dto.getSedeId());
         Sede sede = sedeRepo.findById(dto.getSedeId())
                 .orElseThrow(() -> new ResourceConflictException("Sede no encontrada"));
         Usuario generador = usuarioRepo.findById(usuarioId)
@@ -148,6 +150,7 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     public HojaConteoResponseDto registrarConteo(Long hojaId, RegistrarConteoRequestDto dto, Integer usuarioId) {
         HojaConteo hoja = hojaRepo.findById(hojaId)
                 .orElseThrow(() -> new ResourceConflictException("Hoja de conteo no encontrada"));
+        sedeAcceso.validar(hoja.getSede().getIdSede());
 
         if (hoja.getEstado() != EstadoConteo.GENERADA) {
             throw new ResourceConflictException("Esta hoja ya no admite el registro de un conteo");
@@ -182,6 +185,7 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     public HojaConteoResponseDto modificarConteo(Long hojaId, RegistrarConteoRequestDto dto, Integer usuarioId) {
         HojaConteo hoja = hojaRepo.findById(hojaId)
                 .orElseThrow(() -> new ResourceConflictException("Hoja de conteo no encontrada"));
+        sedeAcceso.validar(hoja.getSede().getIdSede());
 
         // Solo se puede corregir un conteo ya registrado que todavía no fue resuelto por el aprobador.
         if (hoja.getEstado() != EstadoConteo.CONTADA) {
@@ -228,7 +232,7 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     @Override
     @Transactional(readOnly = true)
     public List<HojaConteoResponseDto> listarTodas() {
-        return hojaRepo.findAllByOrderByFechaGeneracionDesc().stream()
+        return sedeAcceso.filtrar(hojaRepo.findAllByOrderByFechaGeneracionDesc(), h -> List.of(h.getSede().getIdSede())).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -236,7 +240,7 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     @Override
     @Transactional(readOnly = true)
     public List<HojaConteoResponseDto> listarPendientesAprobacion() {
-        return hojaRepo.findByEstado(EstadoConteo.CONTADA).stream()
+        return sedeAcceso.filtrar(hojaRepo.findByEstado(EstadoConteo.CONTADA), h -> List.of(h.getSede().getIdSede())).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -244,8 +248,9 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     @Override
     @Transactional(readOnly = true)
     public List<HojaConteoResponseDto> listarHistorialAprobacion() {
-        return hojaRepo.findByEstadoInOrderByFechaGeneracionDesc(
-                        Arrays.asList(EstadoConteo.APROBADA, EstadoConteo.RECHAZADA)).stream()
+        return sedeAcceso.filtrar(hojaRepo.findByEstadoInOrderByFechaGeneracionDesc(
+                        Arrays.asList(EstadoConteo.APROBADA, EstadoConteo.RECHAZADA)),
+                        h -> List.of(h.getSede().getIdSede())).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -255,6 +260,7 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     public HojaConteoResponseDto obtenerDetalle(Long hojaId) {
         HojaConteo hoja = hojaRepo.findById(hojaId)
                 .orElseThrow(() -> new ResourceConflictException("Hoja de conteo no encontrada"));
+        sedeAcceso.validar(hoja.getSede().getIdSede());
         return mapToDto(hoja);
     }
 
@@ -263,6 +269,7 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     public void aprobarHoja(Long hojaId, Integer usuarioId) {
         HojaConteo hoja = hojaRepo.findById(hojaId)
                 .orElseThrow(() -> new ResourceConflictException("Hoja de conteo no encontrada"));
+        sedeAcceso.validar(hoja.getSede().getIdSede());
 
         if (hoja.getEstado() != EstadoConteo.CONTADA) {
             throw new ResourceConflictException("Solo se pueden aprobar hojas que ya fueron contadas");
@@ -291,6 +298,7 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     public void rechazarHoja(Long hojaId, String motivo, Integer usuarioId) {
         HojaConteo hoja = hojaRepo.findById(hojaId)
                 .orElseThrow(() -> new ResourceConflictException("Hoja de conteo no encontrada"));
+        sedeAcceso.validar(hoja.getSede().getIdSede());
 
         if (hoja.getEstado() != EstadoConteo.CONTADA) {
             throw new ResourceConflictException("Solo se pueden rechazar hojas que ya fueron contadas");

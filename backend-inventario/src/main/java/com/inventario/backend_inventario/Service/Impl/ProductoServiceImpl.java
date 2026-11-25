@@ -33,6 +33,8 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class ProductoServiceImpl implements ProductoService {
     @Autowired
+    private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
+    @Autowired
     private ProductoRepository productoRepository;
 
     @Autowired
@@ -230,6 +232,7 @@ public class ProductoServiceImpl implements ProductoService {
         if (idSede == null) {
             throw new IllegalArgumentException("El ID de la sede es obligatorio para calcular el reabastecimiento.");
         }
+        sedeAcceso.validar(idSede);
         return productoRepository.obtenerSugerenciasPorSede(idSede);
     }
 

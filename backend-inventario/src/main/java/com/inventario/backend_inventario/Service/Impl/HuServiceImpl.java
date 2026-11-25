@@ -48,6 +48,18 @@ public class HuServiceImpl implements HuService {
     private UsuarioRepository usuarioRepository;
     @Autowired
     private HistorialActividadService historialActividadService;
+    @Autowired
+    private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
+
+    /** Sedes que participan en una HU: el almacén de origen y, si ya fue solicitada, la sede destino. */
+    private List<Integer> sedesDe(Hu hu) {
+        List<Integer> ids = new ArrayList<>();
+        ids.add(hu.getAlmacen().getIdSede());
+        if (hu.getSedeDestino() != null) {
+            ids.add(hu.getSedeDestino().getIdSede());
+        }
+        return ids;
+    }
 
     private String generarSiguienteCodigo() {
         int year = java.time.Year.now().getValue();
@@ -67,6 +79,7 @@ public class HuServiceImpl implements HuService {
     @Override
     @Transactional
     public Hu crearHu(HuDto huDto) {
+        sedeAcceso.validar(huDto.getIdAlmacen());
         Sede almacen = sedeRepository.findById(huDto.getIdAlmacen().intValue())
                 .orElseThrow(() -> new EntityNotFoundException("Almacén no encontrado"));
 
@@ -107,6 +120,7 @@ public class HuServiceImpl implements HuService {
     public Hu actualizarHu(Long idHu, HuDto huDto) {
         Hu hu = huRepository.findById(idHu)
                 .orElseThrow(() -> new EntityNotFoundException("HU no encontrada"));
+        sedeAcceso.validarAlgunaDe(sedesDe(hu).toArray(new Integer[0]));
 
         StringBuilder cambios = new StringBuilder("Actualizó HU: ");
         if (huDto.getEstado() != null) {
@@ -218,7 +232,7 @@ public class HuServiceImpl implements HuService {
 
     @Override
     public List<Hu> historialHu() {
-        return huRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+        return sedeAcceso.filtrar(huRepository.findAll(Sort.by(Sort.Direction.DESC, "id")), this::sedesDe);
     }
 
     @Override
@@ -227,6 +241,7 @@ public class HuServiceImpl implements HuService {
         Hu hu = huRepository.findById(idHu)
                 .orElseThrow(() -> new EntityNotFoundException("HU no encontrada"));
 
+        sedeAcceso.validarAlgunaDe(huDto.getIdSedeDestino());
         if (hu.getEstado() != EstadoHu.COMPLETO && hu.getEstado() != EstadoHu.QUIEBRE) {
             throw new IllegalStateException(
                     "La HU no está en un estado válido para ser solicitada, espere hasta que esté COMPLETO o QUIEBRE (Estado actual: "
@@ -280,6 +295,7 @@ public class HuServiceImpl implements HuService {
     @Transactional
     public void eliminarHu(Long id) {
         Hu hu = obtenerPorId(id);
+        sedeAcceso.validar(hu.getAlmacen().getIdSede());
         huRepository.delete(hu);
         try {
             String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())

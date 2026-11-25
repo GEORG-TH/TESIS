@@ -111,7 +111,9 @@ public class AuthController {
                     usuario.getEstado_u(),
                     usuario.getFotoUrl(),
                     usuario.getRol().getNombreRol(),
-                    usuario.isMfaEnabled()));
+                    usuario.isMfaEnabled(),
+                    usuario.getSede() != null ? usuario.getSede().getIdSede() : null,
+                    usuario.getSede() != null ? usuario.getSede().getNombreSede() : null));
             return ResponseEntity.ok(resp);
         }
     }
@@ -149,7 +151,9 @@ public class AuthController {
                 usuario.getEstado_u(),
                 usuario.getFotoUrl(),
                 usuario.getRol().getNombreRol(),
-                usuario.isMfaEnabled()));
+                usuario.isMfaEnabled(),
+                usuario.getSede() != null ? usuario.getSede().getIdSede() : null,
+                usuario.getSede() != null ? usuario.getSede().getNombreSede() : null));
         return ResponseEntity.ok(resp);
     }
 
@@ -261,6 +265,8 @@ public class AuthController {
             boolean estado_u,
             String fotoUrl,
             String rol,
-            boolean mfaEnabled) {
+            boolean mfaEnabled,
+            Integer sedeId,
+            String sedeNombre) {
     }
 }

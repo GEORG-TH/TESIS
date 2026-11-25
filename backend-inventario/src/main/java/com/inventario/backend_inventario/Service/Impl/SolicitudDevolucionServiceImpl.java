@@ -24,11 +24,13 @@ public class SolicitudDevolucionServiceImpl implements SolicitudDevolucionServic
     @Autowired private UsuarioRepository usuarioRepo;
     @Autowired private ProductoRepository productoRepo;
     @Autowired private ProveedorRepository proveedorRepo;
+    @Autowired private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
     @Autowired private InventarioService inventarioService;
 
     @Override
     @Transactional
     public SolicitudDevolucion crearSolicitud(SolicitudDevolucionRequestDto dto, Integer usuarioId) {
+        sedeAcceso.validar(dto.getSedeOrigenId()); // la sede que devuelve debe ser la del usuario
         Sede origen = sedeRepo.findById(dto.getSedeOrigenId())
                 .orElseThrow(() -> new EntityNotFoundException("Sede que devuelve no encontrada"));
         Usuario solicitante = usuarioRepo.findById(usuarioId)
@@ -78,16 +80,28 @@ public class SolicitudDevolucionServiceImpl implements SolicitudDevolucionServic
         return solicitudRepo.save(solicitud);
     }
 
+    /** Sedes que participan en la devolución: la que devuelve y, si aplica, la que recibe. */
+    private List<Integer> sedesInvolucradas(SolicitudDevolucion s) {
+        List<Integer> ids = new ArrayList<>();
+        ids.add(s.getSedeOrigen().getIdSede());
+        if (s.getSedeDestino() != null) {
+            ids.add(s.getSedeDestino().getIdSede());
+        }
+        return ids;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<SolicitudDevolucion> listarPendientes() {
-        return solicitudRepo.findByEstadoOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE);
+        return sedeAcceso.filtrar(solicitudRepo.findByEstadoOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE),
+                this::sedesInvolucradas);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<SolicitudDevolucion> listarHistorial() {
-        return solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE);
+        return sedeAcceso.filtrar(solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE),
+                this::sedesInvolucradas);
     }
 
     @Override
@@ -98,6 +112,7 @@ public class SolicitudDevolucionServiceImpl implements SolicitudDevolucionServic
         if (s.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new IllegalArgumentException("La solicitud ya fue procesada anteriormente");
         }
+        sedeAcceso.validarAlgunaDe(sedesInvolucradas(s).toArray(new Integer[0]));
 
         String destinoTxt = s.getTipoDestino() == DestinoDevolucion.SEDE
                 ? "sede '" + s.getSedeDestino().getNombreSede() + "'"
@@ -140,6 +155,7 @@ public class SolicitudDevolucionServiceImpl implements SolicitudDevolucionServic
         if (s.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new IllegalArgumentException("La solicitud no está pendiente");
         }
+        sedeAcceso.validarAlgunaDe(sedesInvolucradas(s).toArray(new Integer[0]));
         s.setMotivoRechazo(motivo);
         s.setEstado(EstadoSolicitud.RECHAZADO);
         s.setFechaAprobacion(LocalDateTime.now());

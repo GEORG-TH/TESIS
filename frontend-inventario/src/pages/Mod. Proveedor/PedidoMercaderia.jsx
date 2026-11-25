@@ -7,7 +7,7 @@ import { alpha } from "@mui/material/styles";
 
 // APIs
 import { getHuDisponibles, solicitarHu } from "../../api/huApi";
-import { getSedes } from "../../api/sedeApi";
+import { getSedes, soloSedesPropias, sedePropiaId } from "../../api/sedeApi";
 
 // Componentes UI
 import {
@@ -54,7 +54,7 @@ const PedidoMercaderia = () => {
     // --- Estados para Solicitud (Drawer) ---
     const [openDrawer, setOpenDrawer] = useState(false);
     const [huSeleccionada, setHuSeleccionada] = useState(null);
-    const [idSedeDestino, setIdSedeDestino] = useState("");
+    const [idSedeDestino, setIdSedeDestino] = useState(sedePropiaId() ?? "");
     const [fechaSolicitada, setFechaSolicitada] = useState("");
 
     // --- Estados para Detalle (Modal) ---
@@ -74,6 +74,7 @@ const PedidoMercaderia = () => {
     const { data: sedes = [] } = useQuery({
         queryKey: ["sedes"],
         queryFn: getSedes,
+        select: soloSedesPropias,
     });
 
     // --- Mutación Solicitud ---
@@ -104,7 +105,7 @@ const PedidoMercaderia = () => {
     const handleClickSolicitar = (huRow) => {
         setHuSeleccionada(huRow);
         setOpenDrawer(true);
-        setIdSedeDestino("");
+        setIdSedeDestino(sedePropiaId() ?? "");
         setFechaSolicitada("");
     };
 

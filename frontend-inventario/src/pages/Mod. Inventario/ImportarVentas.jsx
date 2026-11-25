@@ -22,7 +22,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
-import { getSedes } from "../../api/sedeApi";
+import { getSedes, soloSedesPropias, sedeInicial } from "../../api/sedeApi";
 import { importarVentasCsv } from "../../api/InventarioApi";
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
 
@@ -31,7 +31,7 @@ function ImportarVentas() {
   const queryClient = useQueryClient();
   const inputRef = useRef(null);
 
-  const [sedeId, setSedeId] = useState("");
+  const [sedeId, setSedeId] = useState(sedeInicial());
   const [archivo, setArchivo] = useState(null);
   const [resultado, setResultado] = useState(null);
   const [errores, setErrores] = useState([]);
@@ -40,6 +40,7 @@ function ImportarVentas() {
   const { data: sedes, isLoading } = useQuery({
     queryKey: ["sedes"],
     queryFn: getSedes,
+    select: soloSedesPropias,
     initialData: [],
   });
 

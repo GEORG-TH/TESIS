@@ -23,11 +23,22 @@ public class ReporteServiceImpl implements ReporteService {
     @Autowired private InventarioRepository inventarioRepo;
     @Autowired private MovimientoInventarioRepository movimientoRepo;
     @Autowired private DetalleConteoRepository detalleConteoRepo;
+    @Autowired private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
+
+    /** Inventario visible para el usuario actual (su sede; el admin ve todas). */
+    private List<Inventario> inventarios() {
+        return sedeAcceso.filtrar(inventarioRepo.findAllWithProductoAndSede(), i -> List.of(i.getSede().getIdSede()));
+    }
+
+    /** Movimientos visibles para el usuario actual (su sede; el admin ve todas). */
+    private List<MovimientoInventario> movimientos() {
+        return sedeAcceso.filtrar(movimientoRepo.findAllWithDetails(), m -> List.of(m.getSede().getIdSede()));
+    }
 
     @Override
     @Transactional(readOnly = true)
     public List<ReporteQuiebreStockDto> listarQuiebreStock() {
-        return inventarioRepo.findAllWithProductoAndSede().stream()
+        return inventarios().stream()
                 .filter(inv -> inv.getStockActual() <= inv.getProducto().getStockMinimo())
                 .map(this::mapQuiebre)
                 .collect(Collectors.toList());
@@ -52,7 +63,7 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     @Transactional(readOnly = true)
     public List<ReporteValorizadoDto> listarValorizado() {
-        return inventarioRepo.findAllWithProductoAndSede().stream()
+        return inventarios().stream()
                 .map(this::mapValorizado)
                 .collect(Collectors.toList());
     }
@@ -78,7 +89,7 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     @Transactional(readOnly = true)
     public List<ReporteMermaDto> listarMerma(LocalDateTime desde, LocalDateTime hasta) {
-        return movimientoRepo.findAllWithDetails().stream()
+        return movimientos().stream()
                 .filter(m -> m.getTipoMovimiento().getTipo().toLowerCase().contains("merma"))
                 .filter(m -> dentroDeRango(m.getFechaHora(), desde, hasta))
                 .map(this::mapMerma)
@@ -105,7 +116,8 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     @Transactional(readOnly = true)
     public List<ReporteDiferenciaDto> listarDiferencias() {
-        return detalleConteoRepo.findDiferencias(EstadoConteo.APROBADA).stream()
+        return sedeAcceso.filtrar(detalleConteoRepo.findDiferencias(EstadoConteo.APROBADA),
+                        d -> List.of(d.getHoja().getSede().getIdSede())).stream()
                 .map(this::mapDiferencia)
                 .collect(Collectors.toList());
     }
@@ -131,7 +143,7 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     @Transactional(readOnly = true)
     public List<ReporteStockMuertoDto> listarStockMuerto(int diasUmbral) {
-        List<MovimientoInventario> movimientos = movimientoRepo.findAllWithDetails();
+        List<MovimientoInventario> movimientos = movimientos();
 
         Map<String, LocalDateTime> ultimoMovimientoPorClave = new HashMap<>();
         for (MovimientoInventario m : movimientos) {
@@ -145,7 +157,7 @@ public class ReporteServiceImpl implements ReporteService {
         LocalDateTime ahora = LocalDateTime.now();
         List<ReporteStockMuertoDto> resultado = new ArrayList<>();
 
-        for (Inventario inv : inventarioRepo.findAllWithProductoAndSede()) {
+        for (Inventario inv : inventarios()) {
             if (inv.getStockActual() <= 0) continue; // Sin stock no aplica "stock muerto"
 
             String clave = claveProductoSede(inv.getProducto().getId_producto(), inv.getSede().getIdSede());
@@ -178,7 +190,7 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     @Transactional(readOnly = true)
     public List<MovimientoInventarioDto> listarEntradas(LocalDateTime desde, LocalDateTime hasta) {
-        return movimientoRepo.findAllWithDetails().stream()
+        return movimientos().stream()
                 .filter(this::esEntrada)
                 .filter(m -> dentroDeRango(m.getFechaHora(), desde, hasta))
                 .map(this::mapMovimiento)
@@ -188,7 +200,7 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     @Transactional(readOnly = true)
     public List<MovimientoInventarioDto> listarSalidas(LocalDateTime desde, LocalDateTime hasta) {
-        return movimientoRepo.findAllWithDetails().stream()
+        return movimientos().stream()
                 .filter(m -> !esEntrada(m))
                 .filter(m -> dentroDeRango(m.getFechaHora(), desde, hasta))
                 .map(this::mapMovimiento)

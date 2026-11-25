@@ -32,7 +32,7 @@ import AddIcon from "@mui/icons-material/Add";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Swal from "sweetalert2";
 import { getProductos } from "../../api/productoApi";
-import { getSedes } from "../../api/sedeApi";
+import { getSedes, soloSedesPropias, sedeInicial } from "../../api/sedeApi";
 import { getInventarioActual } from "../../api/InventarioApi";
 import { solicitarMerma } from "../../api/mermaApi";
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
@@ -57,7 +57,7 @@ const RegistrarMerma = () => {
   const navigate = useNavigate();
 
   const [sedes, setSedes] = useState([]);
-  const [sedeId, setSedeId] = useState("");
+  const [sedeId, setSedeId] = useState(sedeInicial());
 
   const [stockActualLista, setStockActualLista] = useState([]);
 
@@ -77,7 +77,7 @@ const RegistrarMerma = () => {
       .catch(() => setCatalogoProductos([]));
 
     getSedes()
-      .then(setSedes)
+      .then((lista) => setSedes(soloSedesPropias(lista)))
       .catch(() => setSedes([]));
 
     getInventarioActual()

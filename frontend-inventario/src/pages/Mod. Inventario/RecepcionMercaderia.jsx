@@ -29,7 +29,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { getProductos } from "../../api/productoApi";
-import { getSedes } from "../../api/sedeApi";
+import { getSedes, soloSedesPropias, sedeInicial } from "../../api/sedeApi";
 import { registrarRecepcion } from "../../api/InventarioApi";
 import { recepcionMasivaSchema } from "../../Utils/inventarioSchema";
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
@@ -50,6 +50,7 @@ function RecepcionMercaderia() {
   const { data: sedes, isLoading: isLoadingSedes } = useQuery({
     queryKey: ["sedes"],
     queryFn: getSedes,
+    select: soloSedesPropias,
     initialData: [],
   });
 
@@ -62,7 +63,7 @@ function RecepcionMercaderia() {
   } = useForm({
     resolver: zodResolver(recepcionMasivaSchema),
     defaultValues: {
-      sedeIdOrigen: "",
+      sedeIdOrigen: sedeInicial(),
       descripcion: "",
       detalles: [{ productoId: "", cantidad: "" }],
     },

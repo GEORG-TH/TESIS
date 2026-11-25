@@ -22,6 +22,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import { useGlobalStore } from "../../store/useGlobalStore";
 import { getRoles } from "../../api/rolApi";
+import { getSedes } from "../../api/sedeApi";
 import TablaLista from "../../components/TablaLista";
 import FormularioDialogo from "../../components/FomularioDialogo";
 import { usuarioEditSchema } from "../../Utils/usuarioSchema";
@@ -50,6 +51,8 @@ function ListaUsuarios() {
       queryFn: getRoles
     });
   const roles = rolesData || [];
+  const { data: sedesData } = useQuery({ queryKey: ["sedes"], queryFn: getSedes });
+  const sedes = sedesData || [];
   const usuarioFields = useMemo(() => [
     { name: 'nombre_u', label: 'Nombre', type: 'text' },
     { name: 'apellido_pat', label: 'Apellido Paterno', type: 'text' },
@@ -61,8 +64,17 @@ function ListaUsuarios() {
       label: 'Rol',
       type: 'select',
       options: roles.map(rol => ({ label: rol.nombreRol, value: String(rol.id_rol) }))
+    },
+    {
+      name: 'id_sede',
+      label: 'Sede (obligatoria salvo Administrador)',
+      type: 'select',
+      options: [
+        { label: 'Sin sede (solo Administrador)', value: '' },
+        ...sedes.map(s => ({ label: s.nombreSede, value: String(s.idSede) }))
+      ]
     }
-  ], [roles]);
+  ], [roles, sedes]);
   const processedUsuarios = useMemo(() => {
     if (!usuariosData) {
       return [];
@@ -74,6 +86,7 @@ function ListaUsuarios() {
       nombreCompleto: `${u.nombre_u || ""} ${u.apellido_pat || ""} ${u.apellido_mat || ""
         }`.trim(),
       rolNombre: u.rol?.nombreRol || "N/A",
+      sedeNombre: u.sede?.nombreSede || (u.rol?.nombreRol === "Administrador" ? "Todas (multisede)" : "Sin sede"),
     }));
   }, [usuariosData]);
   const deleteUsuarioMutation = useMutation({
@@ -198,18 +211,25 @@ function ListaUsuarios() {
       apellido_mat: usuario.apellido_mat,
       telefono: usuario.telefono,
       email: usuario.email,
-      id_rol: usuario.rol?.id_rol ? String(usuario.rol.id_rol) : ''
+      id_rol: usuario.rol?.id_rol ? String(usuario.rol.id_rol) : '',
+      id_sede: usuario.sede?.idSede ? String(usuario.sede.idSede) : ''
     });
     setOpenEditDialog(true);
   };
   const onSaveEdit = (formData) => {
+    const esAdmin = roles.find(r => String(r.id_rol) === formData.id_rol)?.nombreRol === "Administrador";
+    if (!esAdmin && !formData.id_sede) {
+      MySwal.fire("Sede requerida", "Solo el Administrador puede no tener sede. Selecciona la sede del usuario.", "warning");
+      return;
+    }
     const payload = {
       nombre_u: formData.nombre_u,
       apellido_pat: formData.apellido_pat,
       apellido_mat: formData.apellido_mat,
       telefono: formData.telefono,
       email: formData.email,
-      rol: { id_rol: parseInt(formData.id_rol) }
+      rol: { id_rol: parseInt(formData.id_rol) },
+      sede: esAdmin || !formData.id_sede ? null : { idSede: parseInt(formData.id_sede) }
     };
     updateUsuarioMutation.mutate({
       id: usuarioSeleccionado.id_u,
@@ -244,7 +264,12 @@ function ListaUsuarios() {
     {
       field: "rolNombre",
       headerName: "Rol",
-      width: 280,
+      width: 200,
+    },
+    {
+      field: "sedeNombre",
+      headerName: "Sede",
+      width: 180,
     },
     {
       field: "estado_u",

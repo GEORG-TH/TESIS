@@ -27,6 +27,8 @@ public class SolicitudMermaController {
     private SolicitudMermaRepository mermaRepository;
     @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
+    private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
 
     /**
      * 1. CREAR SOLICITUD (queda en estado PENDIENTE / "Solicitado")
@@ -94,7 +96,7 @@ public class SolicitudMermaController {
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerPorId(@PathVariable Long id) {
         return mermaRepository.findById(id)
-                .map(ResponseEntity::ok)
+                .map(m -> { sedeAcceso.validar(m.getSede().getIdSede()); return ResponseEntity.ok((Object) m); })
                 .orElse(ResponseEntity.notFound().build());
     }
 }

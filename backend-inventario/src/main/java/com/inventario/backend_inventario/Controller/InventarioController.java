@@ -36,6 +36,8 @@ public class InventarioController {
         } catch (EntityNotFoundException e) {
             // Error si el Producto o Sede no existen
             return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e; // 403 lo resuelve GlobalExceptionHandler
         } catch (Exception e) {
             // Error genérico: no se expone el detalle técnico al cliente
             return ResponseEntity.status(500).body(Map.of("message", "No se pudo registrar la recepción. Inténtalo nuevamente."));
@@ -57,6 +59,8 @@ public class InventarioController {
             return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e; // 403 lo resuelve GlobalExceptionHandler
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("message", "No se pudo importar el archivo de ventas. Inténtalo nuevamente."));
         }
@@ -107,6 +111,8 @@ public class InventarioController {
             // El servicio hará la magia de convertir las Entidades en DTOs
             List<MovimientoInventarioDto> movimientos = inventarioService.listarMovimientos();
             return ResponseEntity.ok(movimientos);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e; // 403 lo resuelve GlobalExceptionHandler
         } catch (Exception e) {
             // Puedes usar tu GlobalExceptionHandler, pero esto es un catch simple
             return ResponseEntity.status(500).body(null);
@@ -120,6 +126,8 @@ public class InventarioController {
         try {
             List<InventarioActualDto> inventario = inventarioService.listarInventarioActual();
             return ResponseEntity.ok(inventario);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e; // 403 lo resuelve GlobalExceptionHandler
         } catch (Exception e) {
             return ResponseEntity.status(500).body(null);
         }

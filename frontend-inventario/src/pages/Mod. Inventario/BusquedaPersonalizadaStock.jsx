@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import FiltroAvanzado from "../../components/FiltroAvanzado"; // Asegúrate de apuntar a la ruta correcta
-import { getSedes } from "../../api/sedeApi"; // Importa la API para obtener las sedes
+import { getSedes, soloSedesPropias } from "../../api/sedeApi"; // Importa la API para obtener las sedes
 import { getProductos } from "../../api/productoApi"; // Importa la API de productos
 import { getSubcategorias } from "../../api/subcategoriaApi"; // Importa la API de subcategorías
 import { getCategorias } from "../../api/categoriaApi"; // Importa la API de categorías
@@ -21,7 +21,7 @@ function BusquedaPersonalizadaStock() {
       try {
         const data = await getSedes();
         // Mapear los datos de la API para que coincidan con lo que espera el Autocomplete
-        const options = data.map(sede => ({
+        const options = soloSedesPropias(data).map(sede => ({
           label: `${sede.idSede}-${sede.nombreSede}`,
           id: sede.idSede
         }));

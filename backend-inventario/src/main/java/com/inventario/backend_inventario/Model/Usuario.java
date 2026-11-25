@@ -68,7 +68,12 @@ public class Usuario implements UserDetails {
     @ManyToOne
     @JoinColumn(name = "id_rol")
     private Rol rol;
-    
+
+    /** Sede a la que pertenece el usuario. Solo el rol Administrador es multisede (sede = null). */
+    @ManyToOne
+    @JoinColumn(name = "id_sede")
+    private Sede sede;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (rol == null || rol.getNombreRol() == null) {

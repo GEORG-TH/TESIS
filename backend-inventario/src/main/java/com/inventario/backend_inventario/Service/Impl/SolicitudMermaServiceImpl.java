@@ -24,11 +24,13 @@ public class SolicitudMermaServiceImpl implements SolicitudMermaService {
     @Autowired private SedeRepository sedeRepo;
     @Autowired private UsuarioRepository usuarioRepo;
     @Autowired private ProductoRepository productoRepo;
+    @Autowired private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
     @Autowired private InventarioService inventarioService; // Para ejecutar el descuento real de stock al aprobar
 
     @Override
     @Transactional
     public SolicitudMerma crearSolicitud(SolicitudMermaRequestDto dto, Integer usuarioId) {
+        sedeAcceso.validar(dto.getSedeId());
         SolicitudMerma solicitud = new SolicitudMerma();
 
         Sede sede = sedeRepo.findById(dto.getSedeId())
@@ -61,7 +63,8 @@ public class SolicitudMermaServiceImpl implements SolicitudMermaService {
 
     @Override
     public List<SolicitudMerma> listarPendientes() {
-        return solicitudRepo.findByEstado(EstadoSolicitud.PENDIENTE);
+        return sedeAcceso.filtrar(solicitudRepo.findByEstado(EstadoSolicitud.PENDIENTE),
+                s -> List.of(s.getSede().getIdSede()));
     }
 
     @Override
@@ -73,6 +76,7 @@ public class SolicitudMermaServiceImpl implements SolicitudMermaService {
         if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new ResourceConflictException("La solicitud ya fue procesada anteriormente");
         }
+        sedeAcceso.validar(solicitud.getSede().getIdSede());
 
         // Traduce la solicitud aprobada al DTO que ya sabe descontar stock y registrar el Kardex
         MermaMasivaDto mermaDto = new MermaMasivaDto();
@@ -103,6 +107,7 @@ public class SolicitudMermaServiceImpl implements SolicitudMermaService {
         if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new ResourceConflictException("La solicitud no está pendiente");
         }
+        sedeAcceso.validar(solicitud.getSede().getIdSede());
 
         solicitud.setMotivoRechazo(motivo);
         solicitud.setEstado(EstadoSolicitud.RECHAZADO);
@@ -112,6 +117,7 @@ public class SolicitudMermaServiceImpl implements SolicitudMermaService {
 
     @Override
     public List<SolicitudMerma> listarHistorial() {
-        return solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE);
+        return sedeAcceso.filtrar(solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE),
+                s -> List.of(s.getSede().getIdSede()));
     }
 }

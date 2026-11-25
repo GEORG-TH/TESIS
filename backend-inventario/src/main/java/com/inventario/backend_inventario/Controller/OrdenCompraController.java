@@ -37,6 +37,8 @@ public class OrdenCompraController {
                 "message", "Se generaron " + ordenes.size() + " órdenes de compra correctamente.",
                 "ordenes", ordenes
             ));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e; // 403 lo resuelve GlobalExceptionHandler
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", "Error al generar órdenes: " + e.getMessage()));
         }
@@ -52,6 +54,8 @@ public class OrdenCompraController {
     public ResponseEntity<?> obtenerOrden(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(ordenCompraService.obtenerPorId(id));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e; // 403 lo resuelve GlobalExceptionHandler
         } catch (Exception e) {
             return ResponseEntity.status(404).body(Map.of("message", "Orden no encontrada"));
         }
@@ -70,6 +74,8 @@ public class OrdenCompraController {
         try {
             ordenCompraService.enviarOrdenPorCorreo(id);
             return ResponseEntity.ok(Map.of("message", "Orden enviada correctamente al proveedor."));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e; // 403 lo resuelve GlobalExceptionHandler
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", "Error al enviar correo: " + e.getMessage()));
         }
@@ -88,6 +94,8 @@ public class OrdenCompraController {
             return ResponseEntity.ok(Map.of("message", "Recepción registrada con éxito. Stock y Kardex actualizados."));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e; // 403 lo resuelve GlobalExceptionHandler
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("message", "Error interno al procesar recepción: " + e.getMessage()));

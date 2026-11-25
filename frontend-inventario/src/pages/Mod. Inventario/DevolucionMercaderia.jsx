@@ -26,7 +26,7 @@ import SendIcon from "@mui/icons-material/Send";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { getProductos } from "../../api/productoApi";
-import { getSedes } from "../../api/sedeApi";
+import { getSedes, soloSedesPropias, sedeInicial } from "../../api/sedeApi";
 import { getProveedores } from "../../api/proveedorApi";
 import { solicitarDevolucion } from "../../api/devolucionApi";
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
@@ -61,7 +61,7 @@ function DevolucionMercaderia() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      sedeOrigenId: "",
+      sedeOrigenId: sedeInicial(),
       tipoDestino: "SEDE",
       sedeDestinoId: "",
       proveedorId: "",
@@ -172,7 +172,7 @@ function DevolucionMercaderia() {
                     error={!!errors.sedeOrigenId}
                     helperText={errors.sedeOrigenId?.message}
                   >
-                    {sedes.map((s) => (
+                    {soloSedesPropias(sedes).map((s) => (
                       <MenuItem key={s.idSede} value={String(s.idSede)}>{s.nombreSede}</MenuItem>
                     ))}
                   </TextField>

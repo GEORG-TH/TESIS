@@ -26,6 +26,8 @@ public class SolicitudTransferenciaController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
+    private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
 
     @PostMapping("/solicitar")
     public ResponseEntity<?> crearSolicitud(@RequestBody SolicitudRequestDto solicitudDto) {
@@ -85,7 +87,10 @@ public class SolicitudTransferenciaController {
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerPorId(@PathVariable Long id) {
         return transferenciaRepository.findById(id)
-                .map(ResponseEntity::ok)
+                .map(t -> {
+                    sedeAcceso.validarAlgunaDe(t.getSedeOrigen().getIdSede(), t.getSedeDestino().getIdSede());
+                    return ResponseEntity.ok((Object) t);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 }

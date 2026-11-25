@@ -22,6 +22,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     @Autowired private ProveedorRepository proveedorRepository;
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private SedeRepository sedeRepository;
+    @Autowired private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
     
     // Repositorios para mover el inventario real
     @Autowired private InventarioRepository inventarioRepository;
@@ -33,6 +34,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     @Override
     @Transactional
     public List<OrdenCompra> generarOrdenesMasivas(List<Map<String, Object>> itemsSolicitados, Integer idUsuario, Integer idSede) {
+        sedeAcceso.validar(idSede);
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         Sede sede = sedeRepository.findById(idSede)
@@ -87,19 +89,27 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     }
 
     @Override
-    public List<OrdenCompra> listarTodas() { return ordenCompraRepository.findAll(); }
+    public List<OrdenCompra> listarTodas() {
+        return sedeAcceso.filtrar(ordenCompraRepository.findAll(), o -> List.of(o.getSedeDestino().getIdSede()));
+    }
 
     @Override
-    public List<OrdenCompra> listarPorEstado(EstadoOC estado) { return ordenCompraRepository.findByEstado(estado); }
+    public List<OrdenCompra> listarPorEstado(EstadoOC estado) {
+        return sedeAcceso.filtrar(ordenCompraRepository.findByEstado(estado), o -> List.of(o.getSedeDestino().getIdSede()));
+    }
 
     @Override
     public OrdenCompra obtenerPorId(Long id) {
-        return ordenCompraRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Orden no encontrada"));
+        OrdenCompra orden = ordenCompraRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Orden no encontrada"));
+        sedeAcceso.validar(orden.getSedeDestino().getIdSede());
+        return orden;
     }
 
     @Override
     public Optional<OrdenCompra> buscarPorCodigo(String codigo) {
-        return ordenCompraRepository.findByCodigoOrden(codigo);
+        Optional<OrdenCompra> orden = ordenCompraRepository.findByCodigoOrden(codigo);
+        orden.ifPresent(o -> sedeAcceso.validar(o.getSedeDestino().getIdSede()));
+        return orden;
     }
 
     @Override

@@ -32,7 +32,7 @@ import {
   Autocomplete
 } from "@mui/material";
 import Swal from "sweetalert2";
-import { getSedes } from "../../api/sedeApi";
+import { getSedes, soloSedesPropias, sedeInicial } from "../../api/sedeApi";
 import { getAreas } from "../../api/areaApi";
 import { getCategorias } from "../../api/categoriaApi";
 import { getSubcategorias } from "../../api/subcategoriaApi";
@@ -71,7 +71,7 @@ function GenerarConteoInventario() {
   const queryClient = useQueryClient();
 
   const [sedes, setSedes] = useState([]);
-  const [sedeId, setSedeId] = useState("");
+  const [sedeId, setSedeId] = useState(sedeInicial());
   const [tipoConteo, setTipoConteo] = useState("PROGRAMADO");
 
   const [alcance, setAlcance] = useState("SEDE");
@@ -90,7 +90,7 @@ function GenerarConteoInventario() {
 
   useEffect(() => {
     getSedes()
-      .then(setSedes)
+      .then((lista) => setSedes(soloSedesPropias(lista)))
       .catch(() => setSedes([]));
 
     getAreas()
@@ -133,7 +133,7 @@ function GenerarConteoInventario() {
     mutationFn: generarHojaConteo,
     onSuccess: () => {
       Swal.fire("Hoja generada", "La hoja de conteo se generó correctamente.", "success");
-      setSedeId("");
+      setSedeId(sedeInicial());
       handleCambiarAlcance("SEDE");
       queryClient.invalidateQueries({ queryKey: ["hojasConteo"] });
     },

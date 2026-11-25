@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getSugerenciasReabastecimiento } from '../api/productoApi';
-import { getSedes } from '../api/sedeApi';
+import { getSedes, soloSedesPropias, sedePropiaId } from '../api/sedeApi';
 import TablaLista from './TablaLista';
 import { Box, FormControl, InputLabel, Select, MenuItem, Chip, Alert, Typography } from '@mui/material';
 import BuscadorInteligente from './BuscadorInteligente';
@@ -11,11 +11,12 @@ import LayoutDashboard from './Layouts/LayoutDashboard';
 
 const SugerenciasReabastecimiento = () => {
     const navigate = useNavigate();
-    const [idSede, setIdSede] = useState('');
+    const [idSede, setIdSede] = useState(sedePropiaId() ?? '');
 
     const { data: sedes = [], isLoading: loadingSedes } = useQuery({
         queryKey: ['sedes'],
-        queryFn: getSedes
+        queryFn: getSedes,
+        select: soloSedesPropias
     });
 
     const {

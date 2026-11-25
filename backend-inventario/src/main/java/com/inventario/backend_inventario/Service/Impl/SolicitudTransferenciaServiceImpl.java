@@ -22,11 +22,14 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
     @Autowired private SedeRepository sedeRepo;
     @Autowired private UsuarioRepository usuarioRepo;
     @Autowired private ProductoRepository productoRepo;
+    @Autowired private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
     @Autowired private InventarioService inventarioService; // Para mover stock real
 
     @Override
     @Transactional
     public SolicitudTransferencia crearSolicitud(SolicitudRequestDto dto, Integer usuarioId) {
+        // Un usuario de sede solo puede pedir/enviar transferencias en las que su sede participe.
+        sedeAcceso.validarAlgunaDe(dto.getSedeOrigenId(), dto.getSedeDestinoId());
         SolicitudTransferencia solicitud = new SolicitudTransferencia();
         
         // 1. Configurar Cabecera
@@ -63,9 +66,13 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
         return solicitudRepo.save(solicitud);
     }
 
+    private List<Integer> sedesInvolucradas(SolicitudTransferencia s) {
+        return List.of(s.getSedeOrigen().getIdSede(), s.getSedeDestino().getIdSede());
+    }
+
     @Override
     public List<SolicitudTransferencia> listarPendientes() {
-        return solicitudRepo.findByEstado(EstadoSolicitud.PENDIENTE);
+        return sedeAcceso.filtrar(solicitudRepo.findByEstado(EstadoSolicitud.PENDIENTE), this::sedesInvolucradas);
     }
 
     @Override
@@ -77,6 +84,7 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
         if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new ResourceConflictException("La solicitud ya fue procesada anteriormente");
         }
+        sedeAcceso.validarAlgunaDe(sedesInvolucradas(solicitud).toArray(new Integer[0]));
 
         // Ejecutar movimiento por cada producto en la lista
         for (DetalleSolicitud det : solicitud.getDetalles()) {
@@ -122,6 +130,7 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
         if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new ResourceConflictException("La solicitud no está pendiente");
         }
+        sedeAcceso.validarAlgunaDe(sedesInvolucradas(solicitud).toArray(new Integer[0]));
 
         solicitud.setMotivoRechazo(motivo);
         solicitud.setEstado(EstadoSolicitud.RECHAZADO);
@@ -132,6 +141,7 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
     @Override
     public List<SolicitudTransferencia> listarHistorial() {
         // Asumiendo que agregaste este método en el Repository: findByEstadoNot(EstadoSolicitud.PENDIENTE)
-        return solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE);
+        return sedeAcceso.filtrar(solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE),
+                this::sedesInvolucradas);
     }
 }

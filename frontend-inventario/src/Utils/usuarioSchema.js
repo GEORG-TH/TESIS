@@ -18,6 +18,8 @@ export const IngresarUsuarioSchema = z.object({
       "La contraseña debe tener al menos un caracter especial"
     ),
   id_rol: z.string().nonempty("Debes seleccionar un rol"),
+  // Obligatoria para todo rol salvo Administrador (multisede); se valida en el formulario.
+  id_sede: z.string().optional(),
 });
 export const usuarioEditSchema = z.object({
   nombre_u: z.string().trim().min(4, "El nombre es obligatorio"),
@@ -29,6 +31,8 @@ export const usuarioEditSchema = z.object({
     .min(9, "El teléfono debe tener 9 dígitos"),
   email: z.string().trim().email("Debe ser un email válido"),
   id_rol: z.string().nonempty("Debes seleccionar un rol"),
+  // Obligatoria para todo rol salvo Administrador (multisede); se valida en el formulario.
+  id_sede: z.string().optional(),
 });
 
 export const rolSchema = z.object({

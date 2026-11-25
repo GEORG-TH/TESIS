@@ -24,6 +24,7 @@ public class SolicitudDevolucionController {
     @Autowired private SolicitudDevolucionService devolucionService;
     @Autowired private SolicitudDevolucionRepository devolucionRepository;
     @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private com.inventario.backend_inventario.Security.SedeAcceso sedeAcceso;
 
     @PostMapping("/solicitar")
     public ResponseEntity<?> crearSolicitud(@Valid @RequestBody SolicitudDevolucionRequestDto dto) {
@@ -79,6 +80,10 @@ public class SolicitudDevolucionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerPorId(@PathVariable Long id) {
-        return devolucionRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return devolucionRepository.findById(id).map(d -> {
+            sedeAcceso.validarAlgunaDe(d.getSedeOrigen().getIdSede(),
+                    d.getSedeDestino() != null ? d.getSedeDestino().getIdSede() : null);
+            return ResponseEntity.ok((Object) d);
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

@@ -27,7 +27,7 @@ import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
-import { getSedes } from "../../api/sedeApi";
+import { getSedes, soloSedesPropias, sedePropiaId } from "../../api/sedeApi";
 import { generarOrdenesMasivas } from "../../api/comprasApi";
 import { getSugerenciasReabastecimiento } from "../../api/productoApi";
 
@@ -36,12 +36,13 @@ const MySwal = withReactContent(Swal);
 const GenerarOrdenCompra = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [sedeSeleccionada, setSedeSeleccionada] = useState("");
+    const [sedeSeleccionada, setSedeSeleccionada] = useState(sedePropiaId() ?? "");
     const [seleccionados, setSeleccionados] = useState({});
     const [proveedoresCount, setProveedoresCount] = useState(0);
     const { data: sedes = [], isLoading: loadingSedes } = useQuery({
         queryKey: ["sedes"],
         queryFn: getSedes,
+        select: soloSedesPropias,
     });
 
     const {
