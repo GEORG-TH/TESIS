@@ -41,7 +41,7 @@ export function BotAvatar({ size = 34, online = false }) {
 }
 
 /** Indicador "escribiendo…" con tres puntos animados. */
-export function TypingDots() {
+export function TypingDots({ texto }) {
   return (
     <Box sx={{ display: "flex", gap: 0.6, alignItems: "center", py: 0.5, px: 0.5 }} aria-label="El asistente está escribiendo">
       {[0, 1, 2].map((i) => (
@@ -52,6 +52,11 @@ export function TypingDots() {
           transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
         />
       ))}
+      {texto && (
+        <Typography variant="caption" color="text.secondary" sx={{ ml: 0.75 }}>
+          {texto}
+        </Typography>
+      )}
     </Box>
   );
 }

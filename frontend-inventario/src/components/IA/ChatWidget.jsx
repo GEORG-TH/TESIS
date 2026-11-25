@@ -13,7 +13,7 @@ const MONO = '"JetBrains Mono", ui-monospace, monospace';
 
 /** Widget flotante del Gerente IA (esquina inferior derecha del dashboard). */
 const ChatWidget = () => {
-  const { messages, isLoading, enviar, limpiar } = useChatIA();
+  const { messages, isLoading, estado, enviar, limpiar } = useChatIA();
   const [abierto, setAbierto] = useState(false);
   const [input, setInput] = useState("");
   const finRef = useRef(null);
@@ -108,7 +108,7 @@ const ChatWidget = () => {
                   <Stack direction="row" spacing={1} alignItems="center">
                     <BotAvatar size={28} />
                     <Box sx={{ px: 1.5, py: 0.8, borderRadius: 3, border: "1px solid", borderColor: "divider", bgcolor: (t) => alpha(t.palette.primary.main, 0.07) }}>
-                      <TypingDots />
+                      <TypingDots texto={estado} />
                     </Box>
                   </Stack>
                 )}

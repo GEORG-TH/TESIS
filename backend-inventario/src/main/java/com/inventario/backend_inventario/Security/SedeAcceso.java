@@ -52,6 +52,17 @@ public class SedeAcceso {
         return u.getSede().getIdSede();
     }
 
+    /**
+     * Alcance de una consulta de la IA: null = todas las sedes (Administrador); un id = solo esa sede.
+     * Falla cerrado: sin usuario autenticado en el hilo actual no se entrega ningun dato.
+     */
+    public Integer alcanceIa() {
+        if (usuarioActual() == null) {
+            throw new AccessDeniedException("No se pudo identificar al usuario para limitar la consulta a su sede.");
+        }
+        return sedeDelUsuario();
+    }
+
     /** Lanza 403 si un usuario no admin intenta operar sobre una sede distinta a la suya. */
     public void validar(Integer sedeId) {
         if (!restringido()) {

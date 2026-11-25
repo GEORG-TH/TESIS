@@ -41,6 +41,8 @@ public class SecurityConfig {
             .cors().and()
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+            // Respuestas asíncronas (SSE del chat IA): la petición original ya pasó por la autorización de rol.
+            .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ASYNC).permitAll()
             .requestMatchers(
                 "/api/auth/login", 
                 "/api/auth/forgot-password", 

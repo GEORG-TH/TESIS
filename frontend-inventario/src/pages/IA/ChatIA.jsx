@@ -13,7 +13,7 @@ const SORA = '"Sora", "Inter", sans-serif';
 const MONO = '"JetBrains Mono", ui-monospace, monospace';
 
 const ChatIA = () => {
-  const { messages, isLoading, enviar, limpiar } = useChatIA();
+  const { messages, isLoading, estado, enviar, limpiar } = useChatIA();
   const [input, setInput] = useState("");
   const finRef = useRef(null);
   const inputRef = useRef(null);
@@ -126,7 +126,7 @@ const ChatIA = () => {
                     bgcolor: (t) => alpha(t.palette.primary.main, 0.07),
                   }}
                 >
-                  <TypingDots />
+                  <TypingDots texto={estado} />
                 </Box>
               </Stack>
             )}

@@ -6,9 +6,11 @@ import com.inventario.backend_inventario.Dto.SugerenciaCompraDto;
 import com.inventario.backend_inventario.Enum.EstadoSolicitud;
 import com.inventario.backend_inventario.Model.Inventario;
 import com.inventario.backend_inventario.Model.Sede;
+import com.inventario.backend_inventario.Security.SedeAcceso;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +29,7 @@ public class InventoryTools {
     private final SolicitudTransferenciaRepository solicitudRepository;
     private final CampaniaRepository campaniaRepository;
     private final ProductoService productoService;
+    private final SedeAcceso sedeAcceso;
 
     public InventoryTools(ProductoRepository productoRepository,
             MovimientoInventarioRepository movimientoRepository,
@@ -35,7 +38,9 @@ public class InventoryTools {
             InventarioRepository inventarioRepository,
             SolicitudTransferenciaRepository solicitudRepository,
             CampaniaRepository campaniaRepository,
-            ProductoService productoService) {
+            ProductoService productoService,
+            SedeAcceso sedeAcceso) {
+        this.sedeAcceso = sedeAcceso;
         this.productoRepository = productoRepository;
         this.movimientoRepository = movimientoRepository;
         this.proveedorRepository = proveedorRepository;
@@ -54,6 +59,31 @@ public class InventoryTools {
                 .findFirst();
     }
 
+    private static final String MSG_SOLO_SEDE = "Solo puedes consultar información de tu propia sede";
+
+    /**
+     * Sede sobre la que puede consultar el usuario actual. Administrador (alcance null): la que pida por nombre.
+     * Resto de roles: siempre la suya; si piden otra, se deniega.
+     */
+    private Sede sedeAutorizada(String nombrePedido) {
+        Integer propia = sedeAcceso.alcanceIa();
+        if (propia == null) {
+            return buscarSedePorNombre(nombrePedido).orElse(null);
+        }
+        Sede sede = sedeRepository.findById(propia).orElseThrow(() -> new AccessDeniedException("Tu sede ya no existe."));
+        if (nombrePedido != null && !nombrePedido.isBlank()) {
+            Optional<Sede> pedida = buscarSedePorNombre(nombrePedido);
+            if (pedida.isPresent() && !pedida.get().getIdSede().equals(propia)) {
+                throw new AccessDeniedException(MSG_SOLO_SEDE + " (" + sede.getNombreSede() + ").");
+            }
+        }
+        return sede;
+    }
+
+    private String denegado(AccessDeniedException e) {
+        return "🔒 " + e.getMessage();
+    }
+
     // --- HERRAMIENTA 1: SUGERENCIAS DE COMPRA ---
     public record RequestSugerencias(String nombreSede) {
     }
@@ -65,10 +95,11 @@ public class InventoryTools {
     @Description("Obtiene una lista de productos que necesitan reabastecimiento urgente dado el nombre de una sede")
     public Function<RequestSugerencias, ResponseSugerencias> analizarReabastecimiento() {
         return request -> {
-            Sede sedeEncontrada = buscarSedePorNombre(request.nombreSede())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "No se encontró ninguna sede con el nombre: " + request.nombreSede()));
-
+            ProgresoIa.avisar("Analizando el reabastecimiento…");
+            Sede sedeEncontrada = sedeAutorizada(request.nombreSede());
+            if (sedeEncontrada == null) {
+                throw new IllegalArgumentException("No se encontró ninguna sede con el nombre: " + request.nombreSede());
+            }
             List<SugerenciaCompraDto> data = productoService
                     .obtenerSugerenciasReabastecimiento(sedeEncontrada.getIdSede());
             return new ResponseSugerencias(data);
@@ -86,18 +117,23 @@ public class InventoryTools {
     @Description("Consulta los últimos movimientos (entradas/salidas) de un producto por su nombre")
     public Function<RequestKardex, ResponseKardex> consultarMovimientos() {
         return request -> {
+            ProgresoIa.avisar("Revisando el kardex de movimientos…");
             var productos = productoRepository.buscarPorSimilitud(request.nombreProducto());
 
             if (productos.isEmpty())
                 return new ResponseKardex("No encontré ningún producto similar a " + request.nombreProducto());
 
             var producto = productos.get(0);
-            var movimientos = movimientoRepository.findByProductoOrderByFechaHoraAsc(producto);
+            Integer alcance = sedeAcceso.alcanceIa();
+            var movimientos = movimientoRepository.findByProductoOrderByFechaHoraAsc(producto).stream()
+                    .filter(m -> alcance == null || m.getSede().getIdSede().equals(alcance))
+                    .collect(Collectors.toList());
 
             String historial = movimientos.stream()
                     .skip(Math.max(0, movimientos.size() - 5))
-                    .map(m -> String.format("[%s] %s de %d unidades por %s",
+                    .map(m -> String.format("[%s] %s: %s de %d unidades por %s",
                             m.getFechaHora().toString(),
+                            m.getSede().getNombreSede(),
                             m.getTipoMovimiento().getTipo(),
                             m.getCantidad(),
                             m.getUsuario().getUsername()))
@@ -118,6 +154,7 @@ public class InventoryTools {
     @Description("Busca información de contacto de un proveedor por RUC o Email")
     public Function<RequestProveedor, ResponseProveedor> buscarDatosProveedor() {
         return request -> {
+            ProgresoIa.avisar("Buscando al proveedor…");
             var provRuc = proveedorRepository.findByRuc(request.rucOEmail());
             if (provRuc.isPresent())
                 return new ResponseProveedor(provRuc.get().toString());
@@ -141,6 +178,7 @@ public class InventoryTools {
     @Description("Calcula el valor monetario del stock (Stock * Costo). Puede filtrar por sede si se especifica.")
     public Function<RequestValor, ResponseValor> calcularValorInventario() {
         return request -> {
+            ProgresoIa.avisar("Calculando la valorización del inventario…");
             var productos = productoRepository.buscarPorSimilitud(request.nombreProducto());
 
             if (productos.isEmpty()) {
@@ -153,8 +191,15 @@ public class InventoryTools {
             Integer stockTotal = 0;
             String ubicacionReporte = "Global (Todas las sedes)";
 
-            if (request.nombreSede() != null && !request.nombreSede().isBlank()) {
-                var sedeOpt = buscarSedePorNombre(request.nombreSede());
+            Integer alcance = sedeAcceso.alcanceIa();
+            if (alcance != null || (request.nombreSede() != null && !request.nombreSede().isBlank())) {
+                Sede sedeConsulta;
+                try {
+                    sedeConsulta = sedeAutorizada(request.nombreSede());
+                } catch (AccessDeniedException e) {
+                    return new ResponseValor(denegado(e), 0.0);
+                }
+                var sedeOpt = Optional.ofNullable(sedeConsulta);
 
                 if (sedeOpt.isPresent()) {
                     var sede = sedeOpt.get();
@@ -195,6 +240,7 @@ public class InventoryTools {
     @Description("Busca en qué sedes hay stock disponible de un producto específico")
     public Function<RequestUbicacion, ResponseUbicacion> ubicarProductoEnSedes() {
         return request -> {
+            ProgresoIa.avisar("Ubicando el stock del producto…");
             var productos = productoRepository.buscarPorSimilitud(request.nombreProducto());
 
             if (productos.isEmpty()) {
@@ -203,7 +249,10 @@ public class InventoryTools {
             }
 
             var producto = productos.get(0);
-            var inventarios = inventarioRepository.findByProducto(producto);
+            Integer alcance = sedeAcceso.alcanceIa();
+            var inventarios = inventarioRepository.findByProducto(producto).stream()
+                    .filter(inv -> alcance == null || inv.getSede().getIdSede().equals(alcance))
+                    .collect(Collectors.toList());
 
             String disponibilidad = inventarios.stream()
                     .filter(inv -> inv.getStockActual() > 0)
@@ -213,7 +262,7 @@ public class InventoryTools {
 
             if (disponibilidad.isEmpty()) {
                 return new ResponseUbicacion("El producto '" + producto.getNombre() + "' (SKU: " + producto.getSku()
-                        + ") está agotado en todas las sedes.");
+                        + ") está agotado " + (alcance == null ? "en todas las sedes." : "en tu sede."));
             }
 
             return new ResponseUbicacion("📍 Disponibilidad de '" + producto.getNombre() + "':\n" + disponibilidad);
@@ -231,7 +280,13 @@ public class InventoryTools {
     @Description("Genera un resumen rápido del estado actual de una sede (Valorizado, alertas, stock total), en formato de lista")
     public Function<RequestResumenSede, ResponseResumenSede> resumenEstadoSede() {
         return request -> {
-            var sedeOpt = buscarSedePorNombre(request.nombreSede());
+            ProgresoIa.avisar("Preparando el resumen de la sede…");
+            Optional<Sede> sedeOpt;
+            try {
+                sedeOpt = Optional.ofNullable(sedeAutorizada(request.nombreSede()));
+            } catch (AccessDeniedException e) {
+                return new ResponseResumenSede(denegado(e));
+            }
 
             if (sedeOpt.isEmpty()) {
                 return new ResponseResumenSede("No encontré la sede llamada: " + request.nombreSede());
@@ -275,6 +330,7 @@ public class InventoryTools {
     @Description("Obtiene la ficha técnica detallada de un producto: precios, códigos (SKU/EAN), marca y proveedor, en formato de lista")
     public Function<RequestInfoProducto, ResponseInfoProducto> obtenerInformacionProducto() {
         return request -> {
+            ProgresoIa.avisar("Consultando la ficha del producto…");
             var productos = productoRepository.buscarPorSimilitud(request.nombreProducto());
 
             if (productos.isEmpty()) {
@@ -320,11 +376,17 @@ public class InventoryTools {
     @Description("Consulta las solicitudes de transferencia de mercadería según su estado (PENDIENTE, APROBADO, RECHAZADO), en formato de lista")
     public Function<RequestTransferencias, ResponseTransferencias> consultarTransferencias() {
         return request -> {
+            ProgresoIa.avisar("Consultando las transferencias…");
             String estadoBusqueda = request.estado() != null ? request.estado().toUpperCase() : "PENDIENTE";
 
             try {
                 var estadoEnum = EstadoSolicitud.valueOf(estadoBusqueda);
-                var solicitudes = solicitudRepository.findByEstado(estadoEnum);
+                Integer alcance = sedeAcceso.alcanceIa();
+                var solicitudes = solicitudRepository.findByEstado(estadoEnum).stream()
+                        .filter(s -> alcance == null
+                                || s.getSedeOrigen().getIdSede().equals(alcance)
+                                || s.getSedeDestino().getIdSede().equals(alcance))
+                        .collect(Collectors.toList());
 
                 if (solicitudes.isEmpty()) {
                     return new ResponseTransferencias(
@@ -358,6 +420,7 @@ public class InventoryTools {
     @Description("Muestra las campañas promocionales activas y próximas a realizarse")
     public Function<RequestCampanias, ResponseCampanias> consultarCampaniasActivas() {
         return request -> {
+            ProgresoIa.avisar("Revisando las campañas vigentes…");
             var activas = campaniaRepository.findProximasYActivas(LocalDate.now());
 
             if (activas.isEmpty()) {
